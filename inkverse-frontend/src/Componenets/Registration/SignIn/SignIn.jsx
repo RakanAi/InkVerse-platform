@@ -223,7 +223,7 @@ const Form = ({ onRegister }) => {
             </p>
 
             <div className="d-flex align-items-center justify-content-center gap-2">
-              <div className="d-grid m-auto">
+              <div className="d-grid w-auto">
                 <GoogleLoginButton
                   onSuccess={(authObj) => {
                     setAuth(authObj);
