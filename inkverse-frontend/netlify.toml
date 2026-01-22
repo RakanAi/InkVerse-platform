@@ -1,0 +1,35 @@
+plugins = []
+headers = []
+redirects = []
+
+[dev]
+framework = "#custom"
+command = "npm run dev"
+targetPort = 5173
+port = 8888
+autoLaunch = false
+
+[functions]
+
+  [functions."*"]
+
+[build]
+publish = "/opt/build/repo/inkverse-frontend/dist"
+publishOrigin = "config"
+commandOrigin = "config"
+command = "npm install && npm run build"
+base = "/opt/build/repo/inkverse-frontend"
+
+  [build.environment]
+
+  [build.processing]
+
+    [build.processing.css]
+
+    [build.processing.html]
+
+    [build.processing.images]
+
+    [build.processing.js]
+
+  [build.services]

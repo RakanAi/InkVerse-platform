@@ -21,7 +21,11 @@ export default function GoogleLoginButton({ onSuccess }) {
 
             const authToStore = {
               accessToken: dto.token,
-              user: { userName: dto.userName, email: dto.email, roles: dto.roles ?? [] },
+              user: {
+                userName: dto.userName,
+                email: dto.email,
+                roles: dto.roles ?? [],
+              },
             };
 
             localStorage.setItem("auth", JSON.stringify(authToStore));
@@ -40,9 +44,9 @@ export default function GoogleLoginButton({ onSuccess }) {
     window.google.accounts.id.renderButton(divRef.current, {
       theme: "outline",
       size: "large",
-      text: "signin_with",
+      text: "icon", // 👈 icon only
       shape: "pill",
-      width: 260,
+      width: 48,
     });
   }, [onSuccess]);
 
