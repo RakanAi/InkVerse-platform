@@ -222,8 +222,7 @@ const Form = ({ onRegister }) => {
               </button>
             </p>
 
-            <div className="d-flex align-items-center justify-content-center gap-2">
-              <div className="d-grid w-auto">
+            <div className="d-grid justify-content-center">
                 <GoogleLoginButton
                   onSuccess={(authObj) => {
                     setAuth(authObj);
@@ -231,7 +230,6 @@ const Form = ({ onRegister }) => {
                     navigate(from, { replace: true });
                   }}
                 />
-              </div>
             </div>
           </form>
           <footer className="text-center mt-4 footerr align-self-end justify-self-end">
