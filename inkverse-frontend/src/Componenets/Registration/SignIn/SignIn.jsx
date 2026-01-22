@@ -162,9 +162,9 @@ const Form = ({ onRegister }) => {
         />
 
         <h2 className="Greeting mt-2 fw-light">Welcome To InkVerse</h2>
-        <p className="title shadow-sm mt-1 fw-light">
+        <span className="title shadow-sm mt-1 fw-light">
           Access tons of Fanfic Universes by a single tap!
-        </p>
+        </span>
 
         <div className="mt-3">
           <p className="title fw-light">Sign In to continue</p>
