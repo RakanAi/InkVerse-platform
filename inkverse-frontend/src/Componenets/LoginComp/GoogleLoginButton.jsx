@@ -44,9 +44,9 @@ export default function GoogleLoginButton({ onSuccess }) {
     window.google.accounts.id.renderButton(divRef.current, {
       theme: "outline",
       size: "large",
-      text: "icon", // 👈 icon only
+      text: "signin_with",
       shape: "pill",
-      width: 48,
+      width: 260,
     });
   }, [onSuccess]);
 
