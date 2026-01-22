@@ -1,0 +1,101 @@
+.iv-container {
+  width: 100%;
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 8px;
+}
+
+.iv-top-card {
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 18px;
+  padding: 12px;
+  background: white;
+  height: 100%;
+}
+
+.iv-top-head {
+  margin-bottom: 6px;
+}
+
+.iv-top-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.iv-top-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.iv-top-cover {
+  width: 78px;     /* bigger = less “contained” */
+  height: auto;
+  border-radius: 4px;
+  overflow: hidden;
+  flex: 0 0 auto;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.12); /* “free” feel */
+  transition: transform 180ms ease, box-shadow 180ms ease;
+   aspect-ratio: 2 / 3;
+}
+
+.iv-top-cover:hover{
+  transform: translateY(-5px);
+  box-shadow: 0 12px 26px rgba(0,0,0,0.16);
+}
+
+.iv-top-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.iv-top-meta {
+  min-width: 0;
+  flex: 1;
+}
+
+
+.iv-top-row {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.iv-top-rank {
+  font-weight: 700;
+  color: #422bed;
+}
+
+.iv-top-title {
+  color: inherit;
+  text-decoration: none;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.iv-top-title:hover { text-decoration: underline; }
+
+.iv-top-sub {
+  font-size: 0.85rem;
+  color: rgba(0,0,0,0.65);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  align-self: self-end;
+}
+
+.iv-top-link {
+  color: rgba(0,0,0,0.65);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+.iv-top-link:hover { text-decoration: underline; }

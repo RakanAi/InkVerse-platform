@@ -1,0 +1,70 @@
+.iv-section {
+  padding: 0 8px;
+}
+
+.iv-books-row {
+  display: flex;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  
+}
+
+.iv-book-card {
+  display: block;
+  color: inherit;
+}
+
+.iv-cover-wrap {
+  width: 100%;
+    aspect-ratio: 2 / 3;   /* common book ratio */
+
+  border-radius: 12px;
+  overflow: hidden;
+  /* border: 1px solid rgba(0,0,0,0.08); */
+}
+
+.iv-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 160ms ease;
+}
+
+.iv-book-card:hover .iv-cover {
+  transform: scale(1.03);
+}
+
+.iv-meta {
+  padding-top: 8px;
+}
+
+.iv-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.iv-author {
+  display: inline-block;
+  margin-top: 2px;
+  font-size: 0.85rem;
+  color: rgba(0,0,0,0.6);
+  text-decoration: none;
+}
+
+.iv-author:hover {
+  text-decoration: underline;
+}
+
+.iv-link {
+  color: rgba(0,0,0,0.65);
+  text-decoration: none;
+}
+
+.iv-link:hover {
+  text-decoration: underline;
+}

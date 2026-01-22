@@ -1,0 +1,41 @@
+body {
+    zoom: 1;
+  }
+  
+  @media (max-width: 768px) {
+    body {
+      zoom: 0.7;
+    }
+  }
+  
+  @media (max-width: 576px) {
+    body {
+      zoom: 0.6;
+    }
+  }
+  
+  .nextPrev{
+    transition: ease .25s ease;
+  }
+
+  .nextPrev:hover{
+    transform: translateY(-2px);
+  }
+
+
+.reader-tools{
+  position: fixed;
+  top: 350px;
+  left: 50%;
+  transform: translateX(460px);
+  flex-direction: column !important;
+}
+
+.chapters-btn{
+  transition: transform 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
+}
+
+.chapters-btn:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.12);
+}

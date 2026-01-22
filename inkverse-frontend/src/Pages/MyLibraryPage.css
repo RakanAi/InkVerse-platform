@@ -1,0 +1,149 @@
+.iv-tabs {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 8px;
+}
+
+.iv-tab {
+  position: relative;
+  border: 0;
+  background: transparent;
+  padding: 10px 6px;
+  color: #6c757d;
+  font-size: 0.95rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+
+  gap: 6px;
+  cursor: pointer;
+}
+
+.iv-tab:hover {
+  color: #212529;
+}
+
+.iv-tab .iv-underline {
+  content: "";
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: -9px;
+  height: 2px;
+  background: transparent;
+  border-radius: 999px;
+}
+
+.iv-tab.active {
+  color: #212529;
+}
+
+.iv-tab.active .iv-underline {
+  background: #212529;
+}
+
+.lib-card {
+  background: #fff;
+  /* border: 1px solid #e9ecef; */
+  border-radius: 14px;
+  overflow: hidden;
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.lib-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(13, 110, 253, 0.35); /* bootstrap primary tint */
+  box-shadow: 0 10px 24px rgba(16, 24, 40, 0.08);
+}
+
+.lib-cover {
+  position: relative;
+  display: block;
+  aspect-ratio: 3 / 4;
+  background: #f8f9fa;
+}
+
+.lib-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.lib-noCover {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: #6c757d;
+  font-weight: 600;
+}
+
+/* overlay appears on hover (desktop), always visible on mobile */
+.lib-overlay {
+  position: absolute;
+  inset: 0;
+  padding: 10px;
+  display: flex;
+  border-radius: 14px;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.35), rgba(0,0,0,0));
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.lib-card:hover .lib-overlay {
+  opacity: 1;
+}
+
+.lib-select {
+  border: 0;
+  outline: none;
+  background: rgba(255, 255, 255, 0);
+  color: #d3d7db;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.lib-remove {
+  border: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0);
+  font-weight: 900;
+  color: #8c8d8e;
+  cursor: pointer;
+}
+
+.lib-meta {
+  padding: 10px 10px 12px;
+}
+
+.lib-title {
+  font-weight: 800;
+  color: #212529;
+  font-size: 0.95rem;
+  line-height: 1.2;
+
+  /* clamp to 2 lines */
+  display: -webkit-box;
+  /* -webkit-line-clamp: 2; */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.4em;
+}
+
+/* Mobile: show overlay without hover */
+@media (max-width: 600px) {
+  .lib-overlay {
+    opacity: 1;
+  }
+}
+

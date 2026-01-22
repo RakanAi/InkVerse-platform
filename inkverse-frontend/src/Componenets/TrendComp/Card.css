@@ -1,0 +1,468 @@
+.cardTop-container {
+    width: 100%;
+    height: 400px;
+    position: relative;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    background-size: cover;
+    background: 
+    linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), ;
+    background-position: center;
+    background-repeat: no-repeat;
+    /* backdrop-filter: blur(); */
+    background-size: cover;
+  }
+
+  .cardTopcard-container {
+    width: 100%;
+    height: 400px;
+    position: relative;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    /* overflow-wrap: anywhere; */
+    background-size: cover;
+    background: 
+    linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), ;
+    background-position: center;
+    background-repeat: no-repeat;
+    /* backdrop-filter: blur(); */
+    background-size: cover;
+    transition: all 300ms;
+        min-width: 300px;
+
+
+          overflow:hidden;
+ 
+
+  }
+
+    .cardTopcard-container:hover{
+      /* transform: translateY(5px); */
+    box-shadow: 0 0 5px rgb(0, 59, 108),
+                0 0 25px rgb(0, 59, 108),
+                0 0 50px rgb(0, 59, 108),
+                0 0 100px rgba(0, 59, 108, 0);    }
+  
+  .cardTop {
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+  }
+
+   .cardTop {
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+  }
+  
+  .cardTop .front-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.6s cubic-bezier(0.23, 1, 0.320, 1)
+  }
+  
+  .cardTop .front-content p {
+    font-size: 32px;
+    font-weight: 700;
+    opacity: 1;
+    background: linear-gradient(-45deg, #0b1ffe 0%, #ff0f7b 100% );
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    transition: all 0.6s cubic-bezier(0.23, 1, 0.320, 1)
+  }
+  
+  .cardTop .content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.424);
+    backface-visibility: visible;
+    color: #e8e8e8;
+    padding: 20px;
+    line-height: 1.5;
+    border-radius: 5px;
+    pointer-events: none;
+    transform: translateY(-100%);
+    transition: all 0.6s cubic-bezier(0.23, 1, 0.320, 1);
+  }
+  
+  .cardTop .content .heading {
+    font-size: 32px;
+    font-weight: 700;
+    
+
+  }
+  
+  .cardTop:hover .content {
+    transform: translateY(0);
+  }
+  
+  .cardTop:hover .front-content {
+    transform: translateY(30%);
+  }
+  
+  .cardTop:hover .front-content p {
+    opacity: 0;
+  }
+  
+  
+
+  /* ---------------- */
+  .cardTopc {
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+  }
+
+   .cardTopc {
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+  }
+  
+  .cardTopc .front-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.6s cubic-bezier(0.23, 1, 0.320, 1)
+  }
+  
+  .cardTopc .front-content p {
+    font-size: 22px;
+    font-weight: 700;
+    opacity: 1;
+    background: linear-gradient(-45deg, #00b3ff 0%, #ff0f7b 100% );
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    transition: all 0.6s cubic-bezier(0.23, 1, 0.320, 1);
+
+  
+  }
+  
+  .cardTopc .content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.424);
+    backface-visibility: visible;
+    color: #e8e8e8;
+    padding: 20px;
+    line-height: 1.5;
+    border-radius: 5px;
+    pointer-events: none;
+    transform: translateY(-100%);
+    transition: all 0.6s cubic-bezier(0.23, 1, 0.320, 1);
+
+   
+  }
+
+   .cardTopc .content .disc {
+
+    height: 90px;
+     overflow:hidden;
+      word-break:break-all;
+      
+
+         overflow-y: scroll;
+    overflow: -moz-scrollbars-none;
+    scrollbar-width: none;
+    /* font-size: x-small; */
+    
+  }
+  
+  .cardTopc .content .heading {
+    font-size: 32px;
+    font-weight: 700;
+  }
+  
+  .cardTopc:hover .content {
+    transform: translateY(0);
+  }
+  
+  .cardTopc:hover .front-content {
+    transform: translateY(30%);
+  }
+  
+  .cardTopc:hover .front-content p {
+    opacity: 0;
+  }
+  
+/* --------------- */
+
+  .cardEnd-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    background-position: center;
+    background:  linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),url(../../assets/0e16dcfc-7007-46db-b60e-e49be6769119.webp) ;
+    overflow: hidden;
+    background-repeat: no-repeat;
+    background-size: cover;
+
+  }
+
+  .cardEnd {
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+  }
+
+  .cardEnd .front-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.6s cubic-bezier(0.23, 1, 0.320, 1)
+  }
+
+  .cardEnd .front-content p {
+    font-size: 32px;
+    font-weight: 700;
+    opacity: 1;
+    background: linear-gradient(-45deg, #f89b29 0%, #ff0f7b 100% );
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    transition: all 0.6s cubic-bezier(0.23, 1, 0.320, 1)
+  }
+
+  .cardEnd .content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.424);
+    color: #e8e8e8;
+    padding: 20px;
+    line-height: 1.5;
+    border-radius: 5px;
+    pointer-events: none;
+    transform: translatex(100%);
+    transition: all 0.6s cubic-bezier(0.23, 1, 0.320, 1);
+  }
+
+  .cardEnd .content .heading {
+    font-size: 32px;
+    font-weight: 700;
+  }
+
+  .cardEnd:hover .content {
+    transform: translateY(0);
+  }
+
+  .cardEnd:hover .front-content {
+    transform: translateX(20%);
+  }
+
+  .cardEnd:hover .front-content p {
+    opacity: 0;
+  }
+   
+  
+
+  /* ---------------- */
+
+
+
+.cardBottom-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    border-radius: 10px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(../../assets/BackGround_04.png);
+    overflow: hidden;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+
+  }
+  
+  .cardBottom {
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+  }
+  
+  .cardBottom .front-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.6s cubic-bezier(0.23, 1, 0.320, 1)
+  }
+  
+  .cardBottom .front-content p {
+    font-size: 32px;
+    font-weight: 700;
+    opacity: 1;
+    background: linear-gradient(-45deg, #f89b29 0%, #ff0f7b 100% );
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    transition: all 0.6s cubic-bezier(0.23, 1, 0.320, 1)
+  }
+  
+  .cardBottom .content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.424);
+    color: #e8e8e8;
+    padding: 20px;
+    line-height: 1.5;
+    border-radius: 5px;
+    pointer-events: none;
+    transform: translateY(100%);
+    transition: all 0.6s cubic-bezier(0.23, 1, 0.320, 1);
+  }
+  
+  .cardBottom .content .heading {
+    font-size: 32px;
+    font-weight: 700;
+  }
+  
+  .cardBottom:hover .content {
+    transform: translateY(0);
+  }
+  
+  .cardBottom:hover .front-content {
+    transform: translateY(-30%);
+  }
+  
+  .cardBottom:hover .front-content p {
+    opacity: 0;
+  }
+  
+  
+   
+  
+
+  /* ---------------- */
+
+
+
+
+.cardStart-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(../../assets/AlbedoBase_XL_A_heroic_young_man_in_fantasy_armor_holding_a_ba_0.jpg);
+    overflow: hidden;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+
+  }
+  
+  .cardStart {
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+  }
+  
+  .cardStart .front-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.6s cubic-bezier(0.23, 1, 0.320, 1)
+  }
+  
+  .cardStart .front-content p {
+    font-size: 32px;
+    font-weight: 700;
+    opacity: 1;
+    background: linear-gradient(-45deg, #f89b29 0%, #ff0f7b 100% );
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    transition: all 0.6s cubic-bezier(0.23, 1, 0.320, 1)
+  }
+  
+  .cardStart .content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.424);
+    color: #e8e8e8;
+    padding: 20px;
+    line-height: 1.5;
+    border-radius: 5px;
+    pointer-events: none;
+    transform: translateX(-100%);
+    transition: all 0.6s cubic-bezier(0.23, 1, 0.320, 1);
+  }
+  
+  .cardStart .content .heading {
+    font-size: 32px;
+    font-weight: 700;
+  }
+  
+  .cardStart:hover .content {
+    transform: translateY(0);
+  }
+  
+  .cardStart:hover .front-content {
+    transform: translateX(-30%);
+  }
+  
+  .cardStart:hover .front-content p {
+    opacity: 0;
+  }
+  
+  

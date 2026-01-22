@@ -1,0 +1,11 @@
+.borderStart-read{
+      background-color: gray;
+    border-color: rgb(38, 0, 255) !important;
+    border-radius: 2px;
+    height: 1.5rem;
+    width: 4px;
+        box-sizing: border-box;
+
+        margin-right: 8px;
+        align-self: center;
+}

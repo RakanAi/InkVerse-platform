@@ -1,0 +1,72 @@
+.iv-backdrop{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.iv-modal{
+  /* position: relative; */
+  width: auto;
+  max-height: 92vh;
+  overflow: hidden;
+  border-radius: 18px;
+  /* padding: 10px; */
+  
+}
+
+.iv-close{
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  border: 0;
+  background: transparent;
+  font-size: 22px;
+  cursor: pointer;
+  color: #fff;
+  z-index: 3;
+}
+
+/* ---------- Mobile behavior ---------- */
+@media (max-width: 768px) {
+  .iv-backdrop {
+    align-items: flex-top; /* modal at bottom */
+  }
+
+  .iv-modal {
+    width: 100%;
+    max-height: 92vh;
+    border-radius: 18px 18px 0 0;
+    padding: 12px 12px env(safe-area-inset-bottom);
+    animation: slideUp .28s ease-out;
+    overflow: hidden;
+  }
+
+  .iv-close {
+    top: 14px;
+    right: 16px;
+    font-size: 26px;
+  }
+}
+
+/* ---------- Slide animation ---------- */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+.iv-card {
+  width: 100%;
+    
+    /* padding: 10px; */
+}
+
+
+

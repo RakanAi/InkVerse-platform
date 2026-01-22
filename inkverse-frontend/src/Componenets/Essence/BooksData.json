@@ -1,0 +1,32 @@
+{
+    "BookId": "001",
+    "BookName": "Shadow Slave",
+    "AuthorName": "GuiltyThree",
+    "BookGenra": "Fantasy",
+    "ChaptersNumber": "453",
+    "Status": [{ "Complete": false, "OnGoing": true }]
+,
+    "BookTags": ["Action", "Dark  ", "System","Smut","Evil"],
+    "Rating":[
+      {
+      "RatingNumber":55,
+      "BookRating": 4.8,
+      "RatingEle":[{
+        "Writing Quality":3,
+        "Stability of Updates":2,
+        "Story Development":0,
+        "Character Design":5,
+        "World Background":2
+        }]
+      }
+    ],
+    
+    "Synopsis": "In the world of Nightmare Spell, only the strong survive...",
+    "BookImage": "src/assets/F6-gHmEXoAACtPw.jpg",
+    "WordCount":"1.9 Million",
+    "Views":"2.5 million",
+    "ReadingState":"Ch-226",
+    "LatestUpdate": "2025-04-22T00:00:00Z"
+
+  }
+  

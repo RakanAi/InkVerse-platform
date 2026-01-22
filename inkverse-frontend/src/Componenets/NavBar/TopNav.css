@@ -1,0 +1,35 @@
+.topbar {
+    height: 60px;
+    background-color: #1e1e2f;
+    color: white;
+    position: fixed;
+    top: 0;
+    z-index: 900;
+    border-bottom: #8b960f;
+    
+  }
+  
+  .search-container {
+    display: flex;
+    align-items: center;
+    background-color: #2d2d44;
+    border-radius: 5px;
+    padding: 5px;
+    transition: all 0.3s ease;
+  }
+  
+   .search-container input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: white;
+    padding: 5px;
+  }
+  
+  .search-container button {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+  } 
+  

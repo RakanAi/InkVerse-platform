@@ -1,0 +1,59 @@
+
+  
+  .recent-reviews-swiper {
+    padding: 10px 0;
+  }
+  
+  .review-card {
+    padding: 15px;
+    border-radius: 10px;
+    transition: all 180ms ;
+  }
+
+  .review-card:hover{
+    transform: translateY(-5px);
+  }
+  
+  .user-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  
+  .user-img {
+    width: 75px;
+    height: 70px;
+    border-radius: 50%;
+    background: #333;
+  }
+  
+  .user-details {
+    text-align: left;
+  }
+  
+  .rating {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  
+  .review-book {
+    /* height: 18px; */
+    font-size: 1rem;
+    font-weight: bold;
+  }
+  
+  .review-title {
+    color: #b1511a;
+    font-weight: bold;
+  }
+  
+  .review-text {
+    font-size: 0.9rem;
+    opacity: 0.7;
+    height: 90px;
+    overflow: scroll;
+    scrollbar-width: none;
+  }

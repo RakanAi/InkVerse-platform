@@ -1,0 +1,23 @@
+.hightLimiter{
+    max-height: 265px;
+      overflow:hidden;
+      overflow-y: scroll;
+    overflow: -moz-scrollbars-none;
+    scrollbar-width: none;
+    /* height: 190px; */
+    font-size: x-small;
+}
+
+/* Tablets */
+@media (max-width: 991.98px) {
+.hightLimiter{
+    max-height: 965px;
+}
+}
+
+/* Mobile */
+@media (max-width: 767.98px) {
+.hightLimiter{
+    max-height: 465px;
+}
+}

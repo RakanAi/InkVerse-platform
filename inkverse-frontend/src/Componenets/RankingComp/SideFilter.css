@@ -1,0 +1,100 @@
+.tabs-header{
+    border-right: .5px solid hsla(0, 0%, 85%, .5);
+    font-size: 14px;
+    margin-right: 48px;
+    margin-top: 40px;
+    max-height: calc(100vh - 404px);
+    overflow-y: scroll;
+    overflow: -moz-scrollbars-none;
+    /* position: fixed; */
+    scrollbar-width: none;
+    text-align: center;
+    top: 64px;
+    width: 160px;
+    
+
+}
+
+.tab-group-title{
+    font-weight: 500;
+    line-height: 40px;
+}
+
+.tab-item{
+    display: block;
+    line-height: 40px;
+    position: relative;
+}
+
+
+/* Default state of ::after (invisible) */
+.tab-item::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    background-color: rgba(11, 175, 255, 0.1);
+    border-right: 2px solid #0bafff;
+}
+
+/* Hover state */
+.tab-item:hover::after {
+    opacity: 1;
+}
+
+.tab-item.active::after {
+    opacity: 1;
+}
+
+/* Optional: Change text color on hover */
+.tab-item:hover, .tab-item.active {
+    color: #0bafff;
+    font-weight: bold;
+
+}
+
+/* .topFil{
+    margin-left: 10rem;
+} */
+
+.overflow-scroll-x-hidden {
+    overflow-x: auto;
+    white-space: nowrap;
+  
+    scrollbar-width: none;         /* Firefox */
+    -ms-overflow-style: none;      /* IE/Edge */
+  
+  }
+  
+  .overflow-scroll-x-hidden::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+  }
+
+  .genraFont{
+    font-size: x-small;
+    margin-bottom: 0.1px;
+  }
+
+  .bookSyno{
+    overflow-y: scroll;
+    overflow: -moz-scrollbars-none;
+    scrollbar-width: none;
+    height: 55px;
+    font-size: x-small;
+    margin-bottom: 5px;
+  }
+
+  .bookRC{
+    font-size: 12px;
+    margin-top: 0px;
+
+  }
+
+  .border-top-dotted {
+    border-top: 1.5px dotted #dee2e6;
+  
+  }

@@ -1,0 +1,113 @@
+.bg-img {
+    left: 0;
+    position: absolute;
+    right: 0;
+    width: 100%;
+    margin-top: -4%;
+    height: 22rem;
+    object-position: top;
+    object-fit: cover;
+    /* filter: blur(5px); */
+    border-bottom: solid;
+    top: var(--banner-top);
+    --banner-overlay-gradient: linear-gradient(67.81deg, rgba(0, 0, 0, .64) 35.51%, transparent);
+
+}
+@media screen and (max-width: 990px) { 
+  .bg-img{
+        margin-top: -8%;
+
+  }
+  
+}
+
+
+.BookImg {
+    width: 200px;
+    height: 311px;
+    border-radius: .25rem;
+    object-fit: cover;
+    object-position: center center;
+    transform-style: preserve-3d;
+    cursor: pointer;
+    transition: transform 0.5s ease;
+}
+.BookImg:hover {
+    transform: scale(1.05) rotateX(5deg) rotateY(5deg);
+    
+}
+
+.synopsis {
+    overflow-y: scroll;
+    overflow: -moz-scrollbars-none;
+    height: 10rem;
+    scrollbar-width: none;
+    text-shadow: rgba(0, 0, 0, 0.3) 1px 2px 4px;
+    line-height: 1.6;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+}
+
+.DataBox{
+    border-radius: 5px;
+    backdrop-filter: blur(15px);
+}
+
+.responsive-text {
+    color: black;
+  }
+  
+  @media (min-width: 992px) {
+    .responsive-text {
+      color: white;
+    }
+  }
+
+  .TagBox {
+    overflow-y: scroll;
+    overflow: -moz-scrollbars-none;
+    height: 10rem;
+    scrollbar-width: none;
+    text-shadow: rgba(0, 0, 0, 0.3) 1px 2px 4px;
+    line-height: 1.6;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+}
+
+.ReviewSec{
+  font-weight: 400;
+  line-height: 32px;
+  font-size: 16px;
+  font-family: Archivo;
+
+}
+
+.ReviewSecBorder{
+  border-right: none ;
+  border-bottom: solid;
+  margin-bottom: 6px;
+
+  @media (min-width: 992px){
+    border-right: var(--bs-border-width) var(--bs-border-style) var(--bs-border-color) !important;
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+}
+
+.ReviewBox{
+  display: block;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1.5em;
+  resize: none;
+  color: var(--c_l);
+  width: 100%;
+  border: none;
+  outline: 0 none;
+  overflow: auto;
+  /* vertical-align: top; */
+  outline: none;
+  line-height: 1.8;
+  resize: none;
+  font-family: Nunito Sans, SF Pro Text, SF Pro Icons, Roboto, Helvetica Neue, Helvetica, Arial, sans-serif;
+}

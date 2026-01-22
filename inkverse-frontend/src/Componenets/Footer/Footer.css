@@ -1,0 +1,167 @@
+/* Footer.css */
+.iv-footer {
+  background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
+  color: #ffffff;
+  position: relative;
+  width: 100%;
+  margin-top: auto;
+}
+
+.iv-footer-brand {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.iv-footer-logo {
+  width: 80px;
+  height: auto;
+  background: #fff;
+  object-fit: cover;
+}
+
+.iv-footer-tagline {
+  color: #cccccc;
+  font-style: italic;
+  margin-top: 5px;
+}
+
+.iv-footer-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.iv-footer-link {
+  color: #cccccc;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  padding: 5px 0;
+  transition: color 0.3s ease;
+}
+
+.iv-footer-link:hover {
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.iv-footer-social {
+  color: #cccccc;
+  font-size: 1.5rem;
+  transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.iv-footer-social:hover {
+  color: #ffffff;
+  transform: scale(1.1);
+}
+
+.iv-newsletter-input {
+  border-radius: 25px 0 0 25px;
+  border: 1px solid #555;
+  background: #333;
+  color: #fff;
+}
+
+.iv-newsletter-input::placeholder {
+  color: #aaa;
+}
+
+.iv-newsletter-input:focus {
+  background: #444;
+  border-color: #007bff;
+  box-shadow: none;
+}
+
+.iv-newsletter-btn {
+  border-radius: 0 25px 25px 0;
+  background: #007bff;
+  border: 1px solid #007bff;
+  color: #fff;
+  transition: background 0.3s ease;
+}
+
+.iv-newsletter-btn:hover {
+  background: #0056b3;
+  border-color: #0056b3;
+}
+
+.iv-footer-divider {
+  border-color: #555;
+  margin: 2rem 0;
+}
+
+.badge {
+  font-size: 0.8rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .iv-footer {
+    padding: 2rem 0; /* Reduce padding on mobile */
+  }
+
+  .iv-footer .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .iv-footer-brand {
+    font-size: 1.5rem;
+    flex-direction: column; /* Stack logo and text vertically */
+    gap: 0.5rem;
+  }
+
+  .iv-footer-logo {
+    /* width: 20rem;
+    height: 150px;
+      object-fit: cover; */
+
+
+  }
+
+  .iv-footer-title {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Center social links, explore, and support on mobile */
+  .iv-footer .d-flex.gap-3 {
+    justify-content: center;
+  }
+
+  .iv-footer .col-6.col-md-2 ul {
+    text-align: center;
+  }
+
+  .iv-footer .col-6.col-md-2 .iv-footer-link {
+    justify-content: center;
+  }
+
+  .iv-newsletter-input,
+  .iv-newsletter-btn {
+    font-size: 0.9rem;
+  }
+
+  .iv-newsletter-btn {
+    padding: 0.5rem 1rem;
+  }
+
+  /* Stack newsletter buttons vertically on very small screens */
+  @media (max-width: 576px) {
+    .iv-footer .d-flex.gap-2 {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .iv-footer .btn {
+      margin-bottom: 0.5rem;
+    }
+  }
+}

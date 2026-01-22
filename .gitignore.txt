@@ -1,0 +1,12 @@
+@"
+*.zip
+node_modules/
+dist/
+build/
+bin/
+obj/
+.vs/
+.vscode/
+*.user
+*.suo
+"@ | Out-File -Encoding utf8 .gitignore

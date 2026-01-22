@@ -1,0 +1,99 @@
+.dataBoxs{
+    color: white;
+    background-color: rgba(0, 0, 0, 0.6);
+    width: auto;
+    border-radius: 10px;
+    margin: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        transition: all 0.25s ease;
+        max-height: 70px;
+
+
+    border: 1px solid var(--el-border-color-lighter);
+    display: flex;
+    gap: 12px;
+    padding: 14px 16px;
+    text-decoration: none;
+
+    flex-direction: column;
+    min-width: 0;
+}
+
+.boxHover{
+    transition: all .25s ease;
+}
+
+.boxHover:hover{
+    transform: translateY(-2px);
+    
+}
+
+
+.contentHover{
+    transition: all .25s ease;
+}
+.contentHover:hover{
+    transform: translateX(5px);
+    
+}
+
+.borderStart{
+    background-color: rgb(0, 60, 255);
+    border-color: rgb(38, 0, 255) !important;
+    border-radius: 2px;
+    height: 1.5rem;
+    width: 4px;
+        box-sizing: border-box;
+
+        margin-right: 8px;
+        align-self: center;
+}
+
+@media screen and (max-width: 868px) {
+    .dataBoxs{
+        color: black;
+    }
+    
+}
+
+.metadata-icon{
+    align-items: center;
+    background: var(--el-color-primary-light-9);
+    border-radius: 8px;
+    color: var(--el-color-primary);
+    display: flex;
+    flex-shrink: 0;
+    font-size: 20px;
+    height: 38px;
+    justify-content: center;
+    width: 38px;
+}
+
+.review-breakdown {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease, opacity 0.25s ease;
+  opacity: 0;
+}
+
+.review-breakdown.open {
+  max-height: 500px; /* enough to fit content */
+  opacity: 1;
+}
+
+
+.BookImg{
+        aspect-ratio: 2 / 3;   /* common book ratio */
+
+}
+
+.titleF{
+    color: aliceblue;
+}
+
+@media screen and (max-width: 868px) {
+   .titleF{
+    color: rgb(0, 0, 0);
+}
+    
+}

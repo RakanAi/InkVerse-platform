@@ -1,0 +1,30 @@
+.iv-meta {
+  border-radius: 14px;
+}
+
+.iv-meta-k {
+  font-size: 12px;
+  letter-spacing: 0.2px;
+  color: rgba(0, 0, 0, 0.55);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.iv-meta-v {
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.iv-meta-row {
+  min-width: 150px;
+}
+
+.iv-pill {
+  cursor: pointer;
+  user-select: none;
+}
+
+.iv-pill:hover {
+  filter: brightness(0.96);
+}
