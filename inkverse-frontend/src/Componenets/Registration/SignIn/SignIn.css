@@ -39,13 +39,14 @@
 
 }
 
-    /* .title {
+    .title {
     text-align: center;
     font-size: 0.95rem;
     line-height: 0rem;
     font-weight: 700;
     color: rgba(156, 163, 175, 1);
-  } */
+    line-break: auto;
+  }
     .input-group {
     margin-top: 0.25rem;
     font-size: 0.875rem;
