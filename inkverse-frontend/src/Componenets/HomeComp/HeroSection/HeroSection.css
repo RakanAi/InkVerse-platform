@@ -33,17 +33,7 @@ div{
 
 /* Responsive text sizing */
 .hero-title {
-  font-size: 1rem; /* Mobile, like fs-6 */
-}
-
-@media (min-width: 992px) {
-  .hero-title {
-    font-size: 3rem; /* LG screens, like display-5 */
-  }
-}
-
-.hero-subtitle {
-  /* font-size: clamp(1rem, 2.5vw, 1.25rem); */
+  font-size: clamp(1.5rem, 5vw, 3rem);
 }
 
 .hero-tagline {

@@ -8,7 +8,7 @@ const HeroSection = () => {
       style={{ maxWidth: "1300px", justifySelf: "center" }}
     >
       <div className="">
-        <h1 className="pt-5 fontS fw-bold hero-title">
+        <h1 className="pt-5 fontS fw-bold hero-title d-none d-lg-block">
           Find your next obsession.
         </h1>
 
