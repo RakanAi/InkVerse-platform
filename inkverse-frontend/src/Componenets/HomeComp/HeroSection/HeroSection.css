@@ -5,7 +5,7 @@ div{
 
 .bgImgg {
     position: relative;
-    background-image: url(src/assets/AlbedoBase_XL_A_surreal_scene_of_a_young_girl_with_long_flowin_3.jpg);
+    background-image: url(/public/images/HeroImg.jpg);
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
