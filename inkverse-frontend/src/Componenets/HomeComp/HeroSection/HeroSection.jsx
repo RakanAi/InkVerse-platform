@@ -12,7 +12,7 @@ const HeroSection = () => {
           Find your next obsession.
         </h1>
 
-        <p className="fontS mt-3 fs-5 opacity-75 hero-subtitle">
+        <p className="fontS mt-3 opacity-75 hero-subtitle fs-lg-5 fs-6">
           A fresh reading multiverse—original stories and wild fanfiction you
           won’t find anywhere else.
         </p>
