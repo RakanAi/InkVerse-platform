@@ -10,7 +10,7 @@ div{
     background-position: center;
     background-repeat: no-repeat;
     overflow: hidden;
-    max-height: 375.5px;
+    min-height: 300px; /* Changed from max-height to min-height for flexibility */
 }
 
 .bgImg::before {
@@ -27,7 +27,24 @@ div{
     0 1px 1px rgba(0,0,0,0.9);
 }
 
-
 .hero h1, .hero p{
   -webkit-text-stroke: 0.6px rgba(0, 0, 0, 0);
+}
+
+/* Responsive text sizing */
+.hero-title {
+  font-size: clamp(1.5rem, 5vw, 3rem);
+}
+
+.hero-subtitle {
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+}
+
+.hero-tagline {
+  font-size: clamp(0.8rem, 1.5vw, 1rem);
+}
+
+.hero-btn {
+  font-size: clamp(0.9rem, 2vw, 1rem);
+  padding: clamp(0.5rem, 1.5vw, 1rem) clamp(1rem, 2vw, 1.5rem);
 }
