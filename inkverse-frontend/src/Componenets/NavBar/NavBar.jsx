@@ -96,7 +96,7 @@ function NavBar() {
 
   return (
     <>
-      <nav className="navbar text-start navbar-expand-md fixed-top align-items-center">
+      <nav className="navbar text-start navbar-expand-md fixed-top align-items-center ">
         <div className="container" style={{ maxWidth: "1300px" }}>
           {/* Brand */}
           <Link
@@ -342,7 +342,7 @@ function NavBar() {
       </nav>
 
       {/* spacing under fixed navbar */}
-      <div style={{ height: "72px" }} />
+      <div style={{ height: "10px" }} />
     </>
   );
 }
