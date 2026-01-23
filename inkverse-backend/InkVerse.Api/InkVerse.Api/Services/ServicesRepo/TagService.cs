@@ -22,6 +22,8 @@ namespace InkVerse.Api.Services.Tags
                 {
                     Id = t.ID, // 🔁 if your Tag key is Id, change to t.Id
                     Name = t.Name,
+                    IsActive = t.IsActive
+
                 })
                 .ToListAsync();
         }
@@ -35,6 +37,8 @@ namespace InkVerse.Api.Services.Tags
             {
                 Id = t.ID,
                 Name = t.Name,
+                IsActive = t.IsActive
+
             };
         }
 
@@ -60,6 +64,8 @@ namespace InkVerse.Api.Services.Tags
             {
                 Id = entity.ID,
                 Name = entity.Name,
+                IsActive = entity.IsActive
+
             };
         }
 
@@ -84,6 +90,8 @@ namespace InkVerse.Api.Services.Tags
             {
                 Id = entity.ID,
                 Name = entity.Name,
+                IsActive = entity.IsActive
+
             };
         }
 
