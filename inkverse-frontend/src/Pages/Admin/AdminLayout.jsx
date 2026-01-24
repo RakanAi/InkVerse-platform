@@ -3,7 +3,7 @@ import { NavLink, Outlet } from "react-router-dom";
 export default function AdminLayout() {
   return (
     <div className="container-fluid">
-      <div className="row" style={{ minHeight: "100vh" }}>
+      <div className="row" style={{ minHeight: "100vh", textAlign:"center" }}>
         <aside className="col-12 col-md-3 col-lg-2 border-end p-3">
           <h5 className="mb-3">Admin Panel</h5>
 

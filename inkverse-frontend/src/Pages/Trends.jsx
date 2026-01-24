@@ -94,29 +94,14 @@ export default function TrendsPage() {
   const openTrend = (t) => nav(`/trend/${t.id}`);
 
   return (
-    <div className="container py-3">
+    <div className="container py-3" style={{textAlign:"center"}}>
       <div className="d-flex flex-wrap gap-2 align-items-end justify-content-between mb-3">
         <div>
           <h3 className="m-0">Trending Concepts</h3>
           <div className="text-muted small">Curated collections</div>
         </div>
 
-        {/* <div className="d-flex gap-2 align-items-center">
-          <span className="text-muted small">Sort</span>
-          <select
-            className="form-select form-select-sm"
-            style={{ width: 200 }}
-            value={sortBy}
-            onChange={(e) => {
-              setSortBy(e.target.value);
-              setPageNumber(1);
-            }}
-          >
-            <option value="sortOrder">Default (Sort Order)</option>
-            <option value="newest">Newest</option>
-            <option value="az">A → Z</option>
-          </select>
-        </div> */}
+       
       </div>
 
       {/* BOOTSTRAP 5 CAROUSEL HERO */}

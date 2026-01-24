@@ -1,16 +1,10 @@
 import React from "react";
 import "./Card.css";
+import { absUrl } from "../../Utils/absUrl";
 
 const FALLBACK = "/src/assets/BackGround_04.png"; // use your existing fallback if you want
 
-const API_ORIGIN = "https://localhost:5221";
 
-const absUrl = (u) => {
-  if (!u) return "";
-  if (u.startsWith("http")) return u;
-  if (u.startsWith("/")) return API_ORIGIN + u;
-  return API_ORIGIN + "/" + u;
-};
 
 export default function CardTopcard({ trend, onClick, variant = "hero" }) {
   if (!trend) return null;
@@ -40,11 +34,7 @@ const imgUrl = absUrl(trend.imageUrl ?? trend.ImageUrl);
               : "Explore this curated collection."}
           </div>
 
-          <div className="mt-2">
-            <span className="badge bg-light text-dark me-2">
-              {trend.isActive ? "Active" : "Hidden"}
-            </span>
-          </div>
+
         </div>
       </div>
     </div>

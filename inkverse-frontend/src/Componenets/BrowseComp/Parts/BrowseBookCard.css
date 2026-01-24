@@ -1,6 +1,6 @@
 .iv-browse-cover{
-  width:174px;
-  height:272px;
+  width:194px;
+  height:100%;
   border-radius:12px;
   overflow:hidden;
   display:block;
@@ -78,7 +78,7 @@
 .iv-browse-desc{
   font-size:.9rem;
   color:#5a6473;
-  /* display:-webkit-box; */
+  display:-webkit-box;
   -webkit-box-orient:vertical;
   overflow:hidden;
       overflow-y: scroll;
@@ -86,9 +86,11 @@
     scrollbar-width: none;
     height: 190px;
     font-size: x-small;
+    
 }
 
 .iv-browse-meta{
+  margin-top: auto;   /* 🔥 THIS is the magic */ /*forREAL!*/
   display:flex;
   align-items:center;
   justify-content:space-between;
@@ -118,4 +120,70 @@
 
 .iv-browse-bookmark:hover{
   background:rgba(47,124,246,.10);
+}
+/* -----------------------------
+   Mobile / small screens
+------------------------------ */
+@media (max-width: 576px) {
+  /* the outer wrapper is Bootstrap d-flex; force stacking on mobile */
+  .iv-browse-card {
+    flex-direction: column !important;
+    align-items: center;
+  }
+
+  /* make cover full-width and shorter */
+  .iv-browse-cover {
+    width: 100%;
+    height: 210px;
+    border-radius: 14px;
+  }
+
+  /* title can wrap a bit on mobile */
+  .iv-browse-title {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* description should not be a huge scroll box on mobile */
+  .iv-browse-desc {
+    height: auto;
+    max-height: 72px;          /* ~3-4 lines depending on font */
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    scrollbar-width: auto;
+  }
+
+  /* tighten meta row so it doesn't overflow */
+  .iv-browse-leftmeta {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+}
+
+/* Optional: mid screens (tablets) */
+@media (max-width: 768px) {
+  .iv-browse-cover {
+    width: 140px;
+    height: 220px;
+  }
+
+  .iv-browse-desc {
+    height: auto;
+    max-height: 96px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+  }
+}
+.iv-book-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;        /* 🔑 allows pushing meta to bottom */
+  min-width: 0;
 }

@@ -2,12 +2,15 @@
   padding: 0 8px;
 }
 
-.iv-books-row {
-  display: flex;
+.iv-books-row{
+  display: grid;
   gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
+
+@media (min-width: 768px){ .iv-books-row{ grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 992px){ .iv-books-row{ grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+
 
 .iv-book-card {
   display: block;
@@ -37,7 +40,12 @@
 
 .iv-meta {
   padding-top: 8px;
+  max-width: inherit;
 }
+
+
+
+
 
 .iv-title {
   font-weight: 600;
@@ -46,7 +54,13 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  max-width: inherit;
 }
+
+
+
+
+
 
 .iv-author {
   display: inline-block;
@@ -55,6 +69,10 @@
   color: rgba(0,0,0,0.6);
   text-decoration: none;
 }
+
+
+
+
 
 .iv-author:hover {
   text-decoration: underline;

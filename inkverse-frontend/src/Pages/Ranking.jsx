@@ -172,7 +172,7 @@ export default function Ranking() {
   };
 
   return (
-    <div className="container-fluid py-3" style={{ maxWidth: "1300px" }}>
+    <div className="container-fluid py-3" style={{ maxWidth: "1300px", textAlign:"center" }}>
       <div className="d-flex flex-wrap gap-2 align-items-end justify-content-between mb-3">
         <div>
           <h3 className="m-0">Ranking</h3>

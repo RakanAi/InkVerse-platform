@@ -1,18 +1,25 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+// ✅ ContentSection.jsx (FULL FIX)
+// - Mobile: offcanvas from BOTTOM
+// - LG+: offcanvas from RIGHT
+// - Same buttons behavior + mobile tap toolbar
+// - Reader settings (font size/line height/font) persisted in localStorage
+// - No duplicate IDs, no CSS hacks
+
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import api from "../../Api/api";
 import "./PageParts.css";
 import PageBread from "./PageBBP";
 import ChapterComments from "./ChapterComments";
-import { useContext } from "react";
 import AuthContext from "../../Context/AuthProvider";
+import ReaderSettings, { loadReaderPrefs, saveReaderPrefs } from "./ReaderSettings";
 
 export default function ContentSection() {
   const { id, chapterId } = useParams(); // id = bookId
   const navigate = useNavigate();
 
   const [chapter, setChapter] = useState(null);
-  const [chapters, setChapters] = useState([]); // list for neighbors
+  const [chapters, setChapters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -24,13 +31,46 @@ export default function ContentSection() {
   // prevent duplicate save (StrictMode / re-render)
   const lastSavedKeyRef = useRef(null);
 
-  // 1) Fetch chapter
+  // =========================
+  // Reader prefs + mobile tools
+  // =========================
+  const [prefs, setPrefs] = useState(() => loadReaderPrefs());
+  useEffect(() => saveReaderPrefs(prefs), [prefs]);
+
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const hideTimerRef = useRef(null);
+
+  const showTools = useCallback(() => {
+    setToolsOpen(true);
+    if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    hideTimerRef.current = setTimeout(() => setToolsOpen(false), 3500);
+  }, []);
+
+  const toggleTools = useCallback(() => {
+    setToolsOpen((v) => {
+      const next = !v;
+      if (next) {
+        if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+        hideTimerRef.current = setTimeout(() => setToolsOpen(false), 3500);
+      }
+      return next;
+    });
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    };
+  }, []);
+
+  // =========================
+  // Data fetching
+  // =========================
   useEffect(() => {
     const fetchChapter = async () => {
       try {
         setLoading(true);
         setError(null);
-
         const response = await api.get(`/chapters/${chapterId}`);
         setChapter(response.data);
       } catch (err) {
@@ -45,11 +85,9 @@ export default function ContentSection() {
     if (chapterId) fetchChapter();
   }, [chapterId]);
 
-  // 2) Fetch chapter list for this book (for prev/next)
   useEffect(() => {
     const fetchChapterList = async () => {
       if (!id) return;
-
       try {
         const res = await api.get(`/chapters/book/${id}`);
         setChapters(Array.isArray(res.data) ? res.data : []);
@@ -62,7 +100,7 @@ export default function ContentSection() {
     fetchChapterList();
   }, [id]);
 
-  // 3) Save progress ONLY after chapter is loaded
+  // Save progress after chapter loads
   useEffect(() => {
     const saveProgress = async () => {
       if (!id || !chapterId || !chapter) return;
@@ -74,16 +112,12 @@ export default function ContentSection() {
       try {
         setSaving(true);
 
-        // ✅ 1) Source of truth: reading progress
         await api.post(`/books/${id}/reading-progress/${chapterId}`);
 
-        // ✅ 2) Optional: also mark in library/history (keep if you want history)
-        // If this endpoint requires being "in library", it might 400/404; ignore those.
         try {
           await api.post(`/books/${id}/library/touch-last-read/${chapterId}`);
         } catch (e2) {
-          console(e2);
-          // ignore if user isn't in library or endpoint rules differ
+          console.log("touch-last-read failed (ignored):", e2);
         }
       } catch (e) {
         if (e?.response?.status === 401 || e?.response?.status === 403) return;
@@ -96,7 +130,6 @@ export default function ContentSection() {
     saveProgress();
   }, [id, chapterId, chapter]);
 
-  // 4) Compute prev/next using chapterNumber order
   const { prevId, nextId } = useMemo(() => {
     if (!chapters?.length || !chapterId) return { prevId: null, nextId: null };
 
@@ -115,7 +148,6 @@ export default function ContentSection() {
     };
   }, [chapters, chapterId]);
 
-  // 5) Navigation handler (also saves current chapter best-effort)
   const goTo = useCallback(
     (targetChapterId) => {
       if (!targetChapterId || !id) return;
@@ -124,13 +156,11 @@ export default function ContentSection() {
     [id, navigate]
   );
 
-  // 6) Keyboard navigation (optional)
   useEffect(() => {
     const onKeyDown = (e) => {
       if (e.key === "ArrowLeft" && prevId) goTo(prevId);
       if (e.key === "ArrowRight" && nextId) goTo(nextId);
     };
-
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [prevId, nextId, goTo]);
@@ -151,243 +181,415 @@ export default function ContentSection() {
     return () => window.removeEventListener("beforeunload", handler);
   }, [id, chapterId]);
 
+  // =========================
+  // UI states
+  // =========================
   if (loading) return <p>Loading chapter...</p>;
   if (error) return <p className="text-danger">{error}</p>;
   if (!chapter)
     return (
-      <p className="my-5 fs-1 fw-bold border-bottom p-5">Chapter not found .</p>
+      <p className="my-5 fs-1 fw-bold border-bottom p-5">Chapter not found.</p>
     );
 
+  // =========================
+  // Small reusable list for chapters
+  // =========================
+  const ChapterList = ({ dismissTarget = true }) => (
+    <div className="list-group">
+      {[...chapters]
+        .sort((a, b) => (a.chapterNumber ?? 0) - (b.chapterNumber ?? 0))
+        .map((c) => (
+          <button
+            key={c.id}
+            type="button"
+            className={
+              "list-group-item list-group-item-action d-flex justify-content-between align-items-center " +
+              (String(c.id) === String(chapterId) ? "active" : "")
+            }
+            {...(dismissTarget ? { "data-bs-dismiss": "offcanvas" } : {})}
+            onClick={() => goTo(c.id)}
+          >
+            <span className="me-2 text-truncate">{c.title || "Untitled"}</span>
+            <span className="badge bg-secondary">#{c.chapterNumber ?? "?"}</span>
+          </button>
+        ))}
+      {!chapters?.length && (
+        <p className="text-muted mt-3 mb-0">No chapters yet.</p>
+      )}
+    </div>
+  );
+
+  // =========================
+  // RENDER
+  // =========================
   return (
-    <div className="d-flex left">
-      <div className="container w-auto"></div>
+    <div className="reader-page">
+      <div className="reader-shell">
+        {/* MAIN READER */}
+        <main className="reader-main" onClick={toggleTools}>
+          <PageBread />
 
-      <div
-        className=" flex-column mt-1  border py-3 mx-auto"
-        style={{ maxWidth: "900px", padding: "64px 64px 0px" }}
-      >
-        <PageBread />
-
-        {/* Header */}
-        <div className="d-flex justify-content-start align-items-center">
-          <h2 className="borderStart mt-2"></h2>
-
-          <h3 className="text-start m-0">{chapter.title}</h3>
-          <span className="text-muted small">{saving ? "Saving..." : ""}</span>
-        </div>
-
-        {/* Meta */}
-        <div className="d-flex gap-3 text-muted align-items-cente">
-          <h2 className="borderStart mt-2"></h2>
-
-          <p className="bi bi-clock">
-            Uploaded:{" "}
-            {new Date(chapter.createdAt).toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "short",
-              day: "numeric",
-            })}
-          </p>
-          <span>-</span>
-          <p className="bi bi-123 bi-end">: {chapter.wordCount}</p>
-        </div>
-
-        {/* Nav buttons */}
-        <div className="d-flex justify-content-start gap-2 my-3">
-          <button
-            className="btn border-0 btn-outline-secondary"
-            disabled={!prevId}
-            onClick={() => goTo(prevId)}
-            type="button"
-          >
-            ← Previous
-          </button>
-
-          <button
-            className="btn border-0 btn-outline-secondary"
-            disabled={!nextId}
-            onClick={() => goTo(nextId)}
-            type="button"
-          >
-            Next →
-          </button>
-        </div>
-
-        <br />
-
-        {/* Content */}
-        <p className="m-2 text-start">
-          {chapter.content.split("\n").map((paragraph, idx) => (
-            <span key={idx}>
-              {paragraph}
-              <br />
-              <br />
-            </span>
-          ))}
-        </p>
-
-        {/* Nav buttons */}
-        <div className="d-flex  justify-content-center gap-2 my-3">
-          <button
-            className="btn nextPrev btn-outline-dark"
-            disabled={!prevId}
-            onClick={() => goTo(prevId)}
-            type="button"
-          >
-            ← Prev
-          </button>
-
-          <button
-            className="btn nextPrev btn-outline-dark"
-            onClick={() => navigate(`/book/${id}`)}
-            type="button"
-          >
-            Home Page
-          </button>
-
-          <button
-            className="btn nextPrev btn-outline-dark"
-            disabled={!nextId}
-            onClick={() => goTo(nextId)}
-            type="button"
-          >
-            Next →
-          </button>
-        </div>
-
-        <div className=" gap-2 my-2 d-flex justify-content-center align-items-center">
-          {/* <span className="text-muted small">Chapters:</span> */}
-
-          <select
-            className="form-select form-select-sm"
-            style={{ maxWidth: 320 }}
-            value={String(chapterId ?? "")}
-            onChange={(e) => goTo(e.target.value)}
-          >
-            {chapters
-              .slice()
-              .sort((a, b) => (a.chapterNumber ?? 0) - (b.chapterNumber ?? 0))
-              .map((c) => (
-                <option key={c.id} value={c.id}>
-                  {`${c.chapterNumber ?? "?"}. ${c.title ?? "Untitled"}`}
-                </option>
-              ))}
-          </select>
-        </div>
-      </div>
-
-      <div className="container page w-auto">
-        <div className="ChaptersBtn reader-tools ">
-          <button
-            className="btn btn-lg chapters-btn d-none d-lg-block btn-dark text-light btn-outline-secondary bi bi-book-half"
-            type="button"
-            data-bs-toggle="offcanvas"
-            data-bs-target="#chaptersOffcanvas"
-            aria-controls="chaptersOffcanvas"
-          ></button>
-
-          <span className="text-muted small">{saving ? "Saving..." : ""}</span>
-        </div>
-        <div className="CommentBtn reader-tools">
-          {/* Chapters button */}
-          <button
-            className="btn btn-lg chapters-btn d-none d-lg-block btn-dark text-light bi bi-book-half"
-            type="button"
-            data-bs-toggle="offcanvas"
-            data-bs-target="#chaptersOffcanvas"
-            aria-controls="chaptersOffcanvas"
-            title="Chapters"
-          />
-
-          {/* Comments button */}
-          <button
-            className="btn btn-lg chapters-btn d-none d-lg-block btn-dark text-light bi bi-chat-left-text"
-            type="button"
-            data-bs-toggle="offcanvas"
-            data-bs-target="#commentsOffcanvas"
-            aria-controls="commentsOffcanvas"
-            title="Comments"
-            style={{ marginTop: "10px" }}
-          />
-
-          <span className="text-muted small">{saving ? "Saving..." : ""}</span>
-        </div>
-
-        <div
-          className="offcanvas offcanvas-end"
-          tabIndex="-1"
-          id="chaptersOffcanvas"
-          aria-labelledby="chaptersOffcanvasLabel"
-        >
-          <div className="offcanvas-header">
-            <h5 className="offcanvas-title" id="chaptersOffcanvasLabel">
-              Chapters
-            </h5>
-            <button
-              type="button"
-              className="btn-close"
-              data-bs-dismiss="offcanvas"
-              aria-label="Close"
-            />
+          <div className="reader-header">
+            <h3 className="reader-title">{chapter.title}</h3>
+            <span className="reader-saving">{saving ? "Saving..." : ""}</span>
           </div>
 
-          <div className="offcanvas-body p-2">
-            <div className="list-group">
-              {[...chapters]
+          <div className="reader-meta">
+            <span className="bi bi-clock">
+              {" "}
+              Uploaded:{" "}
+              {new Date(chapter.createdAt).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })}
+            </span>
+
+            <span className="reader-divider">•</span>
+
+            <span className="bi bi-123">
+              {" "}
+              Words: {Number(chapter.wordCount ?? 0).toLocaleString()}
+            </span>
+          </div>
+
+          <div className="reader-navrow" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="btn btn-outline-secondary border-0"
+              disabled={!prevId}
+              onClick={() => goTo(prevId)}
+              type="button"
+            >
+              ← Previous
+            </button>
+
+            <button
+              className="btn btn-outline-secondary border-0"
+              disabled={!nextId}
+              onClick={() => goTo(nextId)}
+              type="button"
+            >
+              Next →
+            </button>
+          </div>
+
+          <div
+            className={`reader-content font-${prefs.font}`}
+            style={{ fontSize: prefs.fontSize, lineHeight: prefs.lineHeight }}
+          >
+            {String(chapter.content ?? "")
+              .split("\n")
+              .map((paragraph, idx) => {
+                const t = paragraph.trim();
+                if (!t) return <div key={idx} style={{ height: 12 }} />;
+                return <p key={idx}>{t}</p>;
+              })}
+          </div>
+
+          <div className="reader-bottom" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="btn nextPrev btn-outline-dark"
+              disabled={!prevId}
+              onClick={() => goTo(prevId)}
+              type="button"
+            >
+              ← Prev
+            </button>
+
+            <button
+              className="btn nextPrev btn-outline-dark"
+              onClick={() => navigate(`/book/${id}`)}
+              type="button"
+            >
+              Home Page
+            </button>
+
+            <button
+              className="btn nextPrev btn-outline-dark"
+              disabled={!nextId}
+              onClick={() => goTo(nextId)}
+              type="button"
+            >
+              Next →
+            </button>
+          </div>
+
+          <div className="reader-select" onClick={(e) => e.stopPropagation()}>
+            <select
+              className="form-select form-select-sm"
+              value={String(chapterId ?? "")}
+              onChange={(e) => goTo(e.target.value)}
+            >
+              {chapters
+                .slice()
                 .sort((a, b) => (a.chapterNumber ?? 0) - (b.chapterNumber ?? 0))
                 .map((c) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    className={
-                      "list-group-item list-group-item-action d-flex justify-content-between align-items-center " +
-                      (String(c.id) === String(chapterId) ? "active" : "")
-                    }
-                    data-bs-dismiss="offcanvas"
-                    onClick={() => goTo(c.id)}
-                  >
-                    <span
-                      className="me-2 text-truncate"
-                      style={{ maxWidth: 260 }}
-                    >
-                      {c.title || "Untitled"}
-                    </span>
-
-                    <span className="badge bg-secondary">
-                      #{c.chapterNumber ?? "?"}
-                    </span>
-                  </button>
+                  <option key={c.id} value={c.id}>
+                    {`${c.chapterNumber ?? "?"}. ${c.title ?? "Untitled"}`}
+                  </option>
                 ))}
-            </div>
-
-            {!chapters?.length && (
-              <p className="text-muted mt-3 mb-0">No chapters yet.</p>
-            )}
+            </select>
           </div>
-        </div>
-        <div
-          className="offcanvas offcanvas-end"
-          tabIndex="-1"
-          id="commentsOffcanvas"
-          aria-labelledby="commentsOffcanvasLabel"
+        </main>
+
+        {/* DESKTOP RAIL (LG+) */}
+        <aside className="reader-tools-rail d-none d-lg-flex">
+          <button
+            className="btn btn-dark text-light reader-toolbtn bi bi-book-half"
+            type="button"
+            data-bs-toggle="offcanvas"
+            data-bs-target="#chaptersDesktop"
+            aria-controls="chaptersDesktop"
+            title="Chapters"
+          />
+          <button
+            className="btn btn-dark text-light reader-toolbtn bi bi-chat-left-text"
+            type="button"
+            data-bs-toggle="offcanvas"
+            data-bs-target="#commentsDesktop"
+            aria-controls="commentsDesktop"
+            title="Comments"
+          />
+          <button
+            className="btn btn-dark text-light reader-toolbtn bi bi-sliders"
+            type="button"
+            data-bs-toggle="offcanvas"
+            data-bs-target="#settingsDesktop"
+            aria-controls="settingsDesktop"
+            title="Settings"
+          />
+        </aside>
+      </div>
+
+      {/* MOBILE TAP TOOLBAR (below LG) */}
+      <div className={`iv-mobile-tools ${toolsOpen ? "show" : ""}`}>
+        <button
+          className="btn btn-dark iv-tool"
+          type="button"
+          data-bs-toggle="offcanvas"
+          data-bs-target="#chaptersMobile"
+          aria-controls="chaptersMobile"
+          onClick={(e) => {
+            e.stopPropagation();
+            showTools();
+          }}
+          title="Chapters"
         >
-          <div className="offcanvas-header">
-            <h5 className="offcanvas-title" id="commentsOffcanvasLabel">
-              Comments
-            </h5>
-            <button
-              type="button"
-              className="btn-close"
-              data-bs-dismiss="offcanvas"
-              aria-label="Close"
-            />
-          </div>
+          <i className="bi bi-book-half" />
+        </button>
 
-          <div className="offcanvas-body p-2">
-            <ChapterComments chapterId={chapterId} myUserId={myUserId} />
-          </div>
+        <button
+          className="btn btn-dark iv-tool"
+          type="button"
+          data-bs-toggle="offcanvas"
+          data-bs-target="#commentsMobile"
+          aria-controls="commentsMobile"
+          onClick={(e) => {
+            e.stopPropagation();
+            showTools();
+          }}
+          title="Comments"
+        >
+          <i className="bi bi-chat-left-text" />
+        </button>
+
+        <button
+          className="btn btn-dark iv-tool"
+          type="button"
+          data-bs-toggle="offcanvas"
+          data-bs-target="#settingsMobile"
+          aria-controls="settingsMobile"
+          onClick={(e) => {
+            e.stopPropagation();
+            showTools();
+          }}
+          title="Settings"
+        >
+          <i className="bi bi-sliders" />
+        </button>
+      </div>
+
+      {/* =========================
+          OFFCANVAS: CHAPTERS
+          ========================= */}
+      {/* Mobile bottom */}
+      <div
+        className="offcanvas offcanvas-bottom iv-sheet d-lg-none"
+        tabIndex="-1"
+        id="chaptersMobile"
+        aria-labelledby="chaptersMobileLabel"
+      >
+        <div className="offcanvas-header">
+          <h5 className="offcanvas-title" id="chaptersMobileLabel">
+            Chapters
+          </h5>
+          <button className="btn-close" data-bs-dismiss="offcanvas" />
+        </div>
+        <div className="offcanvas-body p-2">
+          <ChapterList />
         </div>
       </div>
+
+      {/* Desktop right */}
+      <div
+        className="offcanvas offcanvas-end d-none d-lg-flex"
+        tabIndex="-1"
+        id="chaptersDesktop"
+        aria-labelledby="chaptersDesktopLabel"
+      >
+        <div className="offcanvas-header">
+          <h5 className="offcanvas-title" id="chaptersDesktopLabel">
+            Chapters
+          </h5>
+          <button className="btn-close" data-bs-dismiss="offcanvas" />
+        </div>
+        <div className="offcanvas-body p-2">
+          <ChapterList />
+        </div>
+      </div>
+
+      {/* =========================
+          OFFCANVAS: COMMENTS
+          ========================= */}
+      {/* Mobile bottom */}
+      <div
+        className="offcanvas offcanvas-bottom iv-sheet d-lg-none"
+        tabIndex="-1"
+        id="commentsMobile"
+        aria-labelledby="commentsMobileLabel"
+      >
+        <div className="offcanvas-header">
+          <h5 className="offcanvas-title" id="commentsMobileLabel">
+            Comments
+          </h5>
+          <button className="btn-close" data-bs-dismiss="offcanvas" />
+        </div>
+        <div className="offcanvas-body p-2">
+          <ChapterComments chapterId={chapterId} myUserId={myUserId} />
+        </div>
+      </div>
+
+      {/* Desktop right */}
+      <div
+        className="offcanvas offcanvas-end d-none d-lg-flex"
+        tabIndex="-1"
+        id="commentsDesktop"
+        aria-labelledby="commentsDesktopLabel"
+      >
+        <div className="offcanvas-header">
+          <h5 className="offcanvas-title" id="commentsDesktopLabel">
+            Comments
+          </h5>
+          <button className="btn-close" data-bs-dismiss="offcanvas" />
+        </div>
+        <div className="offcanvas-body p-2">
+          <ChapterComments chapterId={chapterId} myUserId={myUserId} />
+        </div>
+      </div>
+
+      {/* =========================
+          OFFCANVAS: SETTINGS
+          ========================= */}
+      {/* Mobile bottom */}
+      <div className="d-lg-none">
+        <ReaderSettings value={prefs} onChange={setPrefs} offcanvasId="settingsMobile" />
+      </div>
+
+      {/* Desktop right */}
+      <div
+        className="offcanvas offcanvas-end d-none d-lg-flex"
+        tabIndex="-1"
+        id="settingsDesktop"
+        aria-labelledby="settingsDesktopLabel"
+      >
+        <div className="offcanvas-header">
+          <h5 className="offcanvas-title" id="settingsDesktopLabel">
+            Reader settings
+          </h5>
+          <button className="btn-close" data-bs-dismiss="offcanvas" />
+        </div>
+
+        <div className="offcanvas-body">
+          {/* Reuse the same settings UI by rendering the component body inside */}
+          {/* Easiest: render ReaderSettings as a normal component (not offcanvas) */}
+          <DesktopSettingsPanel value={prefs} onChange={setPrefs} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ✅ Desktop settings panel (same controls, NOT an offcanvas)
+function DesktopSettingsPanel({ value, onChange }) {
+  const prefs = value;
+
+  const fonts = useMemo(
+    () => [
+      { value: "system", label: "System" },
+      { value: "serif", label: "Serif" },
+      { value: "sans", label: "Sans" },
+      { value: "mono", label: "Mono" },
+    ],
+    []
+  );
+
+  const set = (patch) => onChange?.({ ...prefs, ...patch });
+
+  return (
+    <div className="d-flex flex-column gap-3">
+      <div>
+        <div className="d-flex justify-content-between">
+          <span className="fw-semibold">Text size</span>
+          <span className="text-muted">{prefs.fontSize}px</span>
+        </div>
+        <input
+          className="form-range"
+          type="range"
+          min="14"
+          max="28"
+          value={prefs.fontSize}
+          onChange={(e) => set({ fontSize: Number(e.target.value) })}
+        />
+      </div>
+
+      <div>
+        <div className="d-flex justify-content-between">
+          <span className="fw-semibold">Line spacing</span>
+          <span className="text-muted">{prefs.lineHeight.toFixed(2)}</span>
+        </div>
+        <input
+          className="form-range"
+          type="range"
+          min="1.4"
+          max="2.4"
+          step="0.05"
+          value={prefs.lineHeight}
+          onChange={(e) => set({ lineHeight: Number(e.target.value) })}
+        />
+      </div>
+
+      <div>
+        <div className="fw-semibold mb-1">Font</div>
+        <select
+          className="form-select"
+          value={prefs.font}
+          onChange={(e) => set({ font: e.target.value })}
+        >
+          {fonts.map((f) => (
+            <option key={f.value} value={f.value}>
+              {f.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <button className="btn btn-outline-secondary" type="button" onClick={() => onChange?.({
+        fontSize: 18,
+        lineHeight: 1.85,
+        font: "system",
+      })}>
+        Reset to default
+      </button>
     </div>
   );
 }

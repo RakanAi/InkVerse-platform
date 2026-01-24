@@ -1,12 +1,10 @@
 import axios from "axios";
 import qs from "qs";
 
-// const api = axios.create({
-//   baseURL: "https://localhost:5221/api",
-// });
+
 
 const api = axios.create({
-  baseURL: "https://localhost:5221/api",
+  baseURL: "http://raedodeh-001-site1.anytempurl.com/api",
   paramsSerializer: (params) =>
     qs.stringify(params, { arrayFormat: "repeat" }),
 });

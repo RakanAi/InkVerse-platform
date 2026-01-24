@@ -104,7 +104,7 @@ function NavBar() {
             to="/"
             onClick={onMobileNavClick}
           >
-            <img src={logo} alt="InkVerse" className="iv-navbar-icon rounded-3 "/>
+            <img src={logo} alt="InkVerse" className="iv-navbar-icon rounded-3  "/>
             {/* <div className="ps-4 ms-5"></div> */}
           </Link>
 
@@ -341,8 +341,7 @@ function NavBar() {
         </div>
       </nav>
 
-      {/* spacing under fixed navbar */}
-      <div style={{ height: "10px" }} />
+
     </>
   );
 }

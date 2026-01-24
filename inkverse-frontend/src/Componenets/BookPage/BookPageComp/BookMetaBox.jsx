@@ -58,33 +58,31 @@ export default function BookMetaBox({ book }) {
     if (!sourceUrl) return;
 
     // If user saved without https://, try to fix it
-    const safe =
-      /^https?:\/\//i.test(sourceUrl) ? sourceUrl : `https://${sourceUrl}`;
+    const safe = /^https?:\/\//i.test(sourceUrl)
+      ? sourceUrl
+      : `https://${sourceUrl}`;
 
     window.open(safe, "_blank", "noopener,noreferrer");
   };
 
   return (
-    <div className="iv-meta card p-3 border-3 mt-3">
-      <div className="card-body">
-        <div className="d-flex gap-3 align-items-center justify-content-between">
-          <div className="iv-meta-row">
+    <div className="iv-meta  border-3 mt-3 bg-0">
+      <div className="card-body ">
+        <div className="iv-meta-top text-center">
+          <div className="iv-meta-row border ">
             <div className="iv-meta-k">Status</div>
             <div className="iv-meta-v">{status}</div>
           </div>
 
-          <div className="iv-meta-row border-end border-start">
+          <div className="iv-meta-row border">
             <div className="iv-meta-k">Verse</div>
             <div className="iv-meta-v">{verseType}</div>
           </div>
 
-          <div className="iv-meta-row">
+          <div className="iv-meta-row border">
             <div className="iv-meta-k">Origin</div>
-
-            <div className="iv-meta-v align-items-center gap-2">
-              <span>{originType}</span>
-
-              {/* ✅ show only if Translation + source exists */}
+            <div className="iv-meta-v d-flex align-items-center gap-2">
+              <span className="m-auto">{originType}</span>
               {showSource ? (
                 <button
                   type="button"
@@ -112,14 +110,15 @@ export default function BookMetaBox({ book }) {
             </div>
 
             {genres.length ? (
-              <div className="d-flex flex-wrap gap-2">
+              <div className="d-flex flex-wrap tagg gap-2">
                 {genres.map((g) => (
                   <button
                     key={g}
                     type="button"
-                    className="btn btn-outline-primary p-2 rounded border "
+                    className="btn btn-outline-muted btn-sm rounded border"
                     onClick={() => goBrowse({ genre: g })}
                     title={`Browse genre: ${g}`}
+                    style={{maxHeight:"35px"}}
                   >
                     {g}
                   </button>
@@ -130,7 +129,7 @@ export default function BookMetaBox({ book }) {
             )}
           </div>
 
-          <div className="col-12 col-lg-6 tagg">
+          <div className="col-12 ">
             <div className="iv-meta-k mb-2 text-start">
               <div className="d-flex align-items-center">
                 <p className="borderStart mb-0"></p> Tags
@@ -138,15 +137,17 @@ export default function BookMetaBox({ book }) {
             </div>
 
             {tags.length ? (
-              <div className="d-flex flex-wrap gap-2">
+              <div className="d-flex flex-wrap gap-2 tagg">
                 {tags.map((t) => (
                   <button
                     key={t}
                     type="button"
-                    className="btn btn-outline-primary p-2 rounded border"
-                    style={{ minWidth: "60px" }}
+                    className="btn btn-outline-primary btn-sm rounded border"
+                    style={{ minWidth: "60px" , maxHeight:"35px"}}
                     onClick={() => goBrowse({ tag: t })}
                     title={`Browse tag: ${t}`}
+                    
+                    
                   >
                     {t}
                   </button>

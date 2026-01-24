@@ -1,6 +1,5 @@
 import api from "../Api/api.jsx";
 
-// Turns "/uploads/x.png" -> "https://localhost:5221/uploads/x.png"
 export function absUrl(url) {
   if (!url) return "";
   const s = String(url).trim();

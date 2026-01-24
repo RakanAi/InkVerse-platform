@@ -10,7 +10,7 @@ export default function RatingEle({ rating = 0 }) {
   const emptyStars = maxStars - fullStars - (hasHalfStar ? 1 : 0);
 
   return (
-    <div className="align-items-center justify-content-center my-2 text-lg-start text-center border-start border-thick ps-3">
+    <div className="justify-content-center my-auto text-lg-start text-center border-thick">
       {Array.from({ length: fullStars }).map((_, i) => (
         <i key={`full-${i}`} className="bi bi-star-fill text-warning" />
       ))}

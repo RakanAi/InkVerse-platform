@@ -3,19 +3,13 @@ import Carousel from "react-bootstrap/Carousel";
 import { Link } from "react-router-dom";
 import api from "../../../Api/api";
 import "./Trend.css";
+import { absUrl } from "../../../Utils/absUrl";
 
 export default function TrendCora() {
   const [trends, setTrends] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const API_ORIGIN = "https://localhost:5221"; // backend
 
-  const absUrl = (u) => {
-    if (!u) return "";
-    if (u.startsWith("http")) return u;
-    if (u.startsWith("/")) return API_ORIGIN + u;
-    return API_ORIGIN + "/" + u;
-  };
 
   const getImg = (t) => t.imageUrl ?? t.ImageUrl ?? "";
   const getName = (t) => t.name ?? t.Name ?? "";

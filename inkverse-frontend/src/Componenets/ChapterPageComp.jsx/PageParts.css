@@ -1,41 +1,193 @@
-body {
-    zoom: 1;
-  }
-  
-  @media (max-width: 768px) {
-    body {
-      zoom: 0.7;
-    }
-  }
-  
-  @media (max-width: 576px) {
-    body {
-      zoom: 0.6;
-    }
-  }
-  
-  .nextPrev{
-    transition: ease .25s ease;
-  }
+/* ============================
+   Reader Layout (NO zoom)
+============================ */
 
-  .nextPrev:hover{
-    transform: translateY(-2px);
-  }
-
-
-.reader-tools{
-  position: fixed;
-  top: 350px;
-  left: 50%;
-  transform: translateX(460px);
-  flex-direction: column !important;
+.reader-page{
+  padding: 16px;
 }
 
-.chapters-btn{
-  transition: transform 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
+.reader-shell{
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 64px;
+  gap: 16px;
+  align-items: start;
 }
 
-.chapters-btn:hover{
+.reader-main{
+  background: #fff;
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+/* Header area */
+.reader-header{
+  display:flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.reader-title{
+  margin: 0;
+  font-weight: 700;
+}
+
+/* Meta */
+.reader-meta{
+  display:flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: #6b7280;
+  font-size: .9rem;
+  margin-top: 8px;
+}
+
+.reader-divider{
+  opacity: .5;
+}
+
+/* Chapter content */
+.reader-content{
+  margin-top: 14px;
+  line-height: 1.85;
+  font-size: 1rem;
+  color: #111827;
+}
+
+.reader-content p{
+  margin: 0 0 14px 0;
+}
+
+/* Buttons */
+.reader-navrow{
+  display:flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 14px 0;
+}
+
+/* Bottom control row */
+.reader-bottom{
+  display:flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 10px 0 4px;
+}
+
+/* Tools rail (desktop) */
+.reader-tools-rail{
+  position: sticky;
+  top: 110px;
+  display:flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reader-toolbtn{
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.reader-toolbtn:hover{
   transform: translateY(-2px);
   box-shadow: 0 8px 18px rgba(0,0,0,0.12);
+}
+
+/* Keep your hover */
+.nextPrev{ transition: transform 180ms ease; }
+.nextPrev:hover{ transform: translateY(-2px); }
+
+/* ============================
+   Responsive
+============================ */
+
+@media (max-width: 992px){
+  .reader-shell{
+    grid-template-columns: 1fr; /* remove rail */
+  }
+
+  /* tools become a bottom dock */
+  .reader-tools-rail{
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    top: auto;
+    z-index: 1040;
+    flex-direction: row;
+    justify-content: center;
+    background: rgba(255,255,255,.92);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0,0,0,.08);
+    border-radius: 16px;
+    padding: 8px;
+  }
+
+  .reader-toolbtn{
+    width: 48px;
+    height: 48px;
+  }
+}
+
+@media (max-width: 576px){
+  .reader-page{ padding: 10px; }
+  .reader-main{ padding: 14px; }
+  .reader-content{ font-size: .98rem; }
+}
+
+
+.iv-sheet {
+  height: 92vh !important;
+  border-top-left-radius: 18px;
+  border-top-right-radius: 18px;
+}
+
+.iv-mobile-tools {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 1040;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+
+  opacity: 0;
+  transform: translateY(14px);
+  pointer-events: none;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.iv-mobile-tools.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.iv-tool {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.font-system { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+.font-serif  { font-family: Georgia, "Times New Roman", serif; }
+.font-sans   { font-family: Inter, system-ui, Arial, sans-serif; }
+.font-mono   { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+
+@media (min-width: 992px) {
+  .iv-mobile-tools { display: none; }
 }

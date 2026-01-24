@@ -36,7 +36,7 @@ const Form = ({ onRegister }) => {
 
       // Make API call to login user
       const response = await api.post(
-        "https://localhost:5221/api/account/login",
+        "/account/login",
         loginData,
       );
 

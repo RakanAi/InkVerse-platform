@@ -7,7 +7,7 @@ export default function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="iv-footer">
+    <footer className="iv-footer text-center">
       <div className="container py-5">
         <div className="row g-4 align-items-start">
           {/* Brand */}

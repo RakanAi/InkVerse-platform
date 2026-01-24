@@ -1,38 +1,27 @@
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import api from "../../Api/api";
-
-import { useContext } from "react";
 import AuthContext from "../../Context/AuthProvider";
+import "./ChapterComment.css"
 
 export default function ChapterComments({ chapterId }) {
+  const { auth } = useContext(AuthContext);
+  const myUserId = auth?.user?.id;
+
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [text, setText] = useState("");
   const [replyTo, setReplyTo] = useState(null);
   const [error, setError] = useState("");
-  const { auth } = useContext(AuthContext);
-  const myUserId = auth?.user?.id;
   const [editingId, setEditingId] = useState(null);
+
+  // Normalize common casing differences
   const getCid = (c) => c?.id ?? c?.Id ?? c?.ID;
-
-  const updateComment = async (commentId, content) => {
-    const trimmed = content.trim();
-    if (!trimmed) return;
-
-    try {
-      setError("");
-      await api.put(`/comments/${commentId}`, { content: trimmed });
-      setEditingId(null);
-      await loadComments();
-    } catch (e) {
-      console.error("Edit failed:", e);
-      if (e?.response?.status === 401 || e?.response?.status === 403) {
-        setError("Please sign in.");
-        return;
-      }
-      setError("Failed to edit comment.");
-    }
-  };
+  const getUserId = (c) => c?.userId ?? c?.UserId ?? c?.userID ?? c?.UserID;
+  const getUserName = (c) => c?.userName ?? c?.UserName ?? c?.username ?? c?.Username;
+  const getLikes = (c) => c?.likes ?? c?.Likes ?? 0;
+  const getDislikes = (c) => c?.dislikes ?? c?.Dislikes ?? 0;
+  const getMyReaction = (c) => c?.myReaction ?? c?.MyReaction ?? 0;
+  const getContent = (c) => c?.content ?? c?.Content ?? "";
 
   const loadComments = useCallback(async () => {
     if (!chapterId) return;
@@ -56,7 +45,6 @@ export default function ChapterComments({ chapterId }) {
 
   const post = async () => {
     const content = text.trim();
-
     if (!content) return;
 
     try {
@@ -108,60 +96,86 @@ export default function ChapterComments({ chapterId }) {
     }
   };
 
-  const CommentItem = ({ c, depth = 0 }) => {
-    const cid = String(getCid(c)); // ✅ normalize
-    const isOwner = myUserId && String(c.userId) === String(myUserId);
-    const isEditing = String(editingId) === cid;
+  const updateComment = async (commentId, content) => {
+    const trimmed = content.trim();
+    if (!trimmed) return;
 
-    const [localEditText, setLocalEditText] = useState(c.content);
+    try {
+      setError("");
+      await api.put(`/comments/${commentId}`, { content: trimmed });
+      setEditingId(null);
+      await loadComments();
+    } catch (e) {
+      console.error("Edit failed:", e);
+      if (e?.response?.status === 401 || e?.response?.status === 403) {
+        setError("Please sign in.");
+        return;
+      }
+      setError("Failed to edit comment.");
+    }
+  };
+
+  // Local recursive component is OK in React
+  const CommentItem = ({ c, depth = 0 }) => {
+    const cid = String(getCid(c) ?? "");
+    const isOwner =
+      myUserId && String(getUserId(c) ?? "") === String(myUserId);
+    const isEditing = String(editingId ?? "") === cid;
+
+    const [localEditText, setLocalEditText] = useState(getContent(c));
 
     useEffect(() => {
-      if (!isEditing) setLocalEditText(c.content);
-    }, [c.content, isEditing]);
-const wasEdited =
-  !c.isDeleted &&
-  c.updatedAt &&
-  Math.abs(new Date(c.updatedAt) - new Date(c.createdAt)) > 60_000;
+      if (!isEditing) setLocalEditText(getContent(c));
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isEditing, c]);
 
-  
+    const createdAt = c?.createdAt ?? c?.CreatedAt;
+    const updatedAt = c?.updatedAt ?? c?.UpdatedAt;
+
+    const wasEdited = useMemo(() => {
+      if (!updatedAt || !createdAt) return false;
+      return Math.abs(new Date(updatedAt) - new Date(createdAt)) > 60_000;
+    }, [updatedAt, createdAt]);
 
     return (
-      <div className="mb-2" style={{ paddingLeft: depth * 12 }}>
-        <div className="border-0 shadow-sm rounded p-2">
-          <div className="d-flex justify-content-between align-items-start gap-2">
-            <div>
-              <div className="fw-semibold text-start">
-                {c.userName || "Unknown"}
-              </div>
-              <div className="small d-flex text-muted text-start">
-                {new Date(c.createdAt).toLocaleString()}
-                {wasEdited && <span className=" fst-italic" style={{fontSize:"10px"}}>(edited)</span>}
-              </div>
-            </div>
+      <div className="iv-comment" style={{ marginLeft: depth * 14 }}>
+  <div className="iv-comment-card">
+<div className="iv-comment-top">
+            <div className="iv-comment-who">
+  <div className="iv-comment-author">{getUserName(c) || "Unknown"}</div>
+  <div className="iv-comment-time">
+    {createdAt ? new Date(createdAt).toLocaleString() : ""}
+    {wasEdited && <span className="iv-comment-edited"> • edited</span>}
+  </div>
+</div>
 
             <div className="d-flex justify-content-end gap-2">
               <button
                 className={
                   "btn btn-sm rounded border-0 " +
-                  (c.myReaction === 1 ? "btn-success" : "btn-outline-success")
+                  (getMyReaction(c) === 1
+                    ? "btn-success"
+                    : "btn-outline-success")
                 }
                 type="button"
-                onClick={() => reactTo(cid, 1)} // ✅ use cid
+                onClick={() => reactTo(cid, 1)}
               >
                 <i className="bi bi-hand-thumbs-up me-1" />
-                {c.likes ?? 0}
+                {getLikes(c)}
               </button>
 
               <button
                 className={
                   "btn btn-sm rounded border-0 " +
-                  (c.myReaction === -1 ? "btn-danger" : "btn-outline-danger")
+                  (getMyReaction(c) === -1
+                    ? "btn-danger"
+                    : "btn-outline-danger")
                 }
                 type="button"
-                onClick={() => reactTo(cid, -1)} // ✅ use cid
+                onClick={() => reactTo(cid, -1)}
               >
                 <i className="bi bi-hand-thumbs-down me-1" />
-                {c.dislikes ?? 0}
+                {getDislikes(c)}
               </button>
             </div>
           </div>
@@ -187,7 +201,7 @@ const wasEdited =
                 <button
                   className="btn btn-sm btn-primary"
                   type="button"
-                  onClick={() => updateComment(cid, localEditText)} // ✅ use cid
+                  onClick={() => updateComment(cid, localEditText)}
                   disabled={!localEditText.trim()}
                 >
                   Save
@@ -195,19 +209,15 @@ const wasEdited =
               </div>
             </div>
           ) : (
-            <div className="mt-2 text-start">{c.content}</div>
+<div className="iv-comment-text">{getContent(c)}</div>
           )}
 
           {/* Actions */}
-          <div className="mt-2 d-flex justify-content-between align-items-center">
+<div className="iv-comment-actions">
             {!isEditing ? (
-              <button
-                className="btn btn-sm btn-link p-0"
-                type="button"
-                onClick={() => setReplyTo(cid)} // ✅ use cid
-              >
-                Reply
-              </button>
+              <button className="iv-comment-reply" type="button" onClick={() => setReplyTo(cid)}>
+  Reply
+</button>
             ) : (
               <span />
             )}
@@ -218,7 +228,7 @@ const wasEdited =
                   className="btn btn-sm btn-outline-primary border-0"
                   type="button"
                   title="Edit"
-                  onClick={() => setEditingId(cid)} // ✅ use cid
+                  onClick={() => setEditingId(cid)}
                 >
                   <i className="bi bi-pencil-square" />
                 </button>
@@ -228,7 +238,8 @@ const wasEdited =
                   type="button"
                   title="Delete"
                   onClick={() => {
-                    if (confirm("Delete this comment?")) deleteComment(cid); // ✅ use cid
+                    if (window.confirm("Delete this comment?"))
+                      deleteComment(cid);
                   }}
                 >
                   <i className="bi bi-trash" />
@@ -238,7 +249,7 @@ const wasEdited =
           </div>
         </div>
 
-        {Array.isArray(c.replies) &&
+        {Array.isArray(c?.replies) &&
           c.replies.map((r) => (
             <CommentItem key={String(getCid(r))} c={r} depth={depth + 1} />
           ))}

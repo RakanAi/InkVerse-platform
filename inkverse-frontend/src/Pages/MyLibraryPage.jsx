@@ -77,7 +77,7 @@ export default function MyLibrary({ initialFilter = "All", hideTabs = false }) {
       : filteredItems;
 
   return (
-    <div className="container py-3">
+    <div className="container py-3" style={{textAlign:"center"}}>
       <h4 className="mb-3">My Library</h4>
 
       <div className="text-muted small mb-2">

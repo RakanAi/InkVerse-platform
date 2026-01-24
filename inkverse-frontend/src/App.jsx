@@ -29,7 +29,6 @@ import Privacy from "./Pages/Privacy";
 import DMCA from "./Pages/DMCA";
 import TermsOfService from "./Pages/TermsOfService";
 
-
 function App() {
   return (
     <div>
@@ -46,14 +45,13 @@ function App() {
           <Route path="/dmca" element={<DMCA />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/signin" element={<Home />} />
-
+          <Route path="/book/:id" element={<BookDetails />} />
           {/* User routes */}
           <Route
             element={
               <ProtectedRoute allowedRoles={["Admin", "User", "Author"]} />
             }
           >
-            <Route path="/book/:id" element={<BookDetails />} />
             <Route path="/profilePage" element={<ProfilePage />} />
             <Route
               path="/book/:id/chapter/:chapterId"
@@ -62,32 +60,42 @@ function App() {
             <Route path="/my-library" element={<MyLibrary />} />
           </Route>
 
-              <Route element={<AdminRoute />}>
-                <Route path="/admin" element={<AdminLayout />}>
-                  <Route index element={<AdminDashboard />} />
+          <Route element={<AdminRoute />}>
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboard />} />
 
-                  <Route path="books" element={<AdminBooksPage />} />
-                  <Route path="books/new" element={<AdminBookEditor mode="create" />} />
-                  <Route path="books/:id" element={<AdminBookEditor mode="edit" />} />
+              <Route path="books" element={<AdminBooksPage />} />
+              <Route
+                path="books/new"
+                element={<AdminBookEditor mode="create" />}
+              />
+              <Route
+                path="books/:id"
+                element={<AdminBookEditor mode="edit" />}
+              />
 
-                  <Route path="/admin/books/:bookId/chapters" element={<AdminChaptersPage />} />
-                  <Route path="/admin/books/:bookId/chapters/new" element={<AdminChapterEditor mode="create" />} />
-                  <Route path="/admin/books/:bookId/chapters/:chapterId" element={<AdminChapterEditor mode="edit" />} />
+              <Route
+                path="/admin/books/:bookId/chapters"
+                element={<AdminChaptersPage />}
+              />
+              <Route
+                path="/admin/books/:bookId/chapters/new"
+                element={<AdminChapterEditor mode="create" />}
+              />
+              <Route
+                path="/admin/books/:bookId/chapters/:chapterId"
+                element={<AdminChapterEditor mode="edit" />}
+              />
 
-
-                  <Route path="tags" element={<AdminTags />} />
-                  <Route path="genres" element={<AdminGenres />} />
-                  <Route path="trends" element={<AdminTrends />} />
-                </Route>
-              </Route>
-
-
-
+              <Route path="tags" element={<AdminTags />} />
+              <Route path="genres" element={<AdminGenres />} />
+              <Route path="trends" element={<AdminTrends />} />
+            </Route>
+          </Route>
 
           {/* Chapter reading page */}
           <Route path="/trend" element={<TrendsPage />} />
           <Route path="/trend/:id" element={<TrendDetails />} />
-
 
           {/* admin routes */}
 

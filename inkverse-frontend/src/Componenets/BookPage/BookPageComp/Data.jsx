@@ -5,6 +5,7 @@ import "./Data.css";
 import api from "../../../Api/api";
 import LibraryButton from "../../Library/AddToLibraryBtn";
 import { absUrl } from "../../../Utils/absUrl";
+import BookMetaBox from "./BookMetaBox";
 
 export default function BookData({ book, averageRating }) {
   const navigate = useNavigate();
@@ -95,59 +96,59 @@ export default function BookData({ book, averageRating }) {
   };
 
   return (
-    <div
-      className="row mx-0 px-4 py-4 DataBox shadow-lg border align-items-start"
-      style={{ position: "relative" }}
-    >
-      <div className="BookImg text-center text-lg-start col-12 col-lg-auto">
-        <img
-          src={cover}
-          alt={book.title || "Book cover"}
-          className="BookImg shadow-lg mt-2"
-        />
-      </div>
+    <div className="row mx-0 px-3 px-lg-4 py-4 DataBox  border align-items-stretch">
 
-      <div className="d-flex flex-wrap col-12 col-lg-9 mt-3 mt-lg-0 justify-content-start">
-        <div className="ps-2 rounded d-flex mt-1 align-items-center">
-          <h2 className="borderStart my-0"></h2>
-          <h2 className="titleF">{book.title}</h2>
-        </div>
-
-        <div className="dataBoxs boxHover flex-fill rounded-3 border text-white">
-          <p className="text-lg-start text-center contentHover pt-1">
-            Author:{" "}
-            <a href="#" className="fs-5 text-decoration-none">
-              {book.authorName || "Unknown"}
-            </a>
-          </p>
-        </div>
-
-        <div className="dataBoxs boxHover metadata-content flex-fill rounded-3 border text-white ft-3">
-          <RatingEle rating={averageRating ?? book.averageRating ?? 0} />
-        </div>
-
-        <div className="d-flex gap-3 flex-wrap justify-content-center justify-content-lg-between col-12 mt-2 mb-2">
-          <div className="dataBoxs w-auto rounded-3 border text-white ft-3 boxHover p-2">
-            <button
-              onClick={handleReadClick}
-              className="text-light btn btn-link text-decoration-none"
-              type="button"
-              disabled={loadingProgress || !hasChapters}
-            >
-              {loadingProgress
-                ? "Loading..."
-                : !hasChapters
-                  ? "No chapters yet"
-                  : lastReadChapterId != null
-                    ? "Continue Reading"
-                    : "Start Reading"}
-            </button>
-          </div>
-          <div className="dataBoxs w-auto rounded-3 border text-white ft-3 boxHover p-2">
-            <LibraryButton bookId={book.id} className="" />{" "}
-          </div>
-        </div>
-      </div>
+  {/* LEFT — COVER */}
+  <div className="col-auto d-flex justify-content-center justify-content-lg-start pe-3 me-3">
+    <div className="iv-coverr">
+      <img
+        src={cover}
+        alt={book.title || "Book cover"}
+        className="iv-coverr-img imgHover"
+      />
     </div>
+  </div>
+
+  {/* RIGHT — CONTENT */}
+  <div className="col-12 col-lg d-flex flex-column mt-3 mt-lg-0">
+
+    {/* TOP INFO */}
+    <div>
+      <div className="text-center text-lg-start titleF mb-2">
+        <h1 className="mb-0 titleF" title={book.title}>{book.title}</h1>
+      </div>
+
+      <p className="text-white text-center text-lg-start mb-2">
+        by <strong>{book.authorName || "Unknown"}</strong>
+      </p>
+      <div className="">
+      <RatingEle rating={averageRating ?? 0} /></div>
+
+      <BookMetaBox book={book} />
+
+    </div>
+
+    {/* PUSH BUTTONS TO BOTTOM */}
+    <div className="mt-auto d-flex gap-2 flex-wrap justify-content-center justify-content-lg-between pt-3">
+
+      <button
+        onClick={handleReadClick}
+        className="btn btn-primary px-4"
+        disabled={loadingProgress || !hasChapters}
+      >
+        {loadingProgress
+          ? "Loading..."
+          : !hasChapters
+          ? "No chapters yet"
+          : lastReadChapterId
+          ? "Continue Reading"
+          : "Start Reading"}
+      </button>
+
+      <LibraryButton bookId={book.id} />
+    </div>
+  </div>
+</div>
+
   );
 }

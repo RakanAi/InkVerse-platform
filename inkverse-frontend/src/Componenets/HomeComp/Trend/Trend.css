@@ -40,7 +40,7 @@
 /* Mobile */
 @media (max-width: 576px) {
   .iv-trends__img {
-    height: 220px;
+    height: min(360px, 52vh);
   }
 }
 
@@ -64,6 +64,11 @@
   bottom: 18px;
   z-index: 2;
   text-align: left;
+    padding: 12px;                 /* ✅ add */
+  border-radius: 18px;           /* ✅ add */
+  backdrop-filter: blur(2px);    /* ✅ optional (nice look) */
+  background: rgba(0,0,0,0.18);  /* ✅ optional */
+  max-width: 720px;              /* ✅ prevents super-wide text block on big screens */
 }
 
 .iv-trends__badge {
@@ -92,6 +97,10 @@
   display: -webkit-box;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  -webkit-line-clamp: 3;
+}
+@media (max-width: 576px) {
+  .iv-trends__desc { -webkit-line-clamp: 2; } /* ✅ tighter on mobile */
 }
 
 .iv-trends__cta {
@@ -122,10 +131,14 @@
    ========================= */
 @media (max-width: 576px) {
   .iv-trends__caption {
-    left: 12px;
-    right: 12px;
-    bottom: 12px;
-  }
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    padding: 10px;
+    max-width: fit-content;  
+      backdrop-filter: blur(0px);    /* ✅ optional (nice look) */
+
+}
 
   .iv-trends__badge {
     font-size: 0.7rem;

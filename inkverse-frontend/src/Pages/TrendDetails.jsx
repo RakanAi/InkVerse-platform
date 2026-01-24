@@ -159,7 +159,7 @@ useEffect(() => {
   const items = data.items || [];
 
   return (
-    <div className="container py-3">
+    <div className="container py-3" style={{textAlign:"center"}}>
       <div className="d-flex flex-wrap gap-2 align-items-end justify-content-between mb-3">
         <div className="m-auto" style={{maxWidth:"1000px"}}>
           <h3 className="m-0">Trend: {trend?.name ||"_"}</h3>

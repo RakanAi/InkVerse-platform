@@ -145,7 +145,7 @@ export default function BookPage() {
   }, [reviews]);
 
   return (
-    <div className="container-fluid container-xl bg-white pb-4">
+    <div className="container bg-white pb-4">
       <Bgpic />
 
       {loadingBook ? (
@@ -157,7 +157,6 @@ export default function BookPage() {
       ) : (
         <>
           <BookData book={book} averageRating={avgFromReviews} />
-          <BookMetaBox book={book} />
           <br />
           <SynopsisBox description={book.description} />
           <Toc />

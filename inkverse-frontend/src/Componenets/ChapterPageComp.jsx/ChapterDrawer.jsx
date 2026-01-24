@@ -1,107 +1,306 @@
-import React, { useMemo, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import api from "../../Api/api";
 
-/**
- * Props:
- * - chapters: array of { id, title, chapterNumber }
- * - currentChapterId: string|number
- * - onSelect: (chapterId) => void
- * - canvasId?: string (optional) used for unique offcanvas id
- */
-export default function ChapterDrawer({
-  chapters = [],
-  currentChapterId,
-  onSelect,
-  canvasId = "chaptersOffcanvas",
-}) {
-  const [q, setQ] = useState("");
+import { useContext } from "react";
+import AuthContext from "../../Context/AuthProvider";
 
-  const sorted = useMemo(() => {
-    return [...chapters].sort(
-      (a, b) => (a.chapterNumber ?? 0) - (b.chapterNumber ?? 0)
-    );
-  }, [chapters]);
+export default function ChapterComments({ chapterId }) {
+  const [comments, setComments] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [text, setText] = useState("");
+  const [replyTo, setReplyTo] = useState(null);
+  const [error, setError] = useState("");
+  const { auth } = useContext(AuthContext);
+  const myUserId = auth?.user?.id;
+  const [editingId, setEditingId] = useState(null);
+  const getCid = (c) => c?.id ?? c?.Id ?? c?.ID;
 
-  const filtered = useMemo(() => {
-    const query = q.trim().toLowerCase();
-    if (!query) return sorted;
+  const updateComment = async (commentId, content) => {
+    const trimmed = content.trim();
+    if (!trimmed) return;
 
-    return sorted.filter((c) => {
-      const t = (c.title ?? "").toLowerCase();
-      const n = String(c.chapterNumber ?? "");
-      return t.includes(query) || n.includes(query);
-    });
-  }, [sorted, q]);
+    try {
+      setError("");
+      await api.put(`/comments/${commentId}`, { content: trimmed });
+      setEditingId(null);
+      await loadComments();
+    } catch (e) {
+      console.error("Edit failed:", e);
+      if (e?.response?.status === 401 || e?.response?.status === 403) {
+        setError("Please sign in.");
+        return;
+      }
+      setError("Failed to edit comment.");
+    }
+  };
 
-  return (
-    <>
-      {/* Trigger Button */}
-      <button
-        className="btn btn-sm btn-outline-secondary"
-        type="button"
-        data-bs-toggle="offcanvas"
-        data-bs-target={`#${canvasId}`}
-        aria-controls={canvasId}
-      >
-        Chapters
-      </button>
+  const loadComments = useCallback(async () => {
+    if (!chapterId) return;
+    try {
+      setLoading(true);
+      setError("");
+      const res = await api.get(`/chapters/${chapterId}/comments`);
+      setComments(Array.isArray(res.data) ? res.data : []);
+    } catch (e) {
+      console.error("Load comments failed:", e);
+      setError("Failed to load comments.");
+      setComments([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [chapterId]);
 
-      {/* Offcanvas */}
-      <div
-        className="offcanvas offcanvas-end"
-        tabIndex="-1"
-        id={canvasId}
-        aria-labelledby={`${canvasId}Label`}
-      >
-        <div className="offcanvas-header">
-          <h5 className="offcanvas-title" id={`${canvasId}Label`}>
-            Chapters
-          </h5>
+  useEffect(() => {
+    loadComments();
+  }, [loadComments]);
 
-          <button
-            type="button"
-            className="btn-close"
-            data-bs-dismiss="offcanvas"
-            aria-label="Close"
-          />
-        </div>
+  const post = async () => {
+    const content = text.trim();
 
-        <div className="offcanvas-body p-2">
-          {/* Search */}
-          <input
-            className="form-control form-control-sm mb-2"
-            placeholder="Search title or number…"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-          />
+    if (!content) return;
 
-          <div className="list-group">
-            {filtered.map((c) => (
+    try {
+      setError("");
+      await api.post(`/chapters/${chapterId}/comments`, {
+        content,
+        parentCommentId: replyTo ?? null,
+      });
+      setText("");
+      setReplyTo(null);
+      await loadComments();
+    } catch (e) {
+      console.error("Post comment failed:", e);
+      if (e?.response?.status === 401 || e?.response?.status === 403) {
+        setError("Please sign in to comment.");
+        return;
+      }
+      setError("Failed to post comment.");
+    }
+  };
+
+  const reactTo = async (commentId, value) => {
+    try {
+      setError("");
+      await api.post(`/comments/${commentId}/reaction`, { value });
+      await loadComments();
+    } catch (e) {
+      console.error("React failed:", e);
+      if (e?.response?.status === 401 || e?.response?.status === 403) {
+        setError("Please sign in to react.");
+        return;
+      }
+      setError("Failed to react.");
+    }
+  };
+
+  const deleteComment = async (commentId) => {
+    try {
+      setError("");
+      await api.delete(`/comments/${commentId}`);
+      await loadComments();
+    } catch (e) {
+      console.error("Delete failed:", e);
+      if (e?.response?.status === 401 || e?.response?.status === 403) {
+        setError("Please sign in.");
+        return;
+      }
+      setError("Failed to delete comment.");
+    }
+  };
+
+  const CommentItem = ({ c, depth = 0 }) => {
+    const cid = String(getCid(c)); // ✅ normalize
+    const isOwner = myUserId && String(c.userId) === String(myUserId);
+    const isEditing = String(editingId) === cid;
+
+    const [localEditText, setLocalEditText] = useState(c.content);
+
+    useEffect(() => {
+      if (!isEditing) setLocalEditText(c.content);
+    }, [c.content, isEditing]);
+const wasEdited =
+  !c.isDeleted &&
+  c.updatedAt &&
+  Math.abs(new Date(c.updatedAt) - new Date(c.createdAt)) > 60_000;
+
+  
+
+    return (
+      <div className="mb-2" style={{ paddingLeft: depth * 12 }}>
+        <div className="border-0 shadow-sm rounded p-2">
+          <div className="d-flex justify-content-between align-items-start gap-2">
+            <div>
+              <div className="fw-semibold text-start">
+                {c.userName || "Unknown"}
+              </div>
+              <div className="small d-flex text-muted text-start">
+                {new Date(c.createdAt).toLocaleString()}
+                {wasEdited && <span className=" fst-italic" style={{fontSize:"10px"}}>(edited)</span>}
+              </div>
+            </div>
+
+            <div className="d-flex justify-content-end gap-2">
               <button
-                key={c.id}
-                type="button"
                 className={
-                  "list-group-item list-group-item-action d-flex justify-content-between align-items-center " +
-                  (String(c.id) === String(currentChapterId) ? "active" : "")
+                  "btn btn-sm rounded border-0 " +
+                  (c.myReaction === 1 ? "btn-success" : "btn-outline-success")
                 }
-                data-bs-dismiss="offcanvas"
-                onClick={() => onSelect?.(c.id)}
+                type="button"
+                onClick={() => reactTo(cid, 1)} // ✅ use cid
               >
-                <span className="me-2 text-truncate" style={{ maxWidth: 260 }}>
-                  {c.title || "Untitled"}
-                </span>
-
-                <span className="badge bg-secondary">
-                  #{c.chapterNumber ?? "?"}
-                </span>
+                <i className="bi bi-hand-thumbs-up me-1" />
+                {c.likes ?? 0}
               </button>
-            ))}
+
+              <button
+                className={
+                  "btn btn-sm rounded border-0 " +
+                  (c.myReaction === -1 ? "btn-danger" : "btn-outline-danger")
+                }
+                type="button"
+                onClick={() => reactTo(cid, -1)} // ✅ use cid
+              >
+                <i className="bi bi-hand-thumbs-down me-1" />
+                {c.dislikes ?? 0}
+              </button>
+            </div>
           </div>
 
-          {!filtered.length && (
-            <p className="text-muted mt-3 mb-0">No matching chapters.</p>
+          {/* Content / Editor */}
+          {isEditing ? (
+            <div className="mt-2">
+              <textarea
+                className="form-control form-control-sm"
+                rows={3}
+                value={localEditText}
+                onChange={(e) => setLocalEditText(e.target.value)}
+                autoFocus
+              />
+              <div className="d-flex justify-content-end gap-2 mt-2">
+                <button
+                  className="btn btn-sm btn-outline-secondary"
+                  type="button"
+                  onClick={() => setEditingId(null)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-sm btn-primary"
+                  type="button"
+                  onClick={() => updateComment(cid, localEditText)} // ✅ use cid
+                  disabled={!localEditText.trim()}
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-2 text-start">{c.content}</div>
           )}
+
+          {/* Actions */}
+          <div className="mt-2 d-flex justify-content-between align-items-center">
+            {!isEditing ? (
+              <button
+                className="btn btn-sm btn-link p-0"
+                type="button"
+                onClick={() => setReplyTo(cid)} // ✅ use cid
+              >
+                Reply
+              </button>
+            ) : (
+              <span />
+            )}
+
+            {isOwner && !isEditing && (
+              <div className="d-flex gap-2">
+                <button
+                  className="btn btn-sm btn-outline-primary border-0"
+                  type="button"
+                  title="Edit"
+                  onClick={() => setEditingId(cid)} // ✅ use cid
+                >
+                  <i className="bi bi-pencil-square" />
+                </button>
+
+                <button
+                  className="btn btn-sm btn-outline-secondary border-0"
+                  type="button"
+                  title="Delete"
+                  onClick={() => {
+                    if (confirm("Delete this comment?")) deleteComment(cid); // ✅ use cid
+                  }}
+                >
+                  <i className="bi bi-trash" />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
+
+        {Array.isArray(c.replies) &&
+          c.replies.map((r) => (
+            <CommentItem key={String(getCid(r))} c={r} depth={depth + 1} />
+          ))}
       </div>
-    </>
+    );
+  };
+
+  return (
+    <div>
+      {/* Write box */}
+      <div className="border-0 rounded p-2 mb-2">
+        {replyTo && (
+          <div className="small text-muted mb-1">
+            Replying to #{replyTo}{" "}
+            <button
+              className="btn btn-sm btn-link p-0"
+              type="button"
+              onClick={() => setReplyTo(null)}
+            >
+              Cancel
+            </button>
+          </div>
+        )}
+
+        <textarea
+          className="form-control form-control-sm border-0"
+          rows={3}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="Write a comment..."
+        />
+
+        <div className="d-flex justify-content-between align-items-center mt-2">
+          <button
+            className="btn btn-sm btn-outline-secondary"
+            onClick={loadComments}
+            type="button"
+          >
+            Refresh
+          </button>
+
+          <button
+            className="btn btn-sm btn-primary"
+            type="button"
+            onClick={post}
+            disabled={!text.trim()}
+          >
+            Post
+          </button>
+        </div>
+
+        {error && <div className="text-danger small mt-2">{error}</div>}
+      </div>
+
+      {/* List */}
+      {loading ? (
+        <p className="text-muted">Loading comments...</p>
+      ) : comments.length ? (
+        comments.map((c) => <CommentItem key={String(getCid(c))} c={c} />)
+      ) : (
+        <p className="text-muted">No comments yet. Be the first!</p>
+      )}
+    </div>
   );
 }

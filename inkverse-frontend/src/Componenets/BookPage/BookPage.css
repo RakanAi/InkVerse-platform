@@ -3,7 +3,7 @@
     position: absolute;
     right: 0;
     width: 100%;
-    margin-top: -4%;
+    margin-top: -7%;
     height: 22rem;
     object-position: top;
     object-fit: cover;
@@ -21,7 +21,7 @@
   
 }
 
-
+/* 
 .BookImg {
     width: 200px;
     height: 311px;
@@ -35,7 +35,7 @@
 .BookImg:hover {
     transform: scale(1.05) rotateX(5deg) rotateY(5deg);
     
-}
+} */
 
 .synopsis {
     overflow-y: scroll;
@@ -51,6 +51,7 @@
 .DataBox{
     border-radius: 5px;
     backdrop-filter: blur(15px);
+    background-color: rgba(0, 0, 0, 0.241);
 }
 
 .responsive-text {

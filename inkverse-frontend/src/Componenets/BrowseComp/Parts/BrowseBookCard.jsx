@@ -20,7 +20,7 @@ export default function BrowseBookCard({
   const bookUrl = `/book/${book.id}`; // ✅ adjust if your route is /book/:id
 
   return (
-    <div className="d-flex gap-2 shadow-sm rounded-4 p-2">
+<div className="iv-browse-card d-flex gap-2 shadow-sm rounded-4 p-2">
       {/* ✅ Clicking cover navigates */}
       <Link to={bookUrl} className="iv-browse-cover">
         <img

@@ -77,17 +77,14 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     });
 
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
         builder =>
         {
-            builder
-                .WithOrigins("http://localhost:5173") // React dev server
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials(); // ✅ Required with withCredentials
+            builder.AllowAnyOrigin()
+                   .AllowAnyMethod()
+                   .AllowAnyHeader();
         });
 });
 
@@ -172,8 +169,6 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
-
-
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<IChapterService, ChapterService>();
 builder.Services.AddScoped<IBookServices, BookService>();
@@ -194,10 +189,6 @@ builder.Services.AddScoped<IChapterImportService, ChapterImportService>();
 builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 
 
-
-
-
-
 // Registering ImageHelper
 var webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
 if (!Directory.Exists(webRootPath))
@@ -206,53 +197,42 @@ if (!Directory.Exists(webRootPath))
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 var app = builder.Build();
 
 await InkVerse.Api.Data.IdentitySeeder
     .SeedRolesAndAdminAsync(app.Services, app.Configuration);
 
-
-
-
-
 // Configure the HTTP request pipeline.
+//if (app.Environment.IsDevelopment())
+//{
+//    app.UseDeveloperExceptionPage();
+
+//    app.UseSwagger();
+//    app.UseSwaggerUI(c =>
+//    {
+//        c.SwaggerEndpoint("/swagger/v1/swagger.json", "InkVerse API v1");
+//        c.RoutePrefix = "swagger";
+//    });
+
+//}
+app.UseExceptionHandler("/error");
+
 if (app.Environment.IsDevelopment())
 {
-    app.UseDeveloperExceptionPage();
-
     app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "InkVerse API v1");
-        c.RoutePrefix = "swagger";
-    });
-
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
-
-app.UseStaticFiles();
 
 app.UseRouting();
 
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseDefaultFiles();
 app.UseStaticFiles();
+app.MapFallbackToFile("index.html");
 
 app.MapControllers();
 
