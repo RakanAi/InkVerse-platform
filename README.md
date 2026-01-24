@@ -31,7 +31,7 @@ The frontend communicates with the backend via RESTful API endpoints. Business l
 4. Access the application via browser
 
 ## Live Application
-http://raedodeh-001-site1.anytempurl.com/my-library
+http://raedodeh-001-site1.anytempurl.com
 
 ## GitHub Repository
 https://github.com/RakanAi/InkVerse-platform
