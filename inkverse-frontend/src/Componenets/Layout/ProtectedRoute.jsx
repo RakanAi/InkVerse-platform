@@ -1,28 +1,26 @@
-import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { useContext } from "react";
+import { Navigate, Outlet } from "react-router-dom";
+import { useContext, useEffect } from "react";
 import AuthContext from "../../Context/AuthProvider";
 
 export default function ProtectedRoute({ allowedRoles }) {
-  const { auth } = useContext(AuthContext);
-  const location = useLocation();
+  const { auth, openLogin } = useContext(AuthContext);
 
-  // 1) not logged in
-  if (!auth?.accessToken) {
-    return <Navigate to="/signin" state={{ from: location }} replace />;
+  const isLoggedIn = !!auth?.accessToken;
+
+  useEffect(() => {
+    if (!isLoggedIn) openLogin?.();
+  }, [isLoggedIn, openLogin]);
+
+  if (!isLoggedIn) {
+    return <Navigate to="/signin" replace />;
   }
 
-  // 2) if no roles required => allow any logged-in user
-  if (!allowedRoles || allowedRoles.length === 0) {
-    return <Outlet />;
-  }
+  if (!allowedRoles || allowedRoles.length === 0) return <Outlet />;
 
-  // 3) normalize roles to array
   const userRoles = auth?.user?.roles ?? [];
   const hasRole = allowedRoles.some((r) => userRoles.includes(r));
 
-  if (!hasRole) {
-    return <Navigate to="/unauthorized" replace />;
-  }
+  if (!hasRole) return <Navigate to="/unauthorized" replace />;
 
   return <Outlet />;
 }

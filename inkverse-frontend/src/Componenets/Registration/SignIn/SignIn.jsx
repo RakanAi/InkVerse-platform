@@ -4,7 +4,7 @@ import "./SignIn.css";
 import { useState, useContext, useEffect } from "react";
 import api from "../../../Api/api";
 // import ProtectedRoute from '../../Layout/ProtectedRoute';
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import AuthContext from "../../../Context/AuthProvider";
 import GoogleLoginButton from "../../LoginComp/GoogleLoginButton";
 import icon from "../../../assets/icons/InkVerseIcon.jpeg";
@@ -12,8 +12,8 @@ import icon from "../../../assets/icons/InkVerseIcon.jpeg";
 const Form = ({ onRegister }) => {
   const { setAuth, closeLogin } = useContext(AuthContext);
   const navigate = useNavigate();
-  const location = useLocation();
-  const from = location.state?.from?.pathname || "/";
+  // const location = useLocation();
+  const AFTER_LOGIN = "/profilePage";
 
   const [loginInput, setLoginInput] = useState("");
   const [password, setPassword] = useState("");
@@ -35,10 +35,7 @@ const Form = ({ onRegister }) => {
       };
 
       // Make API call to login user
-      const response = await api.post(
-        "/account/login",
-        loginData,
-      );
+      const response = await api.post("/account/login", loginData);
 
       if (response.status === 200) {
         const { token, userName, email, roles } = response.data;
@@ -49,7 +46,7 @@ const Form = ({ onRegister }) => {
         });
 
         closeLogin();
-        navigate(from, { replace: true });
+        navigate(AFTER_LOGIN, { replace: true });
       }
     } catch (err) {
       console.error("Login error:", err);
@@ -223,13 +220,13 @@ const Form = ({ onRegister }) => {
             </p>
 
             <div className="d-grid justify-content-center">
-                <GoogleLoginButton
-                  onSuccess={(authObj) => {
-                    setAuth(authObj);
-                    closeLogin();
-                    navigate(from, { replace: true });
-                  }}
-                />
+              <GoogleLoginButton
+                onSuccess={(authObj) => {
+                  setAuth(authObj);
+                  closeLogin();
+                  navigate("/profilePage", { replace: true }); // ✅ always go here
+                }}
+              />
             </div>
           </form>
           <footer className="text-center mt-4 footerr align-self-end justify-self-end">
