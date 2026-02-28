@@ -1,34 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
 import "./BrowseFilter.css";
+import {
+  VERSE_TYPES,
+  STATUS_OPTIONS,
+  SORT_OPTIONS,
+  ORIGIN_TYPES,
+} from "@/domain/books/book-filters";
+import DropdownSelect from "@/Shared/ui/DropdownSelect";
+import Button from "@/Shared/ui/Button";
+import TextField from "@/Shared/ui/TextField";
+import Chip from "@/Shared/ui/Chip";
+import Segmented from "@/Shared/ui/Segmented";
+import MultiSelectDropdown from "@/Shared/ui/MultiSelectDropdown";
+import { cyclePick } from "@/features/browse/utils/cyclePick";
+import { buildSelectedChips } from "@/features/browse/utils/selectedChips";
+import { DEFAULT_BROWSE_QUERY } from "@/features/browse/browse.defaults";
 
-import DropdownSelect from "../../../Shared/ui/DropdownSelect";
-import Button from "../../../Shared/ui/Button";
-import TextField from "../../../Shared/ui/TextField";
-import Chip from "../../../Shared/ui/Chip";
-import Segmented from "../../../Shared/ui/Segmented";
-import MultiSelectDropdown from "../../../Shared/ui/MultiSelectDropdown";
-import { VERSE_TYPES, STATUS_OPTIONS, SORT_OPTIONS, ORIGIN_TYPES } from "@/domain/books/book-filters";
-
-// click cycles: include -> exclude -> none
-function cyclePick({ includeArr, excludeArr, id }) {
-  const inc = new Set(includeArr || []);
-  const exc = new Set(excludeArr || []);
-
-  if (inc.has(id)) {
-    inc.delete(id);
-    exc.add(id);
-  } else if (exc.has(id)) {
-    exc.delete(id);
-  } else {
-    inc.add(id);
-  }
-
-  return { include: Array.from(inc), exclude: Array.from(exc) };
-}
 
 export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
   const [showMore, setShowMore] = useState(false);
-
+   
   // debounce search input (so typing doesn't spam the API)
   const [searchLocal, setSearchLocal] = useState(query.search || "");
   useEffect(() => setSearchLocal(query.search || ""), [query.search]);
@@ -44,52 +35,23 @@ export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
     return () => clearTimeout(t);
   }, [searchLocal, setQuery]);
 
-  const selectedGenreChips = useMemo(() => {
-    const byId = new Map((genres || []).map((g) => [g.id ?? g.ID, g]));
-    const res = [];
-    for (const id of query.genreIds || []) {
-      const g = byId.get(id);
-      if (g) res.push({ id, name: g.name, type: "include" });
-    }
-    for (const id of query.excludeGenreIds || []) {
-      const g = byId.get(id);
-      if (g) res.push({ id, name: g.name, type: "exclude" });
-    }
-    return res;
-  }, [genres, query.genreIds, query.excludeGenreIds]);
+  const selectedGenreChips = useMemo(
+    () => buildSelectedChips(genres, query.genreIds, query.excludeGenreIds),
+    [genres, query.genreIds, query.excludeGenreIds],
+  );
 
-  const selectedTagChips = useMemo(() => {
-    const byId = new Map((tags || []).map((t) => [t.id ?? t.ID, t]));
-    const res = [];
-    for (const id of query.tagIds || []) {
-      const t = byId.get(id);
-      if (t) res.push({ id, name: t.name, type: "include" });
-    }
-    for (const id of query.excludeTagIds || []) {
-      const t = byId.get(id);
-      if (t) res.push({ id, name: t.name, type: "exclude" });
-    }
-    return res;
-  }, [tags, query.tagIds, query.excludeTagIds]);
+  const selectedTagChips = useMemo(
+    () => buildSelectedChips(tags, query.tagIds, query.excludeTagIds),
+    [tags, query.tagIds, query.excludeTagIds],
+  );
 
   const clearAll = () => {
-    setQuery((p) => ({
-      ...p,
-      // keep verseType (main) on purpose
-      search: "",
-      sortBy: "UpdatedAt",
-      isAscending: false,
-      statuses: [],
-      originType: "",
-      minRating: "",
-      minReviewCount: "",
-      genreIds: [],
-      excludeGenreIds: [],
-      tagIds: [],
-      excludeTagIds: [],
-      pageNumber: 1,
-    }));
-  };
+  setQuery((p) => ({
+    ...DEFAULT_BROWSE_QUERY,
+    // keep verseType on purpose (your original behavior)
+    verseType: p.verseType,
+  }));
+};
 
   const statusLabel = useMemo(() => {
     const s = query.statuses || [];
@@ -147,7 +109,7 @@ export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
                 }))
               }
               options={SORT_OPTIONS}
-              renderLabel={(o) => `Sort: ${o.label}`}
+              renderLabel={(o) => `Sort by: ${o.label}`}
             />
           </div>
 

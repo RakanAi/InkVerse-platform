@@ -1,0 +1,78 @@
+/* ---------- InkVerse Typography System ---------- */
+:root{
+  /* base */
+  --iv-font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+  --iv-text: #111827;
+  --iv-muted: #6b7280;
+  --iv-subtle: #94a3b8;
+
+  /* sizes */
+  --iv-fs-xs: 0.75rem;
+  --iv-fs-sm: 0.875rem;
+  --iv-fs-base: 1rem;
+  --iv-fs-lg: 1.125rem;
+  --iv-fs-xl: 1.25rem;
+  --iv-fs-2xl: 1.5rem;
+
+  /* line heights */
+  --iv-lh-tight: 1.2;
+  --iv-lh-base: 1.5;
+  --iv-lh-relaxed: 1.65;
+
+  /* tracking */
+  --iv-track-tight: -0.01em;
+  --iv-track-wide: 0.04em;
+}
+
+html{
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+}
+
+body{
+  font-family: var(--iv-font-sans);
+  font-size: var(--iv-fs-base);
+  line-height: var(--iv-lh-base);
+  color: var(--iv-text);
+  letter-spacing: var(--iv-track-tight);
+}
+
+/* headings */
+h1,h2,h3,h4,h5,h6{
+  color: var(--iv-text);
+  line-height: var(--iv-lh-tight);
+  letter-spacing: var(--iv-track-tight);
+  font-weight: 900;
+}
+
+h1{ font-size: 2rem; }
+h2{ font-size: 1.6rem; }
+h3{ font-size: 1.3rem; }
+h4{ font-size: 1.1rem; }
+
+/* paragraphs and muted text */
+p{ margin: 0; color: var(--iv-text); }
+
+.iv-muted{ color: var(--iv-muted) !important; }
+.iv-subtle{ color: var(--iv-subtle) !important; }
+
+/* links */
+a{
+  color: inherit;
+  text-decoration: none;
+}
+a:hover{
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* better small text */
+small, .small{
+  font-size: var(--iv-fs-sm);
+  color: var(--iv-muted);
+}
+
+/* nicer selection */
+::selection{
+  background: rgba(47,124,246,.22);
+}

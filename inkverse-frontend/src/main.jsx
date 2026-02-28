@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import "./index.css";
 import App from "./App.jsx";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
+import "@/Shared/styles/typography.css";
 
 // import 'bootstrap/dist/css/bootstrap.min.css';
 import { AuthProvider } from "./Context/AuthProvider.jsx";
