@@ -114,7 +114,8 @@ export default function Ranking() {
   );
 
   return (
-    <div className="container-fluid py-3" style={{ maxWidth: 1300 }}>
+    <div className="iv-page">
+    <div className="container-fluid iv-surface py-3" style={{ maxWidth: 1300 }}>
       <div className="iv-ranking-header">
         <PageHeader
           title="Ranking"
@@ -198,9 +199,9 @@ export default function Ranking() {
           <EmptyState title="No results" subtitle="Try changing filters." />
         ) : (
           <>
-            <div className="row g-3">
+            <div className="">
               {(data.items || []).map((b) => (
-                <div key={b.id} className="col-12">
+                <div key={b.id} className="col-12 my-3">
                   <BrowseBookCard
                     book={b}
                     isBookmarked={inLib(b.id)}
@@ -221,6 +222,7 @@ export default function Ranking() {
           </>
         )}
       </div>
+    </div>
     </div>
   );
 }

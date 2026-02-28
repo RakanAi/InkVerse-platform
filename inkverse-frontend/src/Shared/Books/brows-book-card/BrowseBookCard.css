@@ -8,6 +8,11 @@
   transition: all 180ms ;
 }
 
+.iv-browse-card{
+  width: 100%;
+  
+}
+
 
 .iv-browse-cover img{
   width:100%;
@@ -204,7 +209,7 @@
 .iv-book-card {
   display: flex;
   flex-direction: column;
-  height: 100%;        /* 🔑 allows pushing meta to bottom */
+  height: 100%;   
   min-width: 0;
 }
 
