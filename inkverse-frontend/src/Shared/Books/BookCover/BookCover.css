@@ -1,0 +1,53 @@
+.iv-cover{
+  overflow: hidden;
+  background: #f3f4f6;
+  flex: 0 0 auto;
+}
+
+.iv-cover.is-rounded{ border-radius: 14px; }
+
+.iv-cover__img{
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;      /* KEY: never stretched */
+  object-position: center;
+}
+
+/* Variants: set size + aspect-ratio only */
+.iv-cover--tile{
+  width: 150px;
+  aspect-ratio: 3 / 4;
+}
+
+.iv-cover--list{
+  width: 194px;           /* matches your BrowseBookCard feel */
+  aspect-ratio: 3 / 4;
+}
+
+.iv-cover--mini{
+  width: 56px;            /* TopVerses small lists */
+  aspect-ratio: 3 / 4;
+  border-radius: 10px;
+}
+
+.iv-cover--hero{
+  width: 140px;           /* Book page: responsive */
+  aspect-ratio: 3 / 4;
+}
+
+@media (min-width: 768px){
+  .iv-cover--hero{ width: 180px; }
+}
+@media (min-width: 992px){
+  .iv-cover--hero{ width: 220px; }
+}
+@media (min-width: 1200px){
+  .iv-cover--hero{ width: 340px; }
+}
+
+.iv-cover--fill{
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto; /* allow parent to control height */
+}

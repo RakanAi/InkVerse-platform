@@ -3,7 +3,9 @@ import api from "../Api/api";
 import { Link } from "react-router-dom";
 import "./MyLibraryPage.css";
 import LibraryButton from "../Componenets/Library/AddToLibraryBtn";
-import { absUrl } from "../Utils/absUrl";
+import { getBookCoverSrc } from "@/domain/books/book-cover";
+import BookCover from "@/Shared/books/BookCover/BookCover";
+
 
 export default function MyLibrary({ initialFilter = "All", hideTabs = false }) {
   const [items, setItems] = useState([]);
@@ -116,11 +118,7 @@ export default function MyLibrary({ initialFilter = "All", hideTabs = false }) {
               <div className="lib-card">
                 <Link to={`/book/${b.bookId}`} className="lib-cover">
                   {b.coverImageUrl || b.CoverImageUrl ? (
-                    <img
-                      src={absUrl(b.coverImageUrl || b.CoverImageUrl)}
-                      alt={b.title}
-                      loading="lazy"
-                    />
+                    <BookCover variant="tile" src={getBookCoverSrc(b)} alt={b.title} />
                   ) : (
                     <div className="lib-noCover">No cover</div>
                   )}

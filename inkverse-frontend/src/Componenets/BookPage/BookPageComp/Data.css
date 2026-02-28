@@ -32,7 +32,6 @@
 
 /* ✅ Cover wrapper controls ratio, NOT the image */
 .iv-coverr {
-  /* --cover-w: 140px;              default (mobile) */
   width: var(--cover-w) !important;
   aspect-ratio: 2 / 3;
   border-radius: 14px;

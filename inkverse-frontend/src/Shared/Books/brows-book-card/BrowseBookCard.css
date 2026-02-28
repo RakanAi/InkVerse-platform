@@ -8,18 +8,17 @@
   transition: all 180ms ;
 }
 
-.iv-browse-card{
-  width: 100%;
-  
+.iv-browse-cover{
+  width: 194px;
+  align-self: stretch;     /* ✅ fill full card height */
+  height: auto;            /* ✅ let flex stretching handle it */
+  border-radius: 12px;
+  overflow: hidden;
+  display: block;
+  text-decoration: none;
+  transition: all 180ms;
 }
 
-
-.iv-browse-cover img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  display:block;
-}
 
 .iv-browse-cover:hover{
     transform: translateY(-5px);
@@ -142,21 +141,13 @@
   /* make cover full-width and shorter */
  .iv-browse-cover{
   width: 170px;
-  min-width: 170px;
-  height: 240px;              /* fixed */
+  height: 240px;              
   border-radius: 14px;
   overflow: hidden;
   display: block;
   text-decoration: none;
   transition: transform 180ms ease;
   background: rgba(47,124,246,.06);
-}
-
-.iv-browse-cover img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  display:block;
 }
 
 .iv-browse-cover:hover{
@@ -243,4 +234,18 @@
 .iv-browse-card:hover{
   transform: translateY(-2px);
   box-shadow: 0 14px 36px rgba(17,24,39,.10);
+}
+
+/* BrowseBookCard: force BookCover to behave like a fill-cover */
+.iv-browse-cover .iv-cover{
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;  /* disable fixed ratio for this context */
+}
+
+.iv-browse-cover .iv-cover__img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;   /* ✅ always fill like the first screenshot */
+  object-position: center;
 }

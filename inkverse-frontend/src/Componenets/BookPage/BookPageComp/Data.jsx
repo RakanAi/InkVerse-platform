@@ -4,8 +4,11 @@ import RatingEle from "./BookRating2";
 import "./Data.css";
 import api from "../../../Api/api";
 import LibraryButton from "../../Library/AddToLibraryBtn";
-import { absUrl } from "../../../Utils/absUrl";
+// import { absUrl } from "../../../Utils/absUrl";
 import BookMetaBox from "./BookMetaBox";
+import { getBookCoverSrc } from "@/domain/books/book-cover";
+import BookCover from "@/Shared/books/BookCover/BookCover";
+
 
 export default function BookData({ book, averageRating }) {
   const navigate = useNavigate();
@@ -45,14 +48,14 @@ export default function BookData({ book, averageRating }) {
   // ✅ now safe
   if (!book) return null;
 
-  const imageUrl =
-    book.coverImageUrl ??
-    book.CoverImageUrl ??
-    book.imageUrl ??
-    book.ImageUrl ??
-    "";
+  // const imageUrl =
+  //   book.coverImageUrl ??
+  //   book.CoverImageUrl ??
+  //   book.imageUrl ??
+  //   book.ImageUrl ??
+  //   "";
 
-  const cover = imageUrl ? absUrl(imageUrl) : "/img/placeholder-cover.png";
+  // const cover = imageUrl ? absUrl(imageUrl) : "/img/placeholder-cover.png";
 
   const startReading = async () => {
     try {
@@ -101,11 +104,11 @@ export default function BookData({ book, averageRating }) {
   {/* LEFT — COVER */}
   <div className="col-auto d-flex justify-content-center justify-content-lg-start pe-3 me-3">
     <div className="iv-coverr">
-      <img
-        src={cover}
-        alt={book.title || "Book cover"}
-        className="iv-coverr-img imgHover"
-      />
+      <BookCover
+  variant="hero"
+  src={getBookCoverSrc(book)}
+  alt={book.title}
+/>
     </div>
   </div>
 

@@ -85,7 +85,8 @@ export default function TrendsPage() {
   }, [totalPages, query.pageNumber]);
 
   return (
-    <div className="container py-3" style={{ textAlign: "center" }}>
+    <div className="iv-page">
+    <div className="container iv-surface py-3" style={{ textAlign: "center" }}>
       {/* Keep old centered structure, but use new header component */}
       <div style={{ textAlign: "center" }}>
         <PageHeader title="Trending Concepts" subtitle="Curated collections" />
@@ -201,6 +202,7 @@ export default function TrendsPage() {
           </>
         )}
       </div>
+    </div>
     </div>
   );
 }

@@ -2,7 +2,9 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../../Api/api";
 import "./NewBooks.css";
-import { absUrl } from "../../../Utils/absUrl";
+import { getBookCoverSrc } from "@/domain/books/book-cover";
+import BookCover from "@/Shared/books/BookCover/BookCover";
+
 
 const FALLBACK_COVER = "/src/assets/BackGround_04.png";
 
@@ -83,17 +85,6 @@ export default function NewBooks() {
               book.userName ??
               book.UserName;
 
-            const imageUrl =
-              book.coverImageUrl ??
-              book.CoverImageUrl ??
-              book.imageUrl ??
-              book.ImageUrl ??
-              "";
-
-            const coverSrc = imageUrl
-              ? absUrl(imageUrl)
-              : "/img/placeholder-cover.png";
-
             return (
               <div key={book.id} className="iv-book-card">
                 <Link
@@ -101,12 +92,7 @@ export default function NewBooks() {
                   className="iv-book-main text-decoration-none"
                 >
                   <div className="iv-cover-wrap">
-                    <img
-                      src={coverSrc}
-                      alt={book.title}
-                      className="iv-cover"
-                      loading="lazy"
-                    />
+                    <BookCover variant="tile" src={getBookCoverSrc(book)} alt={book.title} />
                   </div>
 
                   <div className="iv-meta">

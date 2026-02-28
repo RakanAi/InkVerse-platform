@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import "./BrowseBookCard.css";
-import { absUrl } from "../../../Utils/absUrl";
+// import { absUrl } from "../../../Utils/absUrl";
+import BookCover from "@/Shared/books/BookCover/BookCover";
+import { getBookCoverSrc } from "@/domain/books/book-cover";
 
 function formatNumber(n) {
   const x = Number(n || 0);
@@ -21,17 +23,17 @@ export default function BrowseBookCard({
 
   return (
     <div
-      className={`iv-browse-card iv-status-${book.status?.toLowerCase() || "none"} d-flex gap-2 shadow-sm rounded-4 p-2`}
+      className={`iv-browse-card iv-status-${book.status?.toLowerCase() || "none"} d-flex align-items-stretch gap-2 shadow-sm rounded-4 p-2`}
     >
       {" "}
       {/* ✅ Clicking cover navigates */}
       <Link to={bookUrl} className="iv-browse-cover">
-        <img
-          src={absUrl(book.coverImageUrl) || "/placeholder-cover.png"}
-          alt={book.title}
-          loading="lazy"
-        />
-      </Link>
+  <BookCover
+    variant="fill"
+    src={getBookCoverSrc(book)}
+    alt={book.title}
+  />
+</Link>
       <div className="iv-browse-body ">
         <div className="iv-browse-tags">
           {(book.tags || []).slice(0, 3).map((name) => (
