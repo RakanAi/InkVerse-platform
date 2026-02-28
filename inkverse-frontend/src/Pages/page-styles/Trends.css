@@ -1,0 +1,25 @@
+/* Container stays aligned right */
+.trend-sort {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* Label look like old UI */
+.trend-sort-label {
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+/* Force dropdown compact size */
+.trend-sort-dd {
+  width: 190px;   /* adjust if you want 180–220 */
+  flex: 0 0 auto; /* prevent stretching */
+}
+
+/* If your DropdownSelect root is .iv-dd */
+.trend-sort-dd .iv-dd-btn {
+  height: 34px;   /* match old select height */
+  font-size: 0.9rem;
+}

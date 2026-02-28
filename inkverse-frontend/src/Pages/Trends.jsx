@@ -1,110 +1,97 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../Api/api";
+import "./page-styles/Trends.css";
 
 import CardTop from "../Componenets/TrendComp/CardTop";
-import Pager from "../Componenets/BrowseComp/Parts/Pagination";
 import CardTopcard from "../Componenets/TrendComp/CardTopcard";
+import Pager from "../Componenets/BrowseComp/Parts/Pagination";
 
-function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
+// Shared UI
+import PageHeader from "@/Shared/ui/PageHeader";
+import DropdownSelect from "@/Shared/ui/DropdownSelect";
+import LoadingState from "@/Shared/ui/LoadingState";
+import ErrorState from "@/Shared/ui/ErrorState";
+import EmptyState from "@/Shared/ui/EmptyState";
+
+import { DEFAULT_TRENDS_QUERY } from "@/features/trends/trends.defaults";
+import {
+  TREND_SORT_OPTIONS,
+  TREND_PAGE_SIZE,
+  TREND_FEATURED_COUNT,
+} from "@/features/trends/trends.presets";
+import { shuffle } from "@/features/trends/utils/shuffle";
+import { applyTrendSort } from "@/features/trends/utils/applyTrendSort";
 
 export default function TrendsPage() {
   const nav = useNavigate();
 
+  const [query, setQuery] = useState(DEFAULT_TRENDS_QUERY);
   const [trends, setTrends] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  // Sorting for the list
-  const [sortBy, setSortBy] = useState("sortOrder");
-
-  // Pagination for the list
-  const [pageNumber, setPageNumber] = useState(1);
-  const pageSize = 12; // list cards per page (tweak)
+  const loadTrends = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const res = await api.get("/trends");
+      const list = Array.isArray(res.data) ? res.data : [];
+      setTrends(list);
+    } catch (e) {
+      console.error("Failed to load trends", e);
+      setTrends([]);
+      setError("Failed to load trends.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    let alive = true;
+    loadTrends();
+  }, [loadTrends]);
 
-    (async () => {
-      try {
-        setLoading(true);
-        const res = await api.get("/trends");
-        const list = Array.isArray(res.data) ? res.data : [];
-        if (alive) setTrends(list);
-      } catch (e) {
-        console.error("Failed to load trends", e);
-        if (alive) setTrends([]);
-      } finally {
-        if (alive) setLoading(false);
-      }
-    })();
-
-    return () => (alive = false);
-  }, []);
+  const openTrend = (t) => nav(`/trend/${t.id}`);
 
   // Featured trends for carousel (random)
   const featured = useMemo(() => {
     const active = trends.filter((t) => t.isActive !== false);
-    return shuffle(active).slice(0, Math.min(5, active.length));
+    return shuffle(active).slice(
+      0,
+      Math.min(TREND_FEATURED_COUNT, active.length),
+    );
   }, [trends]);
 
   const sortedTrends = useMemo(() => {
-    const list = [...trends];
-
-    if (sortBy === "newest") {
-      return list.sort(
-        (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
-      );
-    }
-
-    if (sortBy === "az") {
-      return list.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-    }
-
-    // default: sortOrder asc, then name
-    return list.sort((a, b) => {
-      const ao = a.sortOrder ?? 0;
-      const bo = b.sortOrder ?? 0;
-      if (ao !== bo) return ao - bo;
-      return (a.name || "").localeCompare(b.name || "");
-    });
-  }, [trends, sortBy]);
+    return applyTrendSort(trends, query.sortBy);
+  }, [trends, query.sortBy]);
 
   const totalPages = useMemo(() => {
-    return Math.max(1, Math.ceil(sortedTrends.length / pageSize));
+    return Math.max(1, Math.ceil(sortedTrends.length / TREND_PAGE_SIZE));
   }, [sortedTrends.length]);
 
   const pageTrends = useMemo(() => {
-    const start = (pageNumber - 1) * pageSize;
-    return sortedTrends.slice(start, start + pageSize);
-  }, [sortedTrends, pageNumber]);
+    const start = (query.pageNumber - 1) * TREND_PAGE_SIZE;
+    return sortedTrends.slice(start, start + TREND_PAGE_SIZE);
+  }, [sortedTrends, query.pageNumber]);
 
   useEffect(() => {
-    if (pageNumber > totalPages) setPageNumber(totalPages);
-    if (pageNumber < 1) setPageNumber(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [totalPages]);
-
-  const openTrend = (t) => nav(`/trend/${t.id}`);
+    if (query.pageNumber > totalPages) {
+      setQuery((p) => ({ ...p, pageNumber: totalPages }));
+    }
+    if (query.pageNumber < 1) {
+      setQuery((p) => ({ ...p, pageNumber: 1 }));
+    }
+  }, [totalPages, query.pageNumber]);
 
   return (
-    <div className="container py-3" style={{textAlign:"center"}}>
-      <div className="d-flex flex-wrap gap-2 align-items-end justify-content-between mb-3">
-        <div>
-          <h3 className="m-0">Trending Concepts</h3>
-          <div className="text-muted small">Curated collections</div>
-        </div>
-
-       
+    <div className="container py-3" style={{ textAlign: "center" }}>
+      {/* Keep old centered structure, but use new header component */}
+      <div style={{ textAlign: "center" }}>
+        <PageHeader title="Trending Concepts" subtitle="Curated collections" />
       </div>
 
-      {/* BOOTSTRAP 5 CAROUSEL HERO */}
+      {/* HERO */}
       {!loading && featured.length > 0 ? (
         <div
           id="trendHeroCarousel"
@@ -119,7 +106,6 @@ export default function TrendsPage() {
                 key={t.id}
                 className={`carousel-item ${idx === 0 ? "active" : ""}`}
               >
-                {/* Put your CardTop inside the slide */}
                 <CardTop
                   trend={t}
                   variant="hero"
@@ -129,7 +115,6 @@ export default function TrendsPage() {
             ))}
           </div>
 
-          {/* controls only if >1 */}
           {featured.length > 1 ? (
             <>
               <button
@@ -160,57 +145,62 @@ export default function TrendsPage() {
             </>
           ) : null}
         </div>
-      ) : loading ? (
-        <div className="text-muted mb-4">Loading…</div>
       ) : null}
 
-      {/* LIST */}
-      {!loading && sortedTrends.length === 0 ? (
-        <div className="text-muted">No trends yet.</div>
-      ) : !loading ? (
-        <>
-          <div className="d-flex align-items-center justify-content-between">
-            <div className="d-flex">
-              <span className="borderStart"></span>
-              <h5 className=" mt-2">List</h5>
+      {/* LIST HEADER + SORT */}
+      <div className="iv-panel" style={{ textAlign: "left" }}>
+        <div className="d-flex align-items-center justify-content-between">
+          <div className="align-items-center gap-2">
+            <span className="borderStart"></span>
+            <h5 className="m-0">List</h5>
+          </div>
+
+          <div className="trend-sort">
+            <span className="trend-sort-label">Sort</span>
+            <DropdownSelect
+              className="trend-sort-dd"
+              value={query.sortBy}
+              onChange={(v) =>
+                setQuery((p) => ({ ...p, sortBy: v, pageNumber: 1 }))
+              }
+              options={TREND_SORT_OPTIONS}
+              placeholder="Sort"
+            />
+          </div>
+        </div>
+      </div>
+
+      <hr /><br />
+
+      <div className="mt-3">
+        {loading ? (
+          <LoadingState text="Loading trends..." />
+        ) : error ? (
+          <ErrorState subtitle={error} onRetry={loadTrends} />
+        ) : sortedTrends.length === 0 ? (
+          <EmptyState title="No trends" subtitle="No trends yet." />
+        ) : (
+          <>
+            <div className="row g-3 justify-content-between">
+              {pageTrends.map((t) => (
+                <div className="col-auto mx-auto" key={t.id}>
+                  <CardTopcard
+                    trend={t}
+                    variant="list"
+                    onClick={() => openTrend(t)}
+                  />
+                </div>
+              ))}
             </div>
-            <div className="d-flex gap-2 align-items-center justify-content-end">
-              <span className="text-muted small">Sort</span>
-              <select
-                className="form-select form-select-sm"
-                style={{ width: 200 }}
-                value={sortBy}
-                onChange={(e) => {
-                  setSortBy(e.target.value);
-                  setPageNumber(1);
-                }}
-              >
-                <option value="sortOrder">Default (Sort Order)</option>
-                <option value="newest">Newest</option>
-                <option value="az">A → Z</option>
-              </select>
-            </div>{" "}
-          </div>
-          <hr />
-          <div className="row g-3 justify-content-between">
-            {pageTrends.map((t) => (
-              <div className="col-auto mx-auto" key={t.id}>
-                <CardTopcard
-                  trend={t}
-                  variant="list"
-                  onClick={() => openTrend(t)}
-                />
-              </div>
-            ))}
-          </div>
 
-          <Pager
-            pageNumber={pageNumber}
-            totalPages={totalPages}
-            onPage={setPageNumber}
-          />
-        </>
-      ) : null}
+            <Pager
+              pageNumber={query.pageNumber}
+              totalPages={totalPages}
+              onPage={(p) => setQuery((prev) => ({ ...prev, pageNumber: p }))}
+            />
+          </>
+        )}
+      </div>
     </div>
   );
 }

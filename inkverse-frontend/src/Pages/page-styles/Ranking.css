@@ -1,0 +1,32 @@
+.iv-ranking-header {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.iv-ranking-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center; /* center the rows */
+}
+
+.iv-ranking-row {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.iv-ranking-row--dropdowns .iv-ranking-dd {
+  width: 220px;       /* old style compact dropdowns */
+  max-width: 100%;
+}
+
+.iv-ranking-row--seg {
+  width: 100%;
+}
+
+.iv-ranking-row--seg > * {
+  width: min(720px, 100%); /* segmented rows not full width */
+}
