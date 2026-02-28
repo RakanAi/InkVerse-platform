@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useContext } from "react";
 import api from "../Api/api";
 import AuthContext from "../Context/AuthProvider";
-import BrowseBookCard from "../Componenets/BrowseComp/Parts/BrowseBookCard";
+import BrowseBookCard from "@/Shared/Books/brows-book-card/BrowseBookCard";
 import Pager from "../Componenets/BrowseComp/Parts/Pagination";
 import { VERSE_TYPES, normalizeVerseType } from "../Constants/bookEnums";
 import { ORIGIN_TYPES } from "../Constants/bookEnums";

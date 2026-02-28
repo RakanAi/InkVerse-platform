@@ -1,0 +1,425 @@
+
+:root {
+  --iv-bg: #f6f7fb;
+  --iv-card: #ffffff;
+  --iv-text: #111827;
+  --iv-muted: #6b7280;
+
+  --iv-border: rgba(17, 24, 39, 0.08);
+  --iv-shadow: 0 10px 30px rgba(17, 24, 39, 0.08);
+
+  --iv-radius: 16px;
+  --iv-radius-sm: 12px;
+
+  --iv-primary: #6d28d9; /* purple-ish */
+  --iv-primary-soft: rgba(109, 40, 217, 0.12);
+}
+
+.iv-page {
+  padding: 18px;
+}
+
+.iv-surface {
+  background: var(--iv-card);
+  border: 1px solid var(--iv-border);
+  border-radius: var(--iv-radius);
+  box-shadow: var(--iv-shadow);
+  padding: 18px;
+}
+
+.iv-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.iv-title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--iv-text);
+}
+
+.iv-subtitle {
+  margin: 6px 0 0 0;
+  color: var(--iv-muted);
+  font-size: 0.95rem;
+}
+
+.iv-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* States */
+.iv-state {
+  padding: 28px;
+  border-radius: var(--iv-radius);
+  border: 1px dashed var(--iv-border);
+  background: linear-gradient(0deg, rgba(0,0,0,0.01), rgba(0,0,0,0.01));
+  text-align: center;
+}
+
+.iv-state-title {
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-bottom: 6px;
+  color: var(--iv-text);
+}
+
+.iv-state-text {
+  color: var(--iv-muted);
+  font-size: 0.95rem;
+}
+
+.iv-empty-icon {
+  width: 44px;
+  height: 40px;
+  border-radius: 14px;
+  margin: 0 auto 10px auto;
+  display: grid;
+  place-items: center;
+  background: var(--iv-primary-soft);
+  color: var(--iv-primary);
+  font-size: 22px;
+}
+
+/* Spinner */
+.iv-spinner {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 3px solid rgba(0,0,0,0.08);
+  border-top-color: var(--iv-primary);
+  margin: 0 auto 10px auto;
+  animation: ivspin 0.85s linear infinite;
+}
+
+@keyframes ivspin {
+  to { transform: rotate(360deg); }
+}
+
+/* Buttons */
+.iv-btn {
+  border: 0;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.iv-btn-outline {
+  background: transparent;
+  height: 40px;
+  border: 1px solid var(--iv-border);
+  color: var(--iv-text);
+}
+
+.iv-btn-outline:hover {
+  border-color: rgba(109, 40, 217, 0.35);
+  background: rgba(109, 40, 217, 0.06);
+}
+
+/* ===== Form Fields ===== */
+
+/* .iv-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.iv-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--iv-muted);
+}
+
+.iv-select-wrapper {
+  position: relative;
+}
+
+.iv-select {
+  appearance: none;
+  width: 100%;
+  padding: 10px 36px 10px 12px;
+  border-radius: var(--iv-radius-sm);
+  border: 1px solid var(--iv-border);
+  background: white;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.iv-select:hover {
+  border-color: rgba(109, 40, 217, 0.4);
+}
+
+.iv-select:focus {
+  outline: none;
+  border-color: var(--iv-primary);
+  box-shadow: 0 0 0 3px var(--iv-primary-soft);
+}
+
+.iv-select-arrow {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.8rem;
+  pointer-events: none;
+  color: var(--iv-muted);
+} */
+
+/* ===== DropdownSelect ===== */
+
+.iv-dd {
+  position: relative;
+  width: 100%;
+}
+
+.iv-dd-btn {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 14px;
+  border: 1px solid var(--iv-border);
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-weight: 700;
+  color: var(--iv-text);
+}
+
+.iv-dd-btn:hover {
+  border-color: rgba(40, 72, 217, 0.45);
+}
+
+.iv-dd-btn:focus {
+  outline: none;
+  border-color: rgba(40, 72, 217, 0.45);
+  box-shadow: 0 0 0 3px rgba(40, 72, 217, 0.45);
+}
+
+.iv-dd-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.iv-dd-arrow {
+  color: var(--iv-muted);
+  font-size: 0.85rem;
+}
+
+.iv-dd-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 50;
+
+  background: #fff;
+  border: 1px solid var(--iv-border);
+  border-radius: 16px;
+  box-shadow: var(--iv-shadow);
+  padding: 6px;
+
+  /* animation base (closed state) */
+  opacity: 0;
+  transform: translateY(-6px) scale(0.98);
+  pointer-events: none;
+  transition: opacity 140ms ease, transform 160ms ease;
+  transform-origin: top;
+}
+
+.iv-dd-menu.is-open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+/* rotate arrow when open */
+.iv-dd.is-open .iv-dd-arrow {
+  transform: rotate(180deg);
+}
+
+.iv-dd-arrow {
+  color: var(--iv-muted);
+  font-size: 0.85rem;
+  transition: transform 160ms ease;
+}
+
+.iv-dd-item {
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 0;
+  background: transparent;
+  font-weight: 600;
+  color: var(--iv-text);
+  cursor: pointer;
+}
+
+.iv-dd-item:hover {
+  background: rgba(40, 52, 217, 0.08);
+}
+
+.iv-dd-item.is-active {
+  background: rgba(40, 126, 217, 0.14);
+}
+.iv-dd-btn {
+  transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.iv-dd.is-open .iv-dd-btn {
+  box-shadow: 0 0 0 3px rgba(13, 0, 255, 0.159);
+}
+
+.iv-dd-btn:active {
+  transform: scale(0.99);
+}
+
+/* ===== Buttons ===== */
+.iv-btn {
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease, border-color 120ms ease;
+}
+
+.iv-btn-sm { padding: 8px 12px; font-weight: 700; }
+.iv-btn-md { padding: 10px 14px; }
+
+.iv-btn-primary {
+  background: var(--iv-primary);
+  color: white;
+}
+.iv-btn-primary:hover { transform: translateY(-1px); }
+.iv-btn-primary:active { transform: translateY(0px) scale(0.99); }
+
+.iv-btn-outline {
+  background: transparent;
+  border: 1px solid var(--iv-border);
+  color: var(--iv-text);
+}
+.iv-btn-outline:hover {
+  border-color: rgba(109, 40, 217, 0.45);
+  background: rgba(109, 40, 217, 0.06);
+}
+
+.iv-btn-danger {
+  background: rgba(220, 38, 38, 0.12);
+  color: rgb(185, 28, 28);
+  border: 1px solid rgba(220, 38, 38, 0.25);
+}
+.iv-btn-danger:hover {
+  background: rgba(220, 38, 38, 0.16);
+}
+
+.iv-btn-ghost {
+  background: transparent;
+  color: var(--iv-text);
+}
+.iv-btn-ghost:hover {
+  background: rgba(0,0,0,0.04);
+}
+
+/* ===== Inputs ===== */
+.iv-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 14px;
+  border: 1px solid var(--iv-border);
+  background: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--iv-text);
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+.iv-input:focus {
+  outline: none;
+  border-color: var(--iv-primary);
+  box-shadow: 0 0 0 3px var(--iv-primary-soft);
+}
+
+
+/* ===== Chips ===== */
+.iv-chip {
+  border: 1px solid var(--iv-border);
+  background: #fff;
+  color: var(--iv-text);
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+}
+.iv-chip:hover { transform: translateY(-1px); }
+.iv-chip:active { transform: scale(0.99); }
+
+.iv-chip-neutral:hover { background: rgba(0,0,0,0.03); }
+.iv-chip-include { background: rgba(109, 40, 217, 0.10); border-color: rgba(109, 40, 217, 0.25); color: var(--iv-primary); }
+.iv-chip-exclude { background: rgba(220, 38, 38, 0.10); border-color: rgba(220, 38, 38, 0.25); color: rgb(185, 28, 28); }
+
+/* ===== Segmented Control ===== */
+/* ===== Segmented Control (modern) ===== */
+.iv-seg {
+  display: flex;
+  width: 100%; /* fill parent */
+  align-items: center;
+  padding: 6px;
+  border-radius: 16px;
+  border: 1px solid rgba(109, 40, 217, 0.18);
+  justify-content: space-between;
+}
+
+/* each button */
+.iv-seg-btn {
+  position: relative;
+    flex: 1; 
+  width: 100px;
+  border: 0;
+  background: transparent;
+  color: rgba(17, 24, 39, 0.78);
+  font-weight: 800;
+  padding: 10px 18px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 180ms ease, background 180ms ease, color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+/* divider between items (not on last) */
+.iv-seg-btn:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  right: -3px;
+  width: 1px;
+  background: rgba(109, 40, 217, 0.18);
+}
+
+/* hover (non active) */
+.iv-seg-btn:hover {
+  background: rgba(255, 255, 255, 0.28);
+  transform: translateY(-1px) scale(1.01);
+}
+
+/* active state */
+.iv-seg-btn.is-active {
+  background: #fff;
+  color: var(--iv-primary);
+  box-shadow: 0 8px 20px rgba(17, 24, 39, 0.14);
+  z-index: 1; /* sit above dividers */
+}
+
+

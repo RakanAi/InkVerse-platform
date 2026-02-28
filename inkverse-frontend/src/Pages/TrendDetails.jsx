@@ -2,7 +2,7 @@ import { useEffect, useState, useContext } from "react";
 import { useParams, Link } from "react-router-dom";
 import api from "../Api/api";
 import AuthContext from "../Context/AuthProvider";
-import BrowseBookCard from "../Componenets/BrowseComp/Parts/BrowseBookCard";
+import BrowseBookCard from "@/Shared/Books/brows-book-card/BrowseBookCard";
 import Pager from "../Componenets/BrowseComp/Parts/Pagination";
 
 export default function TrendDetails() {

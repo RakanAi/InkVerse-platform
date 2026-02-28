@@ -4,7 +4,11 @@ import Browser from "./Pages/Browser";
 import { Routes, Route } from "react-router-dom";
 import Home from "./Pages/Home";
 import Ranking from "./Pages/Ranking";
-import Author from "./Pages/Author";
+import AuthorLayout from "./Pages/Author/AuthorLayout";
+import AuthorDashboard from "./Pages/Author/AuthorDashboard";
+import AuthorWorkspace from "./Pages/Author/AuthorWorkspace";
+import AuthorIncome from "./Pages/Author/AuthorIncome";
+import AuthorContract from "./Pages/Author/AuthorContract";
 import BookDetails from "./Pages/BookDetails";
 import ChapterPage from "./Pages/ChapterPage";
 import TrendsPage from "./Pages/Trends";
@@ -28,6 +32,7 @@ import Contact from "./Pages/Contact";
 import Privacy from "./Pages/Privacy";
 import DMCA from "./Pages/DMCA";
 import TermsOfService from "./Pages/TermsOfService";
+import "./styles/inkverse-ui.css";
 
 function App() {
   return (
@@ -38,7 +43,12 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/browser" element={<Browser />} />
           <Route path="/ranking" element={<Ranking />} />
-          <Route path="/author" element={<Author />} />
+          <Route path="/author" element={<AuthorLayout />}>
+              <Route index element={<AuthorDashboard />} />
+              <Route path="workspace" element={<AuthorWorkspace />} />
+              <Route path="income" element={<AuthorIncome />} />
+              <Route path="contract" element={<AuthorContract />} />
+            </Route>
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/privacy" element={<Privacy />} />

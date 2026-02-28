@@ -20,7 +20,10 @@ export default function BrowseBookCard({
   const bookUrl = `/book/${book.id}`; // ✅ adjust if your route is /book/:id
 
   return (
-<div className="iv-browse-card d-flex gap-2 shadow-sm rounded-4 p-2">
+    <div
+      className={`iv-browse-card iv-status-${book.status?.toLowerCase() || "none"} d-flex gap-2 shadow-sm rounded-4 p-2`}
+    >
+      {" "}
       {/* ✅ Clicking cover navigates */}
       <Link to={bookUrl} className="iv-browse-cover">
         <img
@@ -29,7 +32,6 @@ export default function BrowseBookCard({
           loading="lazy"
         />
       </Link>
-
       <div className="iv-browse-body ">
         <div className="iv-browse-tags">
           {(book.tags || []).slice(0, 3).map((name) => (
@@ -39,6 +41,7 @@ export default function BrowseBookCard({
               className="iv-browse-tag"
               onClick={(e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 onPickTag?.(name);
               }}
             >
@@ -72,7 +75,10 @@ export default function BrowseBookCard({
           by <span>{book.authorName || "Unknown"}</span>
         </div>
 
-        <div className="iv-browse-desc text-start overflow ">
+        <div
+          className="iv-browse-desc text-start"
+          title={book.description || ""}
+        >
           {book.description || "No description yet."}
         </div>
 

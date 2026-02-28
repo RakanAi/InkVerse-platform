@@ -1,61 +1,29 @@
 import { useEffect, useMemo, useState } from "react";
-import "./BrowseFilter.css"
+import "./BrowseFilter.css";
 
-const VERSE_TYPES = ["Original", "Fanfic", "AU"];
-const ORIGIN_TYPES = ["PlatformOriginal", "Translation"];
+import DropdownSelect from "../../../Shared/ui/DropdownSelect";
+import Button from "../../../Shared/ui/Button";
+import TextField from "../../../Shared/ui/TextField";
+import Chip from "../../../Shared/ui/Chip";
+import Segmented from "../../../Shared/ui/Segmented";
+import MultiSelectDropdown from "../../../Shared/ui/MultiSelectDropdown";
+import { VERSE_TYPES, STATUS_OPTIONS, SORT_OPTIONS, ORIGIN_TYPES } from "@/domain/books/book-filters";
 
-const SORT_OPTIONS = [
-  { value: "UpdatedAt", label: "Updated" },
-  { value: "CreatedAt", label: "New" },
-  { value: "Random", label: "Random" },
-  { value: "TotalViews", label: "Views" },
-  { value: "Title", label: "Name" },
-  { value: "ChapterCount", label: "Chapters" },
-  { value: "AverageRating", label: "Rating" },
-  { value: "ReviewCount", label: "Reviews" },
-];
-
-const STATUS_OPTIONS = ["Ongoing", "Completed", "Paused", "Dropped"];
-
-function toggleInArray(arr, value) {
-  const s = new Set(arr || []);
-  if (s.has(value)) s.delete(value);
-  else s.add(value);
-  return Array.from(s);
-}
-
-// mode: "include" | "exclude"
+// click cycles: include -> exclude -> none
 function cyclePick({ includeArr, excludeArr, id }) {
   const inc = new Set(includeArr || []);
   const exc = new Set(excludeArr || []);
 
   if (inc.has(id)) {
     inc.delete(id);
-    exc.add(id); // include -> exclude
+    exc.add(id);
   } else if (exc.has(id)) {
-    exc.delete(id); // exclude -> none
+    exc.delete(id);
   } else {
-    inc.add(id); // none -> include
+    inc.add(id);
   }
 
-  return {
-    include: Array.from(inc),
-    exclude: Array.from(exc),
-  };
-}
-
-function Chip({ text, variant = "secondary", onClick, title }) {
-  return (
-    <button
-      type="button"
-      className={`btn btn-${variant} btn-sm`}
-      style={{ borderRadius: 999 }}
-      onClick={onClick}
-      title={title}
-    >
-      {text}
-    </button>
-  );
+  return { include: Array.from(inc), exclude: Array.from(exc) };
 }
 
 export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
@@ -133,74 +101,60 @@ export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
     setQuery((p) => ({ ...p, verseType: vt, pageNumber: 1 }));
 
   return (
-    <div className="card " style={{ top: 12, zIndex: 10 }}>
-      <div className="card-body m">
+    <div className="card" style={{ top: 12, zIndex: 10 }}>
+      <div className="card-body">
         {/* Row 0: VerseType tabs + Clear */}
         <div className="d-flex flex-wrap align-items-center gap-2 mb-2">
-          <div className="btn-group">
-            {VERSE_TYPES.map((vt) => (
-              <button
-                key={vt}
-                className={`btn ${
-                  query.verseType === vt ? "btn-dark" : "btn-outline-dark"
-                }`}
-                onClick={() => verseTab(vt)}
-              >
-                {vt}
-              </button>
-            ))}
-          </div>
+          <Segmented
+            value={query.verseType}
+            onChange={(vt) => verseTab(vt)}
+            options={VERSE_TYPES.map((vt) => ({ value: vt, label: vt }))}
+          />
 
           <div className="ms-auto d-flex gap-2 align-items-center">
-            <button
-              className="btn btn-outline-dark btn-sm"
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setShowMore((x) => !x)}
             >
               {showMore ? "Hide filters" : "More filters"}
-            </button>
-            <button
-              className="btn btn-outline-danger btn-sm"
-              onClick={clearAll}
-            >
+            </Button>
+
+            <Button variant="danger" size="sm" onClick={clearAll}>
               Clear
-            </button>
+            </Button>
           </div>
         </div>
 
         {/* Row 1: Search + Sort + Asc + Status */}
         <div className="row g-2 align-items-center">
           <div className="col-12 col-md-5">
-            <input
-              className="form-control"
+            <TextField
               placeholder="Search title, author, summary…"
               value={searchLocal}
-              onChange={(e) => setSearchLocal(e.target.value)}
+              onChange={setSearchLocal}
             />
           </div>
 
           <div className="col-7 col-md-3">
-            <select
-              className="form-select"
+            <DropdownSelect
               value={query.sortBy}
-              onChange={(e) =>
+              onChange={(v) =>
                 setQuery((p) => ({
                   ...p,
-                  sortBy: e.target.value,
+                  sortBy: v,
                   pageNumber: 1,
                 }))
               }
-            >
-              {SORT_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  Sort: {o.label}
-                </option>
-              ))}
-            </select>
+              options={SORT_OPTIONS}
+              renderLabel={(o) => `Sort: ${o.label}`}
+            />
           </div>
 
           <div className="col-5 col-md-2">
-            <button
-              className="btn btn-outline-dark w-100"
+            <Button
+              variant="outline"
+              className="w-100"
               onClick={() =>
                 setQuery((p) => ({
                   ...p,
@@ -211,44 +165,26 @@ export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
               title="Toggle ascending/descending"
             >
               {query.isAscending ? "Asc" : "Desc"}
-            </button>
+            </Button>
           </div>
 
+          {/* status stays bootstrap for now (we can convert next) */}
           <div className="col-12 col-md-2">
-            <div className="dropdown w-100">
-              <button
-                className="btn btn-outline-dark dropdown-toggle w-100 overflow-hidden"
-                data-bs-toggle="dropdown"
-                type="button"
-              >
-                {statusLabel}
-                {query.statuses?.length ? ` (${query.statuses.length})` : ""}
-              </button>
-              <div className="dropdown-menu p-2" style={{ minWidth: 220 }}>
-                {STATUS_OPTIONS.map((s) => {
-                  const checked = (query.statuses || []).includes(s);
-                  return (
-                    <label
-                      key={s}
-                      className="d-flex align-items-center gap-2 py-1"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={() =>
-                          setQuery((p) => ({
-                            ...p,
-                            statuses: toggleInArray(p.statuses, s),
-                            pageNumber: 1,
-                          }))
-                        }
-                      />
-                      <span>{s}</span>
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
+            <MultiSelectDropdown
+              label={statusLabel}
+              values={query.statuses || []}
+              onChange={(vals) =>
+                setQuery((p) => ({
+                  ...p,
+                  statuses: vals,
+                  pageNumber: 1,
+                }))
+              }
+              options={STATUS_OPTIONS.map((s) => ({
+                value: s,
+                label: s,
+              }))}
+            />
           </div>
         </div>
 
@@ -258,39 +194,33 @@ export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
             <hr className="my-3" />
             <div className="row g-2">
               <div className="col-12 col-md-4">
-                <select
-                  className="form-select"
+                <DropdownSelect
                   value={query.originType}
-                  onChange={(e) =>
+                  onChange={(v) =>
                     setQuery((p) => ({
                       ...p,
-                      originType: e.target.value,
+                      originType: v,
                       pageNumber: 1,
                     }))
                   }
-                >
-                  <option value="">All Origin Types</option>
-                  {ORIGIN_TYPES.map((o) => (
-                    <option key={o} value={o}>
-                      {o}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="All Origin Types"
+                  options={ORIGIN_TYPES.map((o) => ({ value: o, label: o }))}
+                  renderLabel={(o) => o.label}
+                />
               </div>
 
               <div className="col-6 col-md-4">
-                <input
-                  className="form-control"
+                <TextField
                   type="number"
                   min="0"
                   max="5"
                   step="0.1"
                   placeholder="Min rating (0–5)"
                   value={query.minRating}
-                  onChange={(e) =>
+                  onChange={(v) =>
                     setQuery((p) => ({
                       ...p,
-                      minRating: e.target.value,
+                      minRating: v,
                       pageNumber: 1,
                     }))
                   }
@@ -298,17 +228,16 @@ export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
               </div>
 
               <div className="col-6 col-md-4">
-                <input
-                  className="form-control"
+                <TextField
                   type="number"
                   min="0"
                   step="1"
                   placeholder="Min review count"
                   value={query.minReviewCount}
-                  onChange={(e) =>
+                  onChange={(v) =>
                     setQuery((p) => ({
                       ...p,
-                      minReviewCount: e.target.value,
+                      minReviewCount: v,
                       pageNumber: 1,
                     }))
                   }
@@ -318,14 +247,10 @@ export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
 
             <div className="row g-2 mt-2">
               {/* Genres picker */}
-              <div className="col-12 ">
+              <div className="col-12">
                 <div className="d-flex align-items-center justify-content-between mb-1">
                   <span className="borderStart"></span>
-
                   <div className="fw-semibold text-start">Genres</div>
-                  <div className="small text-muted text-end">
-                    click cycles: include → exclude → remove
-                  </div>
                 </div>
 
                 <div className="d-flex flex-wrap gap-2">
@@ -334,11 +259,11 @@ export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
                     const isInc = (query.genreIds || []).includes(gid);
                     const isExc = (query.excludeGenreIds || []).includes(gid);
 
-                    const variant = isInc
-                      ? "dark"
+                    const tone = isInc
+                      ? "include"
                       : isExc
-                        ? "danger"
-                        : "outline-secondary";
+                        ? "exclude"
+                        : "neutral";
                     const title = isInc
                       ? "Included"
                       : isExc
@@ -348,8 +273,7 @@ export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
                     return (
                       <Chip
                         key={gid}
-                        text={g.name}
-                        variant={variant}
+                        tone={tone}
                         title={title}
                         onClick={() => {
                           const next = cyclePick({
@@ -364,7 +288,9 @@ export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
                             pageNumber: 1,
                           }));
                         }}
-                      />
+                      >
+                        {g.name}
+                      </Chip>
                     );
                   })}
                 </div>
@@ -375,9 +301,6 @@ export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
                 <div className="d-flex align-items-center justify-content-between mb-1">
                   <span className="borderStart"></span>
                   <div className="fw-semibold text-start">Tags</div>
-                  <div className="small text-muted text-end">
-                    click cycles: include → exclude → remove
-                  </div>
                 </div>
 
                 <div className="d-flex flex-wrap gap-2 hightLimiter">
@@ -386,11 +309,11 @@ export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
                     const isInc = (query.tagIds || []).includes(tid);
                     const isExc = (query.excludeTagIds || []).includes(tid);
 
-                    const variant = isInc
-                      ? "dark"
+                    const tone = isInc
+                      ? "include"
                       : isExc
-                        ? "danger"
-                        : "outline-secondary";
+                        ? "exclude"
+                        : "neutral";
                     const title = isInc
                       ? "Included"
                       : isExc
@@ -400,8 +323,7 @@ export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
                     return (
                       <Chip
                         key={tid}
-                        text={t.name}
-                        variant={variant}
+                        tone={tone}
                         title={title}
                         onClick={() => {
                           const next = cyclePick({
@@ -416,7 +338,9 @@ export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
                             pageNumber: 1,
                           }));
                         }}
-                      />
+                      >
+                        {t.name}
+                      </Chip>
                     );
                   })}
                 </div>
@@ -433,8 +357,7 @@ export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
               {selectedGenreChips.map((x) => (
                 <Chip
                   key={`g-${x.type}-${x.id}`}
-                  text={`${x.type === "exclude" ? "−" : "+"} ${x.name}`}
-                  variant={x.type === "exclude" ? "danger" : "dark"}
+                  tone={x.type === "exclude" ? "exclude" : "include"}
                   title="Click to remove"
                   onClick={() => {
                     setQuery((p) => ({
@@ -446,14 +369,15 @@ export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
                       pageNumber: 1,
                     }));
                   }}
-                />
+                >
+                  {`${x.type === "exclude" ? "−" : "+"} ${x.name}`}
+                </Chip>
               ))}
 
               {selectedTagChips.map((x) => (
                 <Chip
                   key={`t-${x.type}-${x.id}`}
-                  text={`${x.type === "exclude" ? "−" : "+"} ${x.name}`}
-                  variant={x.type === "exclude" ? "danger" : "dark"}
+                  tone={x.type === "exclude" ? "exclude" : "include"}
                   title="Click to remove"
                   onClick={() => {
                     setQuery((p) => ({
@@ -465,7 +389,9 @@ export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
                       pageNumber: 1,
                     }));
                   }}
-                />
+                >
+                  {`${x.type === "exclude" ? "−" : "+"} ${x.name}`}
+                </Chip>
               ))}
             </div>
           </>

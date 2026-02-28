@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 500">
+  <rect width="1000" height="500" fill="#eef2f7"/>
+  <!-- Continental outlines - simplified equirectangular projection -->
+  <!-- North America -->
+  <path d="M120,80 L220,60 L320,70 L380,100 L400,160 L380,220 L320,260 L260,250 L180,220 L120,180 L100,130Z" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.8"/>
+  <!-- South America -->
+  <path d="M280,220 L360,200 L420,240 L440,320 L420,420 L360,460 L300,440 L260,380 L260,300Z" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.8"/>
+  <!-- Europe -->
+  <path d="M440,100 L520,80 L600,90 L640,120 L620,180 L560,200 L500,190 L440,160Z" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.8"/>
+  <!-- Africa -->
+  <path d="M480,200 L540,180 L600,200 L620,280 L600,380 L540,420 L480,400 L460,320 L460,250Z" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.8"/>
+  <!-- Asia -->
+  <path d="M540,80 L680,60 L820,80 L920,100 L960,160 L940,240 L860,280 L720,270 L600,240 L540,180Z" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.8"/>
+  <!-- Indian subcontinent -->
+  <path d="M680,220 L740,200 L780,240 L770,300 L720,320 L660,300 L650,250Z" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.8"/>
+  <!-- Southeast Asia -->
+  <path d="M760,280 L840,260 L880,300 L860,360 L800,380 L740,360 L730,320Z" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.8"/>
+  <!-- Australia -->
+  <path d="M820,340 L920,320 L960,360 L940,420 L880,460 L820,440 L780,400 L790,360Z" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.8"/>
+</svg>

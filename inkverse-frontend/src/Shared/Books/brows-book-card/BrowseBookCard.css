@@ -28,27 +28,23 @@
   gap:6px;
 }
 
-.iv-browse-tags{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  line-height:1;
+.iv-browse-tag,
+.iv-browse-genre{
+  font-size: .72rem;
+  letter-spacing: .05em;
+  font-weight: 800;
+  text-transform: uppercase;
+  cursor: pointer;
+  user-select: none;
 }
 
 .iv-browse-tag{
-  font-size:.72rem;
-  letter-spacing:.06em;
   color:#2f7cf6;
-  font-weight:700;
-  text-transform:uppercase;
 }
 
 .iv-browse-genre{
-      font-size:.52rem;
-  letter-spacing:.06em;
-  color:#020a15;
-  font-weight:700;
-  text-transform:uppercase;
+  color:#111827;
+  opacity:.75;
 }
 
 .iv-browse-title{
@@ -126,17 +122,41 @@
 ------------------------------ */
 @media (max-width: 576px) {
   /* the outer wrapper is Bootstrap d-flex; force stacking on mobile */
-  .iv-browse-card {
-    flex-direction: column !important;
-    align-items: center;
-  }
+ .iv-browse-card{
+  background:#fff;
+  border:1px solid rgba(17,24,39,.08);
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.iv-browse-card:hover{
+  transform: translateY(-2px);
+  border-color: rgba(47,124,246,.22);
+  box-shadow: 0 14px 36px rgba(17,24,39,.10);
+}
 
   /* make cover full-width and shorter */
-  .iv-browse-cover {
-    width: 100%;
-    height: 210px;
-    border-radius: 14px;
-  }
+ .iv-browse-cover{
+  width: 170px;
+  min-width: 170px;
+  height: 240px;              /* fixed */
+  border-radius: 14px;
+  overflow: hidden;
+  display: block;
+  text-decoration: none;
+  transition: transform 180ms ease;
+  background: rgba(47,124,246,.06);
+}
+
+.iv-browse-cover img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+.iv-browse-cover:hover{
+  transform: translateY(-4px);
+}
 
   /* title can wrap a bit on mobile */
   .iv-browse-title {
@@ -186,4 +206,36 @@
   flex-direction: column;
   height: 100%;        /* 🔑 allows pushing meta to bottom */
   min-width: 0;
+}
+
+/* Base card */
+.iv-browse-card{
+  background:#fff;
+  border:1px solid rgba(17,24,39,.08);
+  border-top:4px solid transparent;   /* default */
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+/* Status top borders */
+
+.iv-status-ongoing{
+  border-top-color: #22c55e;
+}
+
+.iv-status-completed{
+  border-top-color: #3b82f6;
+}
+
+.iv-status-dropped{
+  border-top-color: #ee00ff;
+}
+
+.iv-status-paused{
+  border-top-color: #eab308;
+}
+
+/* Optional: subtle hover enhancement */
+.iv-browse-card:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 14px 36px rgba(17,24,39,.10);
 }

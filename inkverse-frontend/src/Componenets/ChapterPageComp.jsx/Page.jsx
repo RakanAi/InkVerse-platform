@@ -15,7 +15,7 @@ import AuthContext from "../../Context/AuthProvider";
 import ReaderSettings, { loadReaderPrefs, saveReaderPrefs } from "./ReaderSettings";
 
 export default function ContentSection() {
-  const { id, chapterId } = useParams(); // id = bookId
+  const { id, chapterId } = useParams();
   const navigate = useNavigate();
 
   const [chapter, setChapter] = useState(null);

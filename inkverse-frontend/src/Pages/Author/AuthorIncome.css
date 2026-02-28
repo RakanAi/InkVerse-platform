@@ -1,0 +1,408 @@
+/* Author Income / Analytics - Reference: WebNovel dashboard */
+
+/* Page header */
+.author-income-header {
+  margin-bottom: 1.5rem;
+}
+
+.author-income-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 0.25rem 0;
+  letter-spacing: -0.02em;
+}
+
+.author-income-subtitle {
+  font-size: 0.95rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Daily Key Metrics - Line chart version */
+.author-income-metrics-section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e5e7eb;
+}
+
+.author-income-metrics-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.author-income-metrics-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.author-income-metrics-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.author-income-metrics-info {
+  color: #9ca3af;
+  cursor: pointer;
+}
+
+.author-income-metrics-subtitle {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 0.25rem;
+}
+
+.author-income-metrics-periods {
+  display: flex;
+  gap: 0;
+}
+
+.author-income-metrics-period {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #9ca3af;
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+}
+
+.author-income-metrics-period.active {
+  color: #ec4899;
+  border-bottom-color: #ec4899;
+}
+
+/* Line chart area */
+.author-income-line-chart {
+  height: 200px;
+  position: relative;
+  margin-top: 1rem;
+}
+
+.author-income-line-chart svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Chart legend */
+.author-income-chart-legend {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.author-income-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.author-income-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.author-income-legend-dot.pink { background: #ec4899; }
+.author-income-legend-dot.yellow { background: #fbbf24; }
+.author-income-legend-dot.blue { background: #4a9eff; }
+
+/* 6 Metric cards */
+.author-income-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+@media (max-width: 1200px) {
+  .author-income-stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .author-income-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.author-income-stats-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.author-income-stat-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.author-income-stat-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.4rem;
+}
+
+.author-income-stat-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.02em;
+}
+
+.author-income-stat-trend {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: #1e6fd9;
+  margin-top: 0.35rem;
+}
+
+.author-income-period-select {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #374151;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* Interaction Trends section */
+.author-income-interaction-section {
+  margin-bottom: 2rem;
+}
+
+.author-income-interaction-header {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 3px solid #ec4899;
+}
+
+.author-income-interaction-legend {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-bottom: 1.5rem;
+}
+
+.author-income-interaction-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* Geo + Gender row */
+.author-income-geo-gender-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+@media (max-width: 900px) {
+  .author-income-geo-gender-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Geographical Distribution */
+.author-income-geo-panel {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.25rem;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.author-income-geo-header {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 1rem;
+}
+
+.author-income-geo-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  align-items: center;
+}
+
+@media (max-width: 500px) {
+  .author-income-geo-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+.author-income-geo-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.author-income-geo-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.4rem 0;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.author-income-geo-map-wrap {
+  position: relative;
+  min-height: 140px;
+  aspect-ratio: 2 / 1;
+  max-width: 100%;
+}
+
+.author-income-geo-map {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.author-income-geo-bubble {
+  position: absolute;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4a9eff 0%, #8b5cf6 100%);
+  opacity: 0.85;
+  cursor: default;
+}
+
+/* Gender Distribution */
+.author-income-gender-panel {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.25rem;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.author-income-gender-header {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 1rem;
+}
+
+.author-income-gender-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.author-income-donut-wrap {
+  position: relative;
+  width: 160px;
+  height: 160px;
+  margin-bottom: 1rem;
+}
+
+.author-income-gender-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.author-income-gender-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.author-income-gender-square {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.author-income-gender-square.male { background: #4a9eff; }
+.author-income-gender-square.female { background: #ec4899; }
+.author-income-gender-square.unknown { background: #d1d5db; }
+
+/* Distribution of Reading Time */
+.author-income-reading-section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.author-income-reading-header {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 1rem;
+}
+
+.author-income-reading-chart {
+  height: 200px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 0.5rem 0;
+}
+
+.author-income-reading-bar {
+  flex: 1;
+  min-width: 6px;
+  max-width: 20px;
+  background: #4a9eff;
+  border-radius: 4px 4px 0 0;
+  min-height: 4px;
+  transition: opacity 0.2s;
+}
+
+.author-income-reading-bar:hover {
+  opacity: 0.8;
+}

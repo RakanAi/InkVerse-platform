@@ -2,9 +2,21 @@ import { useEffect, useMemo, useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import api from "../../Api/api";
 import BrowseFilterBar from "./Parts/BrowseFilterBar";
-import BrowseBookCard from "./Parts/BrowseBookCard";
+import BrowseBookCard from "../../Shared/Books/brows-book-card/BrowseBookCard";
 import Pager from "./Parts/Pagination";
 
+import PageHeader from "../../Shared/ui/PageHeader";
+import LoadingState from "../../Shared/ui/LoadingState";
+import EmptyState from "../../Shared/ui/EmptyState";
+import ErrorState from "../../Shared/ui/ErrorState";
+
+/**
+ * @typedef {import("@/features/browse/browse.query").BrowseQuery} BrowseQuery
+ */
+
+/**
+ * @param {BrowseQuery} q
+ */
 function buildParams(q) {
   const p = {};
 
@@ -29,7 +41,7 @@ function buildParams(q) {
   if (q.excludeTagIds?.length) p.excludeTagIds = q.excludeTagIds;
 
   p.pageNumber = q.pageNumber ?? 1;
-  p.pageSize = 20; // ✅ fixed to 20
+  p.pageSize = 20;
 
   return p;
 }
@@ -41,27 +53,42 @@ const norm = (s) =>
     .toLowerCase();
 
 export default function Browse() {
-  const [query, setQuery] = useState({
-    verseType: "Original",
-    search: "",
-    sortBy: "UpdatedAt",
-    isAscending: false,
-    statuses: [],
-    originType: "",
-    minRating: "",
-    minReviewCount: "",
-    genreIds: [],
-    excludeGenreIds: [],
-    tagIds: [],
-    excludeTagIds: [],
-    pageNumber: 1,
-  });
+
+/**
+ * @typedef {import("@/features/browse/browse.query").BrowseQuery} BrowseQuery
+ */
+
+/** @type {[BrowseQuery, Function]} */
+const [query, setQuery] = useState({
+  verseType: "Original",
+  search: "",
+  sortBy: "UpdatedAt",
+  isAscending: false,
+  statuses: [],
+  originType: "",
+  minRating: "",
+  minReviewCount: "",
+  genreIds: [],
+  excludeGenreIds: [],
+  tagIds: [],
+  excludeTagIds: [],
+  pageNumber: 1,
+});
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const [genres, setGenres] = useState([]);
   const [tags, setTags] = useState([]);
 
   const [bookmarkedIds, setBookmarkedIds] = useState(new Set());
   const [bookmarkError, setBookmarkError] = useState("");
+
+  const { search: quearySearch } = useLocation();
+  const lastAppliedRef = useRef(null);
+
+  const params = useMemo(() => buildParams(query), [query]);
 
   const [data, setData] = useState({
     items: [],
@@ -70,11 +97,6 @@ export default function Browse() {
     totalCount: 0,
     totalPages: 0,
   });
-
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  const params = useMemo(() => buildParams(query), [query]);
 
   const tagIdByName = useMemo(() => {
     const m = new Map();
@@ -112,43 +134,39 @@ export default function Browse() {
     })();
   }, []);
 
-const { search: qs } = useLocation();
-const lastAppliedRef = useRef(null);
+  useEffect(() => {
+    // require both lookups loaded so ids can resolve safely
+    const lookupsReady = (genres?.length ?? 0) > 0 && (tags?.length ?? 0) > 0;
+    if (!lookupsReady) return;
 
-useEffect(() => {
-  // require both lookups loaded so ids can resolve safely
-  const lookupsReady = (genres?.length ?? 0) > 0 && (tags?.length ?? 0) > 0;
-  if (!lookupsReady) return;
+    // prevent re-applying same quearySearch
+    if (lastAppliedRef.current === quearySearch) return;
 
-  // prevent re-applying same qs
-  if (lastAppliedRef.current === qs) return;
-  lastAppliedRef.current = qs;
+    lastAppliedRef.current = quearySearch;
 
-  const p = new URLSearchParams(qs);
+    const p = new URLSearchParams(quearySearch);
+    const genreName = norm(p.get("genre"));
+    const tagName = norm(p.get("tag"));
 
-  const genreName = norm(p.get("genre"));
-  const tagName = norm(p.get("tag"));
+    // if URL has neither, do nothing
+    if (!genreName && !tagName) return;
 
-  // if URL has neither, do nothing
-  if (!genreName && !tagName) return;
+    const gId = genreName ? genreIdByName.get(genreName) : null;
+    const tId = tagName ? tagIdByName.get(tagName) : null;
 
-  const gId = genreName ? genreIdByName.get(genreName) : null;
-  const tId = tagName ? tagIdByName.get(tagName) : null;
+    setQuery((q) => ({
+      ...q,
+      pageNumber: 1,
 
-  setQuery((q) => ({
-    ...q,
-    pageNumber: 1,
+      // set ONLY if we successfully resolved
+      genreIds: gId ? [gId] : [],
+      tagIds: tId ? [tId] : [],
 
-    // set ONLY if we successfully resolved
-    genreIds: gId ? [gId] : [],
-    tagIds: tId ? [tId] : [],
-
-    // clear excludes so filters are clean
-    excludeGenreIds: [],
-    excludeTagIds: [],
-  }));
-}, [qs, genres, tags, genreIdByName, tagIdByName]);
-
+      // clear excludes so filters are clean
+      excludeGenreIds: [],
+      excludeTagIds: [],
+    }));
+  }, [quearySearch, genres, tags, genreIdByName, tagIdByName]);
 
   useEffect(() => {
     (async () => {
@@ -200,7 +218,7 @@ useEffect(() => {
     return () => {
       cancelled = true;
     };
-  }, [params]);
+  }, [params, refreshKey]);
 
   // Bookmark toggle (ENDPOINT PLACEHOLDER)
   const toggleBookmark = async (book) => {
@@ -241,73 +259,85 @@ useEffect(() => {
   };
 
   return (
-    <div className="container-fluid py-3" style={{ maxWidth: "1300px" }}>
-      <BrowseFilterBar
-        query={query}
-        setQuery={setQuery}
-        genres={genres}
-        tags={tags}
-      />
+    <div className="iv-page">
+      <div className="iv-surface" style={{ maxWidth: 1300, margin: "0 auto" }}>
+        <PageHeader
+          title="Browse"
+          subtitle="Find something new to read — filter by tags, genres, rating, and more."
+        />
 
-      {bookmarkError && (
-        <div className="alert alert-warning mt-2 py-2">{bookmarkError}</div>
-      )}
+        <BrowseFilterBar
+          query={query}
+          setQuery={setQuery}
+          genres={genres}
+          tags={tags}
+        />
 
-      <div className="mt-3">
-        {error && <div className="alert alert-danger">{error}</div>}
-        {loading && <div className="text-muted">Loading…</div>}
-
-        {!loading && !error && (
-          <>
-            <div className="row g-3 mt-2">
-              {(data.items || []).map((b) => (
-                <div key={b.id} className="col-12 col-lg-6 d-flex">
-                  <BrowseBookCard
-                    book={b}
-                    isBookmarked={bookmarkedIds.has(b.id)}
-                    onToggleBookmark={toggleBookmark}
-                    onPickTag={(name) => {
-                      const id = tagIdByName.get(String(name).toLowerCase());
-                      if (!id) return;
-                      setQuery((p) => ({
-                        ...p,
-                        tagIds: addIncludedId(p.tagIds, id),
-                        excludeTagIds: (p.excludeTagIds || []).filter(
-                          (x) => x !== id,
-                        ),
-                        pageNumber: 1,
-                      }));
-                    }}
-                    onPickGenre={(name) => {
-                      const id = genreIdByName.get(String(name).toLowerCase());
-                      if (!id) return;
-                      setQuery((p) => ({
-                        ...p,
-                        genreIds: addIncludedId(p.genreIds, id),
-                        excludeGenreIds: (p.excludeGenreIds || []).filter(
-                          (x) => x !== id,
-                        ),
-                        pageNumber: 1,
-                      }));
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
-
-            <Pager
-              pageNumber={data.pageNumber}
-              totalPages={data.totalPages}
-              onPage={(p) => setQuery((prev) => ({ ...prev, pageNumber: p }))}
-            />
-
-            {(!data.items || data.items.length === 0) && (
-              <div className="text-muted mt-3">
-                No books match your filters.
-              </div>
-            )}
-          </>
+        {bookmarkError && (
+          <div className="alert alert-warning mt-3 mb-0 py-2">
+            {bookmarkError}
+          </div>
         )}
+
+        <div className="mt-3">
+          {loading ? (
+            <LoadingState text="Loading books..." />
+          ) : error ? (
+            <ErrorState
+              subtitle={error}
+              onRetry={() => setRefreshKey((k) => k + 1)}
+            />
+          ) : !data.items || data.items.length === 0 ? (
+            <EmptyState
+              title="No books match your filters"
+              subtitle="Try removing some filters, searching a different keyword, or exploring other tags."
+            />
+          ) : (
+            <>
+              <div className="row g-3 mt-2">
+                {(data.items || []).map((b) => (
+                  <div key={b.id} className="col-12 col-lg-6 d-flex">
+                    <BrowseBookCard
+                      book={b}
+                      isBookmarked={bookmarkedIds.has(b.id)}
+                      onToggleBookmark={toggleBookmark}
+                      onPickTag={(name) => {
+                        const id = tagIdByName.get(String(name).toLowerCase());
+                        if (!id) return;
+                        setQuery((p) => ({
+                          ...p,
+                          tagIds: addIncludedId(p.tagIds, id),
+                          excludeTagIds: (p.excludeTagIds || []).filter(
+                            (x) => x !== id
+                          ),
+                          pageNumber: 1,
+                        }));
+                      }}
+                      onPickGenre={(name) => {
+                        const id = genreIdByName.get(String(name).toLowerCase());
+                        if (!id) return;
+                        setQuery((p) => ({
+                          ...p,
+                          genreIds: addIncludedId(p.genreIds, id),
+                          excludeGenreIds: (p.excludeGenreIds || []).filter(
+                            (x) => x !== id
+                          ),
+                          pageNumber: 1,
+                        }));
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <Pager
+                pageNumber={data.pageNumber}
+                totalPages={data.totalPages}
+                onPage={(p) => setQuery((prev) => ({ ...prev, pageNumber: p }))}
+              />
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
