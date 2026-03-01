@@ -1,0 +1,3 @@
+export function getTagName(tag) {
+  return tag?.name ?? tag?.Name ?? tag?.tagName ?? tag?.TagName ?? "";
+}

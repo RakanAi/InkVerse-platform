@@ -55,7 +55,7 @@ export default function TrendCora() {
 
   return (
     <section
-      className="iv-trends iv-container mt-3"
+      className="iv-trends iv iv-container mt-3"
       style={{ maxWidth: "1300px", justifySelf: "center" }}
     >
       <div className="iv-trends__header mb-2">

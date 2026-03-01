@@ -1,26 +1,41 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FaStar } from "react-icons/fa";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/navigation";
 import { Navigation } from "swiper/modules";
+
 import api from "../../../Api/api";
 import "./RecentReviews.css";
-import { absUrl } from "../../../Utils/absUrl";
+// import { absUrl } from "../../../Utils/absUrl";
 
-const FALLBACK_USER_IMG = "https://ui-avatars.com/api/?name=User"; // better than bg image
+import PageHeader from "@/Shared/ui/PageHeader";
+import LoadingState from "@/Shared/ui/LoadingState";
+import EmptyState from "@/Shared/ui/EmptyState";
+import ErrorState from "@/Shared/ui/ErrorState";
+import ReviewCard from "@/Shared/reviews/ReviewCard/ReviewCard";
+import ReviewCardV2 from "@/Shared/reviews/ReviewCard/ReviewCardV2";
 
-const pick = (obj, keys, fallback = "") => {
-  for (const k of keys) {
-    const v = obj?.[k];
-    if (v !== undefined && v !== null && String(v).trim() !== "") return v;
-  }
-  return fallback;
-};
+import {
+  REVIEWS_MAX_WIDTH,
+  RECENT_REVIEWS_QUERY,
+  RECENT_REVIEWS_SWIPER,
+  RECENT_REVIEWS_LABELS,
+} from "@/features/reviews/reviews.presets";
+import { pickFirst } from "@/features/reviews/utils/pickFirst";
+import { buildRecentReviewsEndpoint } from "@/features/reviews/utils/buildRecentReviewsEndpoint";
+
+const FALLBACK_USER_IMG = "https://ui-avatars.com/api/?name=User";
 
 export default function RecentReviews() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const endpoint = useMemo(
+    () => buildRecentReviewsEndpoint(RECENT_REVIEWS_QUERY),
+    [],
+  );
 
   useEffect(() => {
     let alive = true;
@@ -28,12 +43,19 @@ export default function RecentReviews() {
     (async () => {
       try {
         setLoading(true);
-        const res = await api.get("/reviews/recent?take=10");
-        const list = Array.isArray(res.data) ? res.data : res.data?.items ?? [];
+        setError("");
+
+        const res = await api.get(endpoint);
+        const list = Array.isArray(res.data)
+          ? res.data
+          : (res.data?.items ?? []);
         if (alive) setReviews(list);
       } catch (err) {
         console.error("Failed to load recent reviews:", err);
-        if (alive) setReviews([]);
+        if (alive) {
+          setReviews([]);
+          setError("Failed to load recent reviews.");
+        }
       } finally {
         if (alive) setLoading(false);
       }
@@ -42,96 +64,44 @@ export default function RecentReviews() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [endpoint]);
 
   return (
     <section
       id="recent-reviews-wrap"
-      className="row"
-      style={{ maxWidth: "1300px", margin: "auto" }}
+      className="iv-surface mb-2 mt-4"
+      style={{ maxWidth: `${REVIEWS_MAX_WIDTH}px`, margin: "auto" }}
     >
-      <div className="d-flex text-start mt-3">
-        <h2 className="borderStart mt-2"></h2>
-        <h3 className="mt-2">RECENT REVIEWS</h3>
+      <div className="d-flex text-start align-items-center">
+        <span className="borderStart mt-2" />
+        <div className="ms-2 mt-2" style={{ flex: 1 }}>
+          <PageHeader
+            title={RECENT_REVIEWS_LABELS.title}
+            subtitle={RECENT_REVIEWS_LABELS.subtitle}
+          />
+        </div>
       </div>
 
       {loading ? (
-        <div className="text-muted">Loading recent reviews…</div>
+        <LoadingState title={RECENT_REVIEWS_LABELS.loading} />
+      ) : error ? (
+        <ErrorState title={error} />
       ) : reviews.length === 0 ? (
-        <div className="text-muted">No reviews yet.</div>
+        <EmptyState title={RECENT_REVIEWS_LABELS.empty} />
       ) : (
         <Swiper
           navigation
           modules={[Navigation]}
-          spaceBetween={20}
-          breakpoints={{
-            340: { slidesPerView: 1 },
-            768: { slidesPerView: 2 },
-          }}
+          spaceBetween={RECENT_REVIEWS_SWIPER.spaceBetween}
+          breakpoints={RECENT_REVIEWS_SWIPER.breakpoints}
           className="recent-reviews-swiper px-0 px-lg-5"
         >
           {reviews.map((r, idx) => {
-            const id = pick(r, ["id", "Id"], idx);
-
-            const userName = pick(r, ["userName", "UserName", "user", "User"], "Unknown");
-
-            const rawUserImg = pick(
-              r,
-              ["userAvatarUrl", "UserAvatarUrl", "avatarUrl", "AvatarUrl", "image", "Image"],
-              ""
-            );
-            const userImg = rawUserImg ? absUrl(rawUserImg) : FALLBACK_USER_IMG;
-
-            const ratingRaw = pick(r, ["rating", "Rating"], null);
-            const rating = ratingRaw === null ? null : Number(ratingRaw);
-
-            const bookTitle = pick(r, ["bookTitle", "BookTitle", "book", "Book"], "Unknown Book");
-            const bookId = pick(r, ["bookId", "BookId"], null);
-
-            const reviewText = pick(r, ["content", "Content", "reviewText", "ReviewText", "text"], "");
+            const id = pickFirst(r, ["id", "Id"], idx);
 
             return (
               <SwiperSlide key={id}>
-                <div className="review-card shadow" style={{ height: "300px" }}>
-                  <div className="user-wrap">
-                    <img
-                      src={userImg}
-                      alt={userName}
-                      className="user-img"
-                      onError={(e) => {
-                        e.currentTarget.src = FALLBACK_USER_IMG;
-                      }}
-                    />
-
-                    <div className="user-details">
-                      <div className="name fw-bold fs-4">{userName}</div>
-                      <div className="rating fs-4">
-                        <FaStar color="#ffc107" />{" "}
-                        {Number.isFinite(rating) ? rating.toFixed(1) : "N/A"}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="review-content col-11 m-auto">
-                    {bookId ? (
-                      <a
-                        href={`/book/${bookId}`}
-                        className="review-book text-truncate text-decoration-none text-start"
-                        title={bookTitle}
-                      >
-                        Book Title : {bookTitle}
-                      </a>
-                    ) : (
-                      <h6 className="review-book text-truncate" title={bookTitle}>
-                        {bookTitle}
-                      </h6>
-                    )}
-
-                    <p className="review-text text-start border p-2 rounded mt-2">
-                      {reviewText || "—"}
-                    </p>
-                  </div>
-                </div>
+                <ReviewCardV2 review={r} height={350} />
               </SwiperSlide>
             );
           })}

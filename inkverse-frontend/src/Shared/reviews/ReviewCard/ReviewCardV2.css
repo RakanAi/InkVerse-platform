@@ -1,0 +1,130 @@
+.iv-rv2-card {
+  --font-color: #323232;
+  --bg-color: #f0f1f3;
+
+  width: 100%;
+  border-radius: 20px;
+  background: var(--bg-color);
+
+  /* Neumorphic feel (similar to your sample) */
+  box-shadow: -9px 9px 18px rgba(90, 90, 90, 0.25),
+              9px -9px 18px rgba(255, 255, 255, 0.9);
+
+  display: flex;
+  flex-direction: column;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+  overflow: hidden;
+}
+
+.iv-rv2-card:hover {
+  transform: scale(1.01);
+  box-shadow: 0px 0px 14px 2px rgba(90, 90, 90, 0.25);
+}
+
+.iv-rv2-coverLink {
+  text-decoration: none;
+  color: inherit;
+}
+
+.iv-rv2-cover {
+  position: relative;
+  height: 140px; /* top strip */
+  overflow: hidden;
+}
+
+/* Make cover show TOP part */
+.iv-rv2-cover :is(img, .iv-cover, .iv-book-cover, .iv-book-cover__img) {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+  display: block;
+}
+
+.iv-rv2-coverFade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.05), rgba(0,0,0,0.18));
+  pointer-events: none;
+}
+
+.iv-rv2-body {
+  padding: 14px 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  flex: 1;
+}
+
+.iv-rv2-title {
+  color: var(--font-color);
+  text-align: center;
+  font-weight: 900;
+  font-size: 16px;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.iv-rv2-text {
+  color: var(--font-color);
+  font-size: 0.92rem;
+  line-height: 1.45;
+  opacity: 0.85;
+
+  height: 100px;
+
+  /* clean preview (no scroll) */
+  scrollbar-width: none;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.55);
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+.iv-rv2-footer {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.iv-rv2-user {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.iv-rv2-userImg {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  object-fit: cover;
+  background: #e1e3e6;
+  border: 1px solid rgba(0,0,0,0.06);
+}
+
+.iv-rv2-userName {
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: rgba(0,0,0,0.75);
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 140px;
+}
+
+.iv-rv2-action {
+  text-decoration: none;
+}

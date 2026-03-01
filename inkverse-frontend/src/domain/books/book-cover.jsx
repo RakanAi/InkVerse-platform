@@ -1,6 +1,8 @@
 import { absUrl } from "@/Utils/absUrl";
 
-export const FALLBACK_COVER = "/img/placeholder-cover.png";
+export const FALLBACK_COVER = "/public/img/placeholder-cover.png";
+
+
 
 export function getBookCoverSrc(book, fallback = FALLBACK_COVER) {
   const raw =
