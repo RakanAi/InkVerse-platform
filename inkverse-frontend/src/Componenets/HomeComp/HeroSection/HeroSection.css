@@ -43,4 +43,8 @@ div{
 .hero-btn {
   font-size: clamp(0.9rem, 2vw, 1rem);
   padding: clamp(0.5rem, 1.5vw, 1rem) clamp(1rem, 2vw, 1.5rem);
+  transition: all .25s ease !important;
+}
+.hero-btn:hover{
+    transform: translateY(-3px);
 }

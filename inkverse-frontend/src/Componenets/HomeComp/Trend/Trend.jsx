@@ -4,12 +4,15 @@ import { Link } from "react-router-dom";
 import api from "../../../Api/api";
 import "./Trend.css";
 import { absUrl } from "../../../Utils/absUrl";
+import Button from "@/Shared/ui/Button";
+
+import PageHeader from "@/Shared/ui/PageHeader";
+import LoadingState from "@/Shared/ui/LoadingState";
+import EmptyState from "@/Shared/ui/EmptyState";
 
 export default function TrendCora() {
   const [trends, setTrends] = useState([]);
   const [loading, setLoading] = useState(true);
-
-
 
   const getImg = (t) => t.imageUrl ?? t.ImageUrl ?? "";
   const getName = (t) => t.name ?? t.Name ?? "";
@@ -59,24 +62,26 @@ export default function TrendCora() {
       style={{ maxWidth: "1300px", justifySelf: "center" }}
     >
       <div className="iv-trends__header mb-2">
-        <div className="d-flex">
-          <h2 className="borderStart mt-2"></h2>
-          <h4 className="text-dark  pt-1 m-0">Trending Concepts</h4>
-        </div>
-        <Link className="iv-link small" to="/trend">
-          See all →
-        </Link>
+
+          <span className="borderStart mt-2" />
+            <PageHeader
+              title="Trending Concepts"
+              subtitle="Fresh ideas and worlds readers are exploring right now."
+            />
+
+        <Button className="text-white small" to="/trend">
+          SeeAll→
+        </Button>
       </div>
 
       {loading ? (
-        <div className="text-muted">Loading trends…</div>
+        <LoadingState title="Loading trends…" />
       ) : trends.length === 0 ? (
-        <div className="text-muted">No trending items yet.</div>
+        <EmptyState title="No trending items yet." />
       ) : (
         <Carousel className="iv-trends__carousel" interval={5000} pause="hover">
           {limited.map((t) => (
             <Carousel.Item key={getId(t)}>
-              <Link to={`/trend/${getId(t)}`} className="iv-trends__slide">
                 <img
                   className="iv-trends__img"
                   src={absUrl(getImg(t))}
@@ -84,19 +89,18 @@ export default function TrendCora() {
                   onError={(e) => (e.currentTarget.style.display = "none")}
                 />
                 <div className="iv-trends__overlay" />
-                <div className="iv-trends__caption">
+                <div className="iv-trends__caption text-white">
                   <div className="iv-trends__badge">
                     🔥 Trending : {getSlug(t)}
                   </div>
-                  <h5 className="iv-trends__title">{getName(t)}</h5>
+                  <p className="iv-trends__title text-white">{getName(t)}</p>
                   {getDesc(t) ? (
                     <p className="iv-trends__desc">{getDesc(t)}</p>
                   ) : null}
-                  <div className="iv-trends__cta btn btn-outline-light btn-sm">
+                  <Button className="iv-trends__cta btn btn-outline-light btn-sm" to={`/trend/${getId(t)}`}>
                     Explore
-                  </div>
+                  </Button>
                 </div>
-              </Link>
             </Carousel.Item>
           ))}
         </Carousel>

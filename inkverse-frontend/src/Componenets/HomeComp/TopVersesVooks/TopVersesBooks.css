@@ -41,6 +41,7 @@
   box-shadow: 0 8px 18px rgba(0,0,0,0.12); /* “free” feel */
   transition: transform 180ms ease, box-shadow 180ms ease;
    aspect-ratio: 2 / 3;
+   
 }
 
 .iv-top-cover:hover{
@@ -53,6 +54,8 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  overflow: visible !important;
+
 }
 
 .iv-top-meta {

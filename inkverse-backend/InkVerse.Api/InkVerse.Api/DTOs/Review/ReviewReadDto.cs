@@ -23,6 +23,8 @@ namespace InkVerse.Api.DTOs.Review
 
         public string? MyReaction { get; set; } // "like" | "dislike" | null
 
+        public string? BookCoverImageUrl { get; set; }
+
 
         // ✅ breakdown
         public double CharacterAccuracy { get; set; }

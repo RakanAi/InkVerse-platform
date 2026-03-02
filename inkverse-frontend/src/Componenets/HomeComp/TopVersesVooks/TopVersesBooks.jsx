@@ -17,13 +17,14 @@ import {
 } from "@/features/home/topbooks/topbooks.presets";
 import { buildTopByVerseEndpoint } from "@/features/home/topbooks/utils/buildTopByVerseEndpoint";
 import { normalizeTopBooksResponse } from "@/features/home/topbooks/utils/normalizeTopBooksResponse";
+import Surface from "@/Shared/ui/Surface";
 
 function ListCard({ title, items, loading }) {
   return (
     <div className="col-12 col-md-6 col-lg-4">
-      <div className="iv-surface">
-        <div className="iv-top-head">
-          <h5 className="m-0 text-start mb-2">{title}</h5>
+      <Surface className="iv-top-car">
+        <div className="iv-top-head border-bottom">
+          <p className="m-0 text-start mb-2">{title}</p>
         </div>
 
         {loading ? (
@@ -93,7 +94,7 @@ function ListCard({ title, items, loading }) {
             {TOPBOOKS_LABELS.cta}
           </Link>
         </div>
-      </div>
+      </Surface>
     </div>
   );
 }

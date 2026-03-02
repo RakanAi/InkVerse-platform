@@ -19,6 +19,7 @@ import {
 import { getVisibleCount } from "@/features/home/newbooks/getVisibleCount";
 import { buildBooksQuery } from "@/features/home/newbooks/utils/buildBooksQuery";
 import Chip from "@/Shared/ui/Chip";
+import PageHeader from "@/Shared/ui/PageHeader";
 
 export default function NewBooks() {
   const [books, setBooks] = useState([]);
@@ -76,8 +77,10 @@ export default function NewBooks() {
     >
       <div className="d-flex align-items-center justify-content-between">
         <div className="d-flex">
-          <h2 className="borderStart mt-2"></h2>
-          <h4 className="text-start my-2">New Books</h4>
+           <PageHeader
+                        title="Inkverse Leatest"
+                        subtitle="Discover the latest stories and worlds just added to InkVerse."
+            />
         </div>
 
         <Link className="iv-link small my-1" to="/Browser">

@@ -1,71 +1,73 @@
-import { useEffect, useState, useContext } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import api from "../Api/api";
 import AuthContext from "../Context/AuthProvider";
+
+import PageHeader from "@/Shared/ui/PageHeader";
+import LoadingState from "@/Shared/ui/LoadingState";
+import ErrorState from "@/Shared/ui/ErrorState";
+import EmptyState from "@/Shared/ui/EmptyState";
+import DropdownSelect from "@/Shared/ui/DropdownSelect";
+import Button from "@/Shared/ui/Button";
+
 import BrowseBookCard from "@/Shared/Books/brows-book-card/BrowseBookCard";
 import Pager from "../Componenets/BrowseComp/Parts/Pagination";
 
+import {
+  TREND_DETAILS,
+  TREND_SORT,
+} from "@/features/trends/details/trend-details.presets";
+import { parseTrendId } from "@/features/trends/details/utils/parseTrendId";
+import { getSortConfig } from "@/features/trends/details/utils/getSortConfig";
+import { pickFirst } from "@/features/trends/details/utils/pickFirst";
+
 export default function TrendDetails() {
   const { id } = useParams();
-  const trendId = Number(id);
+  const trendId = useMemo(() => parseTrendId(id), [id]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [trend, setTrend] = useState("");
+
+  const [trend, setTrend] = useState(null);
 
   // Sorting (server-side via /books/browse)
-  const [sortBy, setSortBy] = useState("newest"); // newest | rating | views | az
+  const [sortKey, setSortKey] = useState("newest");
 
-  // Pagination (server-side)
+  const trendName = pickFirst(trend, ["name", "Name", "title", "Title"], "—");
+  const trendDesc = pickFirst(
+    trend,
+    ["description", "Description", "desc", "Desc"],
+    "No description yet.",
+  );
+
+  // for DropdownSelect (shared)
+  const sortOptions = TREND_SORT.map((o) => ({
+    value: o.key,
+    label: o.label,
+  }));
+
+  // Pagination
   const [pageNumber, setPageNumber] = useState(1);
-  const pageSize = 24;
 
   const [data, setData] = useState({
     items: [],
     pageNumber: 1,
-    pageSize,
+    pageSize: TREND_DETAILS.pageSize,
     totalCount: 0,
     totalPages: 0,
   });
 
-  // Library (bookmark)
+  // Library
   const { auth } = useContext(AuthContext);
   const myUserId = auth?.user?.id;
 
   const [libraryItems, setLibraryItems] = useState([]);
-  const inLib = (bookId) =>
-    libraryItems.some((x) => (x.bookId ?? x.book?.id) === bookId);
+  const inLib = useCallback(
+    (bookId) => libraryItems.some((x) => (x.bookId ?? x.book?.id) === bookId),
+    [libraryItems],
+  );
 
-  const loadTrend = async () => {
-  try {
-    const res = await api.get("/trends");
-    const list = Array.isArray(res.data) ? res.data : [];
-    const found =
-      list.find((t) => Number(t.id ?? t.ID) === trendId) || null;
-    setTrend(found);
-  } catch (e) {
-    console.error("Failed to load trend", e);
-    setTrend(null);
-  }
-};
-
-useEffect(() => {
-  if (!trendId || Number.isNaN(trendId)) {
-    setError("Invalid trend id.");
-    setLoading(false);
-    return;
-  }
-  loadTrend();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [trendId]);
-
-useEffect(() => {
-  if (!trendId || Number.isNaN(trendId)) return;
-  loadBooks();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [trendId, pageNumber, sortBy]);
-
-  const loadLibrary = async () => {
+  const loadLibrary = useCallback(async () => {
     if (!myUserId) {
       setLibraryItems([]);
       return;
@@ -76,36 +78,52 @@ useEffect(() => {
     } catch {
       setLibraryItems([]);
     }
-  };
+  }, [myUserId]);
 
-  const loadBooks = async () => {
+  const loadTrend = useCallback(async () => {
+    // Best backend is GET /trends/{id}. If you don't have it yet,
+    // this will fallback to fetching /trends and finding it.
+    try {
+      setTrend(null);
+      const res = await api.get("/trends");
+      const list = Array.isArray(res.data)
+        ? res.data
+        : Array.isArray(res.data?.items)
+          ? res.data.items
+          : [];
+
+      const getTrendId = (t) =>
+        Number(t?.id ?? t?.Id ?? t?.ID ?? t?.trendId ?? t?.TrendId);
+
+      const found = list.find((t) => getTrendId(t) === trendId) || null;
+      setTrend(found);
+
+      console.log("TrendDetails trend object:", found);
+    } catch (e) {
+      console.error("Failed to load trend", e);
+      setTrend(null);
+    }
+  }, [trendId]);
+
+  const loadBooks = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
 
-      const sortKey =
-        sortBy === "newest"
-          ? "CreatedAt"
-          : sortBy === "rating"
-          ? "AverageRating"
-          : sortBy === "views"
-          ? "TotalViews"
-          : "Title";
+      const sort = getSortConfig(sortKey);
 
       const res = await api.get("/books/browse", {
         params: {
           trendId,
           pageNumber,
-          pageSize,
-          sortBy: sortKey,
-          isAscending: sortBy === "az",
-          // Optional: keep verseType empty so it doesn't filter
-          // verseType: "",
+          pageSize: TREND_DETAILS.pageSize,
+          sortBy: sort.sortBy,
+          isAscending: sort.isAscending,
         },
       });
 
       const r = res.data || {};
-      const pageSizeRes = r.pageSize ?? pageSize;
+      const pageSizeRes = r.pageSize ?? TREND_DETAILS.pageSize;
       const totalCount = r.totalCount ?? 0;
 
       setData({
@@ -120,7 +138,7 @@ useEffect(() => {
       setData({
         items: [],
         pageNumber: 1,
-        pageSize,
+        pageSize: TREND_DETAILS.pageSize,
         totalCount: 0,
         totalPages: 0,
       });
@@ -128,84 +146,95 @@ useEffect(() => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [trendId, pageNumber, sortKey]);
 
+  const toggleLibrary = useCallback(
+    async (bookId) => {
+      if (!myUserId) return;
+      try {
+        if (inLib(bookId)) await api.delete(`/books/${bookId}/library`);
+        else await api.post(`/books/${bookId}/library`);
+        await loadLibrary();
+      } catch (e) {
+        console.error("toggleLibrary failed", e);
+      }
+    },
+    [myUserId, inLib, loadLibrary],
+  );
+
+  // Validate trendId once
   useEffect(() => {
-    if (!trendId || Number.isNaN(trendId)) {
+    if (!trendId) {
       setError("Invalid trend id.");
       setLoading(false);
       return;
     }
-    loadBooks();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [trendId, pageNumber, sortBy]);
+    loadTrend();
+  }, [trendId, loadTrend]);
 
+  // Load books when filters change (ONLY ONCE)
+  useEffect(() => {
+    if (!trendId) return;
+    loadBooks();
+  }, [trendId, pageNumber, sortKey, loadBooks]);
+
+  // Load library when user changes
   useEffect(() => {
     loadLibrary();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [myUserId]);
-
-  const toggleLibrary = async (bookId) => {
-    if (!myUserId) return;
-    try {
-      if (inLib(bookId)) await api.delete(`/books/${bookId}/library`);
-      else await api.post(`/books/${bookId}/library`);
-      await loadLibrary();
-    } catch (e) {
-      console.error("toggleLibrary failed", e);
-    }
-  };
+  }, [loadLibrary]);
 
   const items = data.items || [];
 
   return (
-    <div className="container py-3" style={{textAlign:"center"}}>
-      <div className="d-flex flex-wrap gap-2 align-items-end justify-content-between mb-3">
-        <div className="m-auto" style={{maxWidth:"1000px"}}>
-          <h3 className="m-0">Trend: {trend?.name ||"_"}</h3>
-          <div className="" style={{overflow:"hidden", height:"auto", wordBreak:"break-all", overflowY:"scroll", scrollbarWidth:"none"}}>Discription:{trend?.description || "Nothing to Read here Kid..."} </div>
+    <div className="container py-3" style={{ textAlign: "center" }}>
+      <div className="d-flex flex-wrap gap-2  mb-3">
+        <div className="align-items-end justify-content-center rounded-3 p-5 HERE"
+        >
+          <div
+            className="m-auto bg-white rounded-2"
+            style={{ maxWidth: `${TREND_DETAILS.headerMaxWidth}px` }}
+          >
+            <PageHeader title={`Trend: ${trendName}`} subtitle={trendDesc} />
+          </div>
         </div>
 
         <div className="d-flex gap-2 align-items-center">
-          <select
-            className="form-select form-select-sm"
-            style={{ width: 200 }}
-            value={sortBy}
-            onChange={(e) => {
-              setSortBy(e.target.value);
+          <DropdownSelect
+            value={sortKey}
+            options={sortOptions}
+            onChange={(v) => {
+              setSortKey(v);
               setPageNumber(1);
             }}
-          >
-            <option value="newest">Newest</option>
-            <option value="rating">Top Rated</option>
-            <option value="views">Most Viewed</option>
-            <option value="az">A → Z</option>
-          </select>
-
-          <Link className="btn btn-outline-secondary btn-sm" to="/trend">
-            Back
+            style={{ width: 200 }}
+          />
+          <Link to="/trend">
+            <Button variant="secondary" size="sm" className="text-white">
+              Back
+            </Button>
           </Link>
         </div>
       </div>
+
       <hr />
 
       {loading ? (
-        <div className="text-muted">Loading…</div>
+        <LoadingState title="Loading…" />
       ) : error ? (
-        <div className="alert alert-warning">{error}</div>
+        <ErrorState title={error} />
       ) : items.length === 0 ? (
-        <div className="text-muted">No books linked yet.</div>
+        <EmptyState title="No books linked yet." />
       ) : (
         <>
           <div className="row g-3">
-                      <div className="text-muted small">Books linked to this TREND</div>
+            <div className="text-muted small">Books linked to this trend</div>
 
             {items.map((b) => (
-              <div className="col-12 col-lg-6 d-flex" key={b.id}>
+              <div className="col-12 col-lg-6 d-flex" key={b.id ?? b.Id}>
                 <BrowseBookCard
                   book={b}
-                  isBookmarked={inLib(b.id)}
-                  onToggleBookmark={() => toggleLibrary(b.id)}
+                  isBookmarked={inLib(b.id ?? b.Id)}
+                  onToggleBookmark={() => toggleLibrary(b.id ?? b.Id)}
                 />
               </div>
             ))}

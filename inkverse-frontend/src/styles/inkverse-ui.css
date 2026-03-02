@@ -310,7 +310,7 @@
   color: var(--iv-text);
 }
 .iv-btn-outline:hover {
-  border-color: rgba(109, 40, 217, 0.45);
+  border-color: #6d28d973;
   background: rgba(109, 40, 217, 0.06);
 }
 

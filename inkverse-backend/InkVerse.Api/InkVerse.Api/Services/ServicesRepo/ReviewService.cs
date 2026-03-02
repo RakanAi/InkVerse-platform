@@ -270,11 +270,10 @@ namespace InkVerse.Api.Services.ServicesRepo
         {
             take = take <= 0 ? 10 : Math.Min(take, 20);
 
-            return await _db.Reviews
-                .Include(r => r.User)
-                .Include(r => r.Reactions)
-                .Include(r => r.Book)
 
+
+            return await _db.Reviews
+                .AsNoTracking()
                 .OrderByDescending(r => r.CreatedAt)
                 .Take(take)
                 .Select(r => new ReviewReadDto
@@ -284,24 +283,26 @@ namespace InkVerse.Api.Services.ServicesRepo
                     Rating = r.Rating,
                     UserId = r.UserId,
                     UserName = r.User != null ? r.User.UserName : "Unknown",
-                    CreatedAt = r.CreatedAt,
-                    UpdatedAt = r.UpdatedAt,
+                    UserAvatarUrl = r.User != null ? r.User.AvatarUrl : null,
+
+                    BookId = r.BookId,
+                    BookTitle = r.Book != null ? r.Book.Title : null,
+                    BookCoverImageUrl = r.Book != null ? r.Book.CoverImageUrl : null,
+
                     Likes = r.Reactions.Count(x => x.ReactionType == "like"),
                     Dislikes = r.Reactions.Count(x => x.ReactionType == "dislike"),
-                    BookId = r.BookId,
-BookTitle = r.Book != null ? r.Book.Title : null,
 
+                    CreatedAt = r.CreatedAt,
+                    UpdatedAt = r.UpdatedAt,
 
                     CharacterAccuracy = r.CharacterAccuracy,
                     ChemistryRelationships = r.ChemistryRelationships,
                     PlotCreativity = r.PlotCreativity,
                     CanonIntegration = r.CanonIntegration,
                     EmotionalDamage = r.EmotionalDamage,
-                    UserAvatarUrl = r.User != null ? r.User.AvatarUrl : null,
-
                 })
                 .ToListAsync();
-        }
+                    }
 
         private async Task RecalcBookAverageRatingAsync(int bookId)
         {

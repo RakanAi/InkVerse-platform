@@ -8,7 +8,8 @@
         public double Rating { get; set; }
         public string ReviewText { get; set; } = string.Empty;
         public string ReviewTitle { get; set; } = "Recent Review";
-        public string Image { get; set; } = "/default-user.png";
+        public string? Image { get; set; }
+        public string? BookCoverImageUrl { get; set; }
     }
 
 }
