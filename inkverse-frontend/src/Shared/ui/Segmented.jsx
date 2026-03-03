@@ -3,11 +3,15 @@ import React from "react";
 export default function Segmented({
   value,
   onChange,
-  options = [], // [{ value, label }]
+  options = [],
   className = "",
+  wrap = true, // default: wrapping ON
 }) {
   return (
-    <div className={`iv-seg ${className}`} role="tablist">
+    <div
+      className={`iv-seg ${wrap ? "iv-seg--wrap" : ""} ${className}`}
+      role="tablist"
+    >
       {options.map((o) => {
         const active = o.value === value;
         return (

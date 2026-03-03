@@ -34,11 +34,21 @@ export default function TrendDetails() {
   const [sortKey, setSortKey] = useState("newest");
 
   const trendName = pickFirst(trend, ["name", "Name", "title", "Title"], "—");
+  const trendImage = pickFirst(trend, ["imageUrl", "ImageUrl"], "");
   const trendDesc = pickFirst(
     trend,
     ["description", "Description", "desc", "Desc"],
     "No description yet.",
   );
+
+  const trendBgUrl = useMemo(() => {
+  if (!trendImage) return "";
+  if (/^https?:\/\//i.test(trendImage)) return trendImage;
+
+  const base = (api.defaults.baseURL || "").replace(/\/api\/?$/, ""); // remove trailing /api
+  const path = trendImage.startsWith("/") ? trendImage : `/${trendImage}`;
+  return `${base}${path}`;
+}, [trendImage]);
 
   // for DropdownSelect (shared)
   const sortOptions = TREND_SORT.map((o) => ({
@@ -148,6 +158,15 @@ export default function TrendDetails() {
     }
   }, [trendId, pageNumber, sortKey]);
 
+   useEffect(() => {
+    if (!trendId) {
+      setError("Invalid trend id.");
+      setLoading(false);
+      return;
+    }
+    loadTrend();
+  }, [trendId, loadTrend]);
+
   const toggleLibrary = useCallback(
     async (bookId) => {
       if (!myUserId) return;
@@ -163,14 +182,7 @@ export default function TrendDetails() {
   );
 
   // Validate trendId once
-  useEffect(() => {
-    if (!trendId) {
-      setError("Invalid trend id.");
-      setLoading(false);
-      return;
-    }
-    loadTrend();
-  }, [trendId, loadTrend]);
+ 
 
   // Load books when filters change (ONLY ONCE)
   useEffect(() => {
@@ -188,15 +200,44 @@ export default function TrendDetails() {
   return (
     <div className="container py-3" style={{ textAlign: "center" }}>
       <div className="d-flex flex-wrap gap-2  mb-3">
-        <div className="align-items-end justify-content-center rounded-3 p-5 HERE"
-        >
-          <div
-            className="m-auto bg-white rounded-2"
-            style={{ maxWidth: `${TREND_DETAILS.headerMaxWidth}px` }}
-          >
-            <PageHeader title={`Trend: ${trendName}`} subtitle={trendDesc} />
-          </div>
-        </div>
+        <div
+  className="align-items-end justify-content-center rounded-3 p-5 HERE"
+  style={{
+    backgroundImage: trendBgUrl ? `url(${trendBgUrl})` : undefined,
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundRepeat: "no-repeat",
+    position: "relative",
+    overflow: "hidden",
+    minHeight: 220,
+  }}
+>
+  {/* dark overlay for readability */}
+  <div
+    style={{
+      position: "absolute",
+      inset: 0,
+      background:
+        "linear-gradient(180deg, rgba(0,0,0,0.40), rgba(0,0,0,0.55))",
+    }}
+  />
+
+  <div
+    className="m-auto rounded-2"
+    style={{
+      maxWidth: `${TREND_DETAILS.headerMaxWidth}px`,
+      position: "relative",
+      // BLUR GLASS effect
+      background: "rgba(255,255,255,0.18)",
+      border: "1px solid rgba(255,255,255,0.25)",
+      backdropFilter: "blur(10px)",
+      WebkitBackdropFilter: "blur(10px)",
+      padding: 18,
+    }}
+  >
+    <PageHeader title={`Trend: ${trendName}`} subtitle={trendDesc} variant="light"/>
+  </div>
+</div>
 
         <div className="d-flex gap-2 align-items-center">
           <DropdownSelect

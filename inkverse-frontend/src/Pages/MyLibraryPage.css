@@ -147,3 +147,38 @@
   }
 }
 
+.iv-seg-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.iv-seg-item i {
+  font-size: 0.95rem;
+  opacity: 0.9;
+}
+
+.iv-seg-item i {
+  transition: transform 0.2s ease;
+}
+
+.iv-segmented-item.active .iv-seg-item i {
+  transform: scale(1.1);
+}
+
+.iv-seg-item.active i {
+  transform: scale(1.1);
+}
+
+.iv-seg-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+}
+
+.iv-seg-item i {
+  font-size: 0.95rem;
+  opacity: 0.9;
+}

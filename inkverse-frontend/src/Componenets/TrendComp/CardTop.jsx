@@ -33,7 +33,7 @@ backgroundRepeat: "no-repeat",      }}
 
         <div className="content">
           <p className="heading">{trend.name}</p>
-          <p className="m-0">
+          <p className="mx-5 px-5 discription">
             {trend.description?.trim()
               ? trend.description
               : "Explore this curated collection."}

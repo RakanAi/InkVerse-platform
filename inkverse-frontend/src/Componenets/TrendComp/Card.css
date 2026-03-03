@@ -50,12 +50,6 @@
     border-radius: inherit;
   }
 
-   .cardTop {
-    width: 100%;
-    height: 100%;
-    border-radius: inherit;
-  }
-  
   .cardTop .front-content {
     width: 100%;
     height: 100%;
@@ -102,12 +96,16 @@
   .cardTop .content .heading {
     font-size: 32px;
     font-weight: 700;
-    
+    color: #e8e8e8;
 
   }
-  
+  .cardTop .content .discription {
+    color: #e8e8e8;
+
+  }
   .cardTop:hover .content {
     transform: translateY(0);
+    
   }
   
   .cardTop:hover .front-content {
@@ -180,6 +178,12 @@
    
   }
 
+
+ .cardTopc .content .heading {
+
+color: #e8e8e8;
+    
+  }
    .cardTopc .content .disc {
 
     height: 90px;

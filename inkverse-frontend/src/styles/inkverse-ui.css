@@ -54,6 +54,22 @@
   align-items: center;
 }
 
+.iv-page-header--default .iv-title {
+  color: #111;
+}
+
+.iv-page-header--default .iv-subtitle {
+  color: #555;
+}
+
+/* Light variant (for dark/image backgrounds) */
+.iv-page-header--light .iv-title {
+  color: #ffffff;
+}
+
+.iv-page-header--light .iv-subtitle {
+  color: rgba(255, 255, 255, 0.85);
+}
 /* States */
 .iv-state {
   padding: 28px;
@@ -373,12 +389,49 @@
 /* ===== Segmented Control (modern) ===== */
 .iv-seg {
   display: flex;
-  width: 100%; /* fill parent */
-  align-items: center;
-  padding: 6px;
-  border-radius: 16px;
+  width: 100%;
+  flex-wrap: wrap;           /* wrapping enabled */
+  gap: 10px;                 /* spacing between buttons */
+  padding: 8px;
+  border-radius: 18px;
   border: 1px solid rgba(109, 40, 217, 0.18);
-  justify-content: space-between;
+  justify-content: center;
+}
+
+/* Buttons */
+.iv-seg-btn {
+  flex: 1 1 140px;           /* nice wrapping size */
+  max-width: 220px;          /* prevents huge buttons on desktop */
+  min-height: 42px;          /* consistent height */
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 10px 16px;
+  border-radius: 14px;
+
+  background: transparent;
+  border: 1px solid transparent;
+
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+
+  transition: all 0.18s ease;
+}
+
+/* Active state */
+.iv-seg-btn.is-active {
+  background: rgba(109, 40, 217, 0.08);
+  border-color: rgba(109, 40, 217, 0.25);
+  box-shadow: 0 4px 14px rgba(109, 40, 217, 0.08);
+  color: #6d28d9;
+}
+
+/* Hover */
+.iv-seg-btn:hover:not(.is-active) {
+  background: rgba(109, 40, 217, 0.05);
 }
 
 /* each button */
