@@ -5,7 +5,7 @@ export default function DropdownSelect({
   onChange,
   options = [],
   renderLabel,
-  placeholder = "Select…",
+  placeholder = "Select...",
   className = "",
 }) {
   const [open, setOpen] = useState(false);
@@ -13,11 +13,13 @@ export default function DropdownSelect({
 
   const selected = useMemo(
     () => options.find((o) => o.value === value),
-    [options, value]
+    [options, value],
   );
 
   const buttonText = selected
-    ? (renderLabel ? renderLabel(selected) : selected.label)
+    ? renderLabel
+      ? renderLabel(selected)
+      : selected.label
     : placeholder;
 
   useEffect(() => {
@@ -30,36 +32,35 @@ export default function DropdownSelect({
   }, []);
 
   return (
-  <div ref={rootRef} className={`iv-dd ${open ? "is-open" : ""} ${className}`}>
-    <button
-      type="button"
-      className="iv-dd-btn"
-      onClick={() => setOpen((x) => !x)}
-    >
-      <span className="iv-dd-text">{buttonText}</span>
-      <span className="iv-dd-arrow">▾</span>
-    </button>
+    <div ref={rootRef} className={`iv-dd ${open ? "is-open" : ""} ${className}`}>
+      <button
+        type="button"
+        className="iv-dd-btn"
+        onClick={() => setOpen((x) => !x)}
+      >
+        <span className="iv-dd-text">{buttonText}</span>
+        <span className="iv-dd-arrow">v</span>
+      </button>
 
-    {/* keep it mounted so CSS can animate */}
-    <div className={`iv-dd-menu ${open ? "is-open" : ""}`} aria-hidden={!open}>
-      {options.map((o) => {
-        const active = o.value === value;
-        return (
-          <button
-            key={o.value}
-            type="button"
-            className={`iv-dd-item ${active ? "is-active" : ""}`}
-            onClick={() => {
-              onChange?.(o.value);
-              setOpen(false);
-            }}
-            tabIndex={open ? 0 : -1}
-          >
-            {renderLabel ? renderLabel(o) : o.label}
-          </button>
-        );
-      })}
+      <div className={`iv-dd-menu ${open ? "is-open" : ""}`} aria-hidden={!open}>
+        {options.map((o) => {
+          const active = o.value === value;
+          return (
+            <button
+              key={o.value}
+              type="button"
+              className={`iv-dd-item ${active ? "is-active" : ""}`}
+              onClick={() => {
+                onChange?.(o.value);
+                setOpen(false);
+              }}
+              tabIndex={open ? 0 : -1}
+            >
+              {renderLabel ? renderLabel(o) : o.label}
+            </button>
+          );
+        })}
+      </div>
     </div>
-  </div>
-);
+  );
 }

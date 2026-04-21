@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using InkVerse.Api.DTOs.Book;
@@ -40,20 +40,35 @@ namespace InkVerse.Api.Server.Controllers
         }
 
         [Authorize(Roles = "Admin,Author")]
-        [HttpPost]
-        public async Task<IActionResult> CreateBook([FromBody] BookCreateDto dto)
+        [HttpGet("mine")]
+        public async Task<IActionResult> GetMyBooks()
         {
-            // Try common claim types (works across setups)
             var userId =
                 User.FindFirst(ClaimTypes.NameIdentifier)?.Value ??
                 User.FindFirst("sub")?.Value;
 
+            if (string.IsNullOrWhiteSpace(userId))
+                return Unauthorized("No user id found in token.");
+
+            var books = await _bookService.GetBooksByAuthorAsync(userId);
+            foreach (var b in books)
+                b.CoverImageUrl = Abs(b.CoverImageUrl);
+
+            return Ok(books);
+        }
+
+        [Authorize(Roles = "Admin,Author")]
+        [HttpPost]
+        public async Task<IActionResult> CreateBook([FromBody] BookCreateDto dto)
+        {
+            var userId =
+                User.FindFirst(ClaimTypes.NameIdentifier)?.Value ??
+                User.FindFirst("sub")?.Value;
 
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized("No user id found in token.");
 
             var created = await _bookService.CreateBookAsync(dto, userId);
-
             return CreatedAtAction(nameof(Get), new { id = created.Id }, created);
         }
 
@@ -64,7 +79,6 @@ namespace InkVerse.Api.Server.Controllers
             return Ok(User.Claims.Select(c => new { c.Type, c.Value }));
         }
 
-
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin,Author")]
         public async Task<IActionResult> Update(int id, [FromBody] BookUpdateDto dto)
@@ -74,7 +88,6 @@ namespace InkVerse.Api.Server.Controllers
                 User.FindFirst("sub")?.Value;
 
             var isAdmin = User.IsInRole("Admin");
-
             var result = await _bookService.UpdateBookAsync(id, dto, userId!, isAdmin);
             if (result == null) return NotFound();
 
@@ -82,7 +95,7 @@ namespace InkVerse.Api.Server.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles ="Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete([FromRoute] int id)
         {
             var success = await _bookService.DeleteBookAsync(id);
@@ -99,12 +112,14 @@ namespace InkVerse.Api.Server.Controllers
             var list = await _bookService.GetTopBooksByVerseTypeAsync(vt, take);
             return Ok(list);
         }
+
         [HttpGet("browse")]
         public async Task<IActionResult> Browse([FromQuery] BookBrowseQuery query)
         {
             var result = await _bookService.BrowseBooksAsync(query);
             return Ok(result);
         }
+
         private string? Abs(string? url)
         {
             if (string.IsNullOrWhiteSpace(url)) return url;
@@ -113,9 +128,5 @@ namespace InkVerse.Api.Server.Controllers
             var path = url.StartsWith("/") ? url : "/" + url;
             return $"{Request.Scheme}://{Request.Host}{path}";
         }
-
     }
-
-
-
 }

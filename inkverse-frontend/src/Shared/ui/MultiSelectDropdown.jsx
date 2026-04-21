@@ -37,7 +37,7 @@ export default function MultiSelectDropdown({
           {label}
           {values.length > 0 ? ` (${values.length})` : ""}
         </span>
-        <span className="iv-dd-arrow">▾</span>
+        <span className="iv-dd-arrow">v</span>
       </button>
 
       <div className={`iv-dd-menu ${open ? "is-open" : ""}`}>
@@ -50,8 +50,15 @@ export default function MultiSelectDropdown({
               className={`iv-dd-item ${active ? "is-active" : ""}`}
               onClick={() => toggle(o.value)}
             >
-              <span>{o.label}</span>
-              {active && <span>✓</span>}
+              <span className="iv-dd-item-content">
+                <span
+                  className={`iv-dd-check ${active ? "is-checked" : ""}`}
+                  aria-hidden="true"
+                >
+                  {active ? "\u2713" : ""}
+                </span>
+                <span>{o.label}</span>
+              </span>
             </button>
           );
         })}

@@ -7,6 +7,8 @@ import Ranking from "./Pages/Ranking";
 import AuthorLayout from "./Pages/Author/AuthorLayout";
 import AuthorDashboard from "./Pages/Author/AuthorDashboard";
 import AuthorWorkspace from "./Pages/Author/AuthorWorkspace";
+import AuthorBookDetails from "./Pages/Author/AuthorBookDetails";
+import AuthorChapterCreate from "./Pages/Author/AuthorChapterCreate";
 import AuthorIncome from "./Pages/Author/AuthorIncome";
 import AuthorContract from "./Pages/Author/AuthorContract";
 import BookDetails from "./Pages/BookDetails";
@@ -22,6 +24,7 @@ import AdminDashboard from "./Componenets/Admin/AdminDashboard";
 import AdminTags from "./Componenets/Admin/AdminTags";
 import AdminGenres from "./Componenets/Admin/AdminGenres";
 import AdminTrends from "./Componenets/Admin/AdminTrends";
+import AdminUsers from "./Componenets/Admin/AdminUsers";
 import AdminBooksPage from "./Componenets/Admin/AdminBooksPage";
 import AdminBookEditor from "./Componenets/Admin/AdminBookEditor";
 import AdminChaptersPage from "./Componenets/Admin/AdminChapterPage";
@@ -39,16 +42,17 @@ function App() {
     <div>
       <Routes>
         <Route path="/" element={<Layout />}>
-          {/* public routes */}
           <Route path="/" element={<Home />} />
           <Route path="/browser" element={<Browser />} />
           <Route path="/ranking" element={<Ranking />} />
           <Route path="/author" element={<AuthorLayout />}>
-              <Route index element={<AuthorDashboard />} />
-              <Route path="workspace" element={<AuthorWorkspace />} />
-              <Route path="income" element={<AuthorIncome />} />
-              <Route path="contract" element={<AuthorContract />} />
-            </Route>
+            <Route index element={<AuthorDashboard />} />
+            <Route path="workspace" element={<AuthorWorkspace />} />
+            <Route path="workspace/:bookId" element={<AuthorBookDetails />} />
+            <Route path="workspace/:bookId/chapters/new" element={<AuthorChapterCreate />} />
+            <Route path="income" element={<AuthorIncome />} />
+            <Route path="contract" element={<AuthorContract />} />
+          </Route>
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/privacy" element={<Privacy />} />
@@ -56,7 +60,7 @@ function App() {
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/signin" element={<Home />} />
           <Route path="/book/:id" element={<BookDetails />} />
-          {/* User routes */}
+
           <Route
             element={
               <ProtectedRoute allowedRoles={["Admin", "User", "Author"]} />
@@ -100,16 +104,12 @@ function App() {
               <Route path="tags" element={<AdminTags />} />
               <Route path="genres" element={<AdminGenres />} />
               <Route path="trends" element={<AdminTrends />} />
+              <Route path="users" element={<AdminUsers />} />
             </Route>
           </Route>
 
-          {/* Chapter reading page */}
           <Route path="/trend" element={<TrendsPage />} />
           <Route path="/trend/:id" element={<TrendDetails />} />
-
-          {/* admin routes */}
-
-          {/* catch all */}
         </Route>
       </Routes>
     </div>
@@ -117,3 +117,7 @@ function App() {
 }
 
 export default App;
+
+
+
+

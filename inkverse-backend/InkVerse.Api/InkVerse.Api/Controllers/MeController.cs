@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -20,17 +20,16 @@ public class MeController : ControllerBase
     [HttpGet("profile")]
     public async Task<IActionResult> GetProfile()
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        var user = await _userManager.FindByIdAsync(userId);
+        var user = await GetCurrentUserAsync();
         if (user == null) return NotFound();
 
         return Ok(new ProfileDto
         {
             UserName = user.UserName ?? "",
             Email = user.Email ?? "",
-            Bio = user.Bio,              // add fields to AppUser
-            AvatarUrl = user.AvatarUrl,  // add fields to AppUser
-            CreatedAt = user.CreatedAt   // add field or use your CrudBase CreatedAt
+            Bio = user.Bio,
+            AvatarUrl = user.AvatarUrl,
+            CreatedAt = user.CreatedAt
         });
     }
 
@@ -38,8 +37,7 @@ public class MeController : ControllerBase
     [HttpPut("profile")]
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileDto dto)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        var user = await _userManager.FindByIdAsync(userId);
+        var user = await GetCurrentUserAsync();
         if (user == null) return NotFound();
 
         user.Bio = dto.Bio?.Trim();
@@ -58,4 +56,55 @@ public class MeController : ControllerBase
         });
     }
 
+    [Authorize]
+    [HttpGet("settings")]
+    public async Task<IActionResult> GetSettings()
+    {
+        var user = await GetCurrentUserAsync();
+        if (user == null) return NotFound();
+
+        return Ok(ToSettingsDto(user));
+    }
+
+    [Authorize]
+    [HttpPut("settings")]
+    public async Task<IActionResult> UpdateSettings([FromBody] UpdateUserSettingsDto dto)
+    {
+        var user = await GetCurrentUserAsync();
+        if (user == null) return NotFound();
+
+        var language = (dto.PreferredLanguage ?? "en").Trim().ToLowerInvariant();
+        if (language.Length > 10)
+        {
+            return BadRequest("preferredLanguage is too long.");
+        }
+
+        user.IsProfilePublic = dto.IsProfilePublic;
+        user.EmailNotificationsEnabled = dto.EmailNotificationsEnabled;
+        user.ReadingRemindersEnabled = dto.ReadingRemindersEnabled;
+        user.PreferredLanguage = string.IsNullOrWhiteSpace(language) ? "en" : language;
+
+        var result = await _userManager.UpdateAsync(user);
+        if (!result.Succeeded) return BadRequest(result.Errors);
+
+        return Ok(ToSettingsDto(user));
+    }
+
+    private async Task<AppUser?> GetCurrentUserAsync()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(userId)) return null;
+        return await _userManager.FindByIdAsync(userId);
+    }
+
+    private static UserSettingsDto ToSettingsDto(AppUser user)
+    {
+        return new UserSettingsDto
+        {
+            IsProfilePublic = user.IsProfilePublic,
+            EmailNotificationsEnabled = user.EmailNotificationsEnabled,
+            ReadingRemindersEnabled = user.ReadingRemindersEnabled,
+            PreferredLanguage = string.IsNullOrWhiteSpace(user.PreferredLanguage) ? "en" : user.PreferredLanguage
+        };
+    }
 }

@@ -1,72 +1,91 @@
-.iv-backdrop{
+.iv-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.55);
-  backdrop-filter: blur(6px);
+  background:
+    radial-gradient(1200px 500px at 10% 0%, rgba(64, 126, 236, 0.18), transparent 58%),
+    radial-gradient(900px 500px at 100% 100%, rgba(14, 165, 145, 0.16), transparent 58%),
+    rgba(8, 12, 20, 0.58);
+  backdrop-filter: blur(18px) saturate(130%);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
+  padding: 20px;
 }
 
-.iv-modal{
-  /* position: relative; */
-  width: auto;
-  max-height: 92vh;
-  overflow: hidden;
-  border-radius: 18px;
-  /* padding: 10px; */
-  
+.iv-modal {
+  position: relative;
+  width: min(980px, 100%);
+  max-height: 94vh;
+  overflow: auto;
+  border-radius: 24px;
 }
 
-.iv-close{
+.iv-card {
+  width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 24px;
+  background: linear-gradient(160deg, rgba(8, 16, 30, 0.48), rgba(10, 20, 34, 0.42));
+  backdrop-filter: blur(16px) saturate(125%);
+  box-shadow:
+    0 30px 60px rgba(2, 8, 24, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.iv-close {
   position: absolute;
-  top: 10px;
+  top: 14px;
   right: 14px;
-  border: 0;
-  background: transparent;
-  font-size: 22px;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.8);
+  color: #e2e8f0;
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
-  color: #fff;
-  z-index: 3;
+  z-index: 5;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
-/* ---------- Mobile behavior ---------- */
-@media (max-width: 768px) {
+.iv-close:hover {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(96, 165, 250, 0.65);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 900px) {
   .iv-backdrop {
-    align-items: flex-top; /* modal at bottom */
+    align-items: flex-end;
+    padding: 0;
   }
 
   .iv-modal {
     width: 100%;
-    max-height: 92vh;
-    border-radius: 18px 18px 0 0;
-    padding: 12px 12px env(safe-area-inset-bottom);
-    animation: slideUp .28s ease-out;
-    overflow: hidden;
+    max-height: 94vh;
+    border-radius: 22px 22px 0 0;
+    animation: slideUp 0.26s ease-out;
+  }
+
+  .iv-card {
+    border-radius: 22px 22px 0 0;
+    border-bottom: 0;
   }
 
   .iv-close {
-    top: 14px;
-    right: 16px;
-    font-size: 26px;
+    top: 12px;
+    right: 12px;
   }
 }
 
-/* ---------- Slide animation ---------- */
 @keyframes slideUp {
   from {
-    transform: translateY(100%);
+    transform: translateY(60px);
+    opacity: 0;
   }
   to {
     transform: translateY(0);
+    opacity: 1;
   }
 }
-.iv-card {
-  width: 100%;
-    
-    /* padding: 10px; */
-}
-
-
-

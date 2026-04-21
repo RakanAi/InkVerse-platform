@@ -9,7 +9,7 @@ export default function LoginModal() {
   const [mode, setMode] = useState("login");
 
   useEffect(() => {
-    if (!isLoginOpen) setMode("login"); // reset when closed
+    if (!isLoginOpen) setMode("login");
   }, [isLoginOpen]);
 
   if (!isLoginOpen) return null;
@@ -17,7 +17,9 @@ export default function LoginModal() {
   return (
     <div className="iv-backdrop" onClick={closeLogin}>
       <div className="iv-modal" onClick={(e) => e.stopPropagation()}>
-        <button className="iv-close" onClick={closeLogin}>✕</button>
+        <button className="iv-close" onClick={closeLogin} aria-label="Close auth dialog">
+          X
+        </button>
 
         <div className="iv-card">
           {mode === "login" ? (

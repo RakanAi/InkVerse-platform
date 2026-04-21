@@ -1,6 +1,30 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../Api/api";
+import Surface from "../../Shared/ui/Surface";
+import Button from "../../Shared/ui/Button";
+import PageHeader from "../../Shared/ui/PageHeader";
+import LoadingState from "../../Shared/ui/LoadingState";
+import ErrorState from "../../Shared/ui/ErrorState";
+import EmptyState from "../../Shared/ui/EmptyState";
+
+const QUICK_ACTIONS = [
+  {
+    title: "Create Or Edit Books",
+    subtitle: "Manage metadata, covers, and publishing state.",
+    to: "/admin/books",
+  },
+  {
+    title: "Curate Trends",
+    subtitle: "Promote books and update spotlight trends.",
+    to: "/admin/trends",
+  },
+  {
+    title: "Manage Users",
+    subtitle: "Moderate accounts and apply restrictions.",
+    to: "/admin/users",
+  },
+];
 
 export default function AdminDashboard() {
   const [data, setData] = useState(null);
@@ -25,92 +49,87 @@ export default function AdminDashboard() {
     load();
   }, []);
 
-  if (loading) return <p className="text-muted">Loading dashboard...</p>;
-  if (err) return <p className="text-danger">{err}</p>;
-  if (!data) return null;
+  const stats = useMemo(() => {
+    if (!data) return [];
+    return [
+      { label: "Books", value: data.books },
+      { label: "Chapters", value: data.chapters },
+      { label: "Genres", value: data.genres },
+      { label: "Tags", value: data.tags },
+      { label: "Trends", value: data.trends },
+    ];
+  }, [data]);
+
+  if (loading) return <LoadingState text="Loading dashboard..." />;
+  if (err) return <ErrorState title="Dashboard unavailable" subtitle={err} onRetry={load} />;
+  if (!data) return <EmptyState title="No dashboard data" subtitle="Try again in a moment." />;
 
   return (
-    <div>
-      <h3 className="mb-3">Dashboard</h3>
+    <div className="admin-dashboard-page">
+      <PageHeader
+        title="Operations Snapshot"
+        subtitle="Overview of catalog health and high-priority tasks."
+      />
 
-      {/* ================= Quick Actions ================= */}
-      {/* Why: jump into common admin tasks without hunting in the sidebar */}
-      <div className="mb-4">
-        <div className="d-flex align-items-center justify-content-between mb-2">
-          <h5 className="mb-0">Quick Actions</h5>
-          <span className="small text-muted">Shortcuts</span>
+      <section className="admin-section mb-4">
+        <div className="admin-section-head">
+          <h3 className="admin-section-title">Quick Actions</h3>
         </div>
 
-        {(() => {
-          const QUICK_ACTIONS_STYLE = "cards";
+        <div className="admin-actions-grid">
+          {QUICK_ACTIONS.map((action) => (
+            <Surface key={action.title} className="admin-action-card">
+              <h4 className="admin-action-title">{action.title}</h4>
+              <p className="admin-action-subtitle mb-0">{action.subtitle}</p>
+              <div className="mt-3">
+                <Link to={action.to} className="text-decoration-none">
+                  <Button variant="primary">Open</Button>
+                </Link>
+              </div>
+            </Surface>
+          ))}
+        </div>
+      </section>
 
- 
-          // Default: cards
-          return (
-            <div className="row g-3 justify-content-between">
-              <QuickActionCard
-                title="Create a Book"
-                subtitle="Start a new story in InkVerse"
-                to="/admin/books"
-                variant="dark"
-              />
-              <QuickActionCard
-                title="Manage Chapters"
-                subtitle="Add/edit chapters inside a book"
-                to="/admin/books"
-              />
-              <QuickActionCard
-                title="Genres"
-                subtitle="Organize discovery categories"
-                to="/admin/genres"
-              />
-              <QuickActionCard
-                title="Tags"
-                subtitle="Fine-grained discovery filters"
-                to="/admin/tags"
-              />
-              <QuickActionCard
-                title="Trends"
-                subtitle="Feature & promote books"
-                to="/admin/trends"
-              />
+      <section className="admin-section mb-4">
+        <div className="admin-section-head">
+          <h3 className="admin-section-title">System Volume</h3>
+        </div>
+
+        <div className="admin-stats-grid">
+          {stats.map((s) => (
+            <Surface key={s.label} className="admin-stat-card">
+              <p className="admin-stat-label mb-1">{s.label}</p>
+              <p className="admin-stat-value mb-0">{s.value}</p>
+            </Surface>
+          ))}
+        </div>
+      </section>
+
+      <section className="admin-section mb-4">
+        <div className="admin-section-head">
+          <h3 className="admin-section-title">Attention Needed</h3>
+        </div>
+
+        <div className="admin-attention-grid">
+          <AttentionCard label="Books Missing Chapters" value={data.booksWithNoChapters} />
+          <AttentionCard label="Books Missing Genres" value={data.booksWithNoGenres} />
+          <AttentionCard label="Books Missing Tags" value={data.booksWithNoTags} />
+        </div>
+      </section>
+
+      <section className="admin-section">
+        <div className="admin-latest-grid">
+          <Surface className="admin-table-card">
+            <div className="admin-section-head mb-3">
+              <h3 className="admin-section-title">Latest Books</h3>
             </div>
-          );
-        })()}
-      </div>
-
-      {/* ================= Stats Cards ================= */}
-      <div className="row g-3 mb-4 justify-content-between">
-        <StatCard label="Books" value={data.books} />
-        <StatCard label="Chapters" value={data.chapters} />
-        <StatCard label="Genres" value={data.genres} />
-        <StatCard label="Tags" value={data.tags} />
-        <StatCard label="Trends" value={data.trends} />
-      </div>
-
-      {/* ================= Attention Needed ================= */}
-      <h5 className="mb-2">Attention Needed</h5>
-      <div className="row g-3 mb-4">
-        <AttentionCard
-          label="Books with no chapters"
-          value={data.booksWithNoChapters}
-        />
-        <AttentionCard label="Books with no genres" value={data.booksWithNoGenres} />
-        <AttentionCard label="Books with no tags" value={data.booksWithNoTags} />
-      </div>
-
-      {/* ================= Latest ================= */}
-      <div className="row g-4">
-        {/* Latest Books */}
-        <div className="col-12 col-lg-6">
-          <div className="border rounded p-3 h-100">
-            <h5 className="mb-3">Latest Books</h5>
 
             {!data.latestBooks?.length ? (
-              <div className="text-muted">No books yet.</div>
+              <EmptyState title="No books yet" subtitle="New books will appear here." />
             ) : (
               <div className="table-responsive">
-                <table className="table table-sm align-middle mb-0">
+                <table className="table table-sm align-middle mb-0 admin-table-modern">
                   <thead>
                     <tr>
                       <th>Title</th>
@@ -126,8 +145,10 @@ export default function AdminDashboard() {
                         <td className="text-muted">{b.status}</td>
                         <td className="text-end">{b.wordCount ?? 0}</td>
                         <td className="text-end">
-                          <Link className="btn btn-outline-dark btn-sm" to={`/admin/books/${b.id}/edit`}>
-                            Edit
+                          <Link to={`/admin/books/${b.id}`} className="text-decoration-none">
+                            <Button variant="outline" size="sm">
+                              Edit
+                            </Button>
                           </Link>
                         </td>
                       </tr>
@@ -136,19 +157,18 @@ export default function AdminDashboard() {
                 </table>
               </div>
             )}
-          </div>
-        </div>
+          </Surface>
 
-        {/* Latest Chapters */}
-        <div className="col-12 col-lg-6">
-          <div className="border rounded p-3 h-100">
-            <h5 className="mb-3">Latest Chapters</h5>
+          <Surface className="admin-table-card">
+            <div className="admin-section-head mb-3">
+              <h3 className="admin-section-title">Latest Chapters</h3>
+            </div>
 
             {!data.latestChapters?.length ? (
-              <div className="text-muted">No chapters yet.</div>
+              <EmptyState title="No chapters yet" subtitle="New chapters will appear here." />
             ) : (
               <div className="table-responsive">
-                <table className="table table-sm align-middle mb-0">
+                <table className="table table-sm align-middle mb-0 admin-table-modern">
                   <thead>
                     <tr>
                       <th>Book</th>
@@ -161,11 +181,16 @@ export default function AdminDashboard() {
                     {data.latestChapters.map((c) => (
                       <tr key={c.id}>
                         <td className="text-muted">{c.bookTitle}</td>
-                        <td className="text-center fw-semibold">{c.number}</td>
+                        <td className="text-center fw-semibold">{c.chapterNumber}</td>
                         <td className="fw-semibold">{c.title}</td>
                         <td className="text-end">
-                          <Link className="btn btn-outline-dark btn-sm" to={`/admin/chapters/${c.id}/edit`}>
-                            Edit
+                          <Link
+                            to={`/admin/books/${c.bookId}/chapters/${c.id}`}
+                            className="text-decoration-none"
+                          >
+                            <Button variant="outline" size="sm">
+                              Edit
+                            </Button>
                           </Link>
                         </td>
                       </tr>
@@ -174,65 +199,21 @@ export default function AdminDashboard() {
                 </table>
               </div>
             )}
-          </div>
+          </Surface>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function QuickActionCard({ title, subtitle, to, variant }) {
-  const classes =
-    variant === "dark"
-      ? "border rounded p-3 h-100 bg-dark text-white"
-      : "border rounded p-3 h-100 bg-light";
-
-  return (
-    <div className="col-12 col-md-6 col-lg-4">
-      <div className={classes}>
-        <div className="d-flex flex-column h-100">
-          <div className="fw-semibold">{title}</div>
-          <div className={variant === "dark" ? "text-white-50 small" : "text-muted small"}>
-            {subtitle}
-          </div>
-
-          <div className="mt-3">
-            <Link
-              className={variant === "dark" ? "btn btn-light btn-sm" : "btn btn-dark btn-sm"}
-              to={to}
-            >
-              Open
-            </Link>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StatCard({ label, value }) {
-  return (
-    <div className="col-6 col-md-4 col-lg-2">
-      <div className="border rounded p-3 h-100">
-        <div className="text-muted small">{label}</div>
-        <div className="fs-4 fw-semibold">{value}</div>
-      </div>
+      </section>
     </div>
   );
 }
 
 function AttentionCard({ label, value }) {
-  const isBad = (value ?? 0) > 0;
+  const count = Number(value ?? 0);
+  const tone = count > 0 ? "warn" : "ok";
+
   return (
-    <div className="col-12 col-md-4">
-      <div
-        className={`border rounded p-3 h-100 ${
-          isBad ? "border-danger text-danger" : "border-success text-success"
-        }`}
-      >
-        <div className="fw-semibold">{label}</div>
-        <div className="fs-4">{value}</div>
-      </div>
-    </div>
+    <Surface className={`admin-attention-card ${tone}`}>
+      <p className="admin-attention-label mb-1">{label}</p>
+      <p className="admin-attention-value mb-0">{count}</p>
+    </Surface>
   );
 }

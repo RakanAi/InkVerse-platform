@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using InkVerse.Api.Data;
 using InkVerse.Api.DTOs.Book;
@@ -156,7 +156,7 @@ namespace InkVerse.Api.Services.ServicesRepo
                 WordCount = 0,
                 SourceUrl = dto.SourceUrl,
 
-                AuthorId = authorId, // ✅ from token, not from dto
+                AuthorId = authorId, // ? from token, not from dto
                 AuthorName = null,
 
                 Genres = genres,
@@ -294,16 +294,30 @@ namespace InkVerse.Api.Services.ServicesRepo
                 .Where(b => b.AuthorId == authorId)
                 .Include(b => b.Genres)
                 .Include(b => b.Tags)
+                .Include(b => b.Author)
+                .OrderByDescending(b => b.UpdatedAt ?? b.CreatedAt)
                 .Select(b => new BookReadDto
                 {
                     Id = b.ID,
                     Title = b.Title,
                     Description = b.Description,
+                    CoverImageUrl = b.CoverImageUrl,
+                    AuthorId = b.AuthorId,
+                    AuthorName = b.AuthorName ?? b.Author!.UserName,
+                    Status = b.Status.ToString(),
+                    WordCount = b.WordCount,
+                    TotalViews = b.TotalViews,
+                    AverageRating = b.AverageRating,
                     IsFanfic = b.IsFanfic,
                     VerseType = b.VerseType.ToString(),
                     OriginType = b.OriginType.ToString(),
                     Genres = b.Genres.Select(g => g.Name).ToList(),
-                    Tags = b.Tags.Select(t => t.Name).ToList()
+                    Tags = b.Tags.Select(t => t.Name).ToList(),
+                    GenreIds = b.Genres.Select(g => g.ID).ToList(),
+                    TagIds = b.Tags.Select(t => t.ID).ToList(),
+                    CreatedAt = b.CreatedAt,
+                    UpdatedAt = b.UpdatedAt,
+                    SourceUrl = b.SourceUrl,
                 }).ToListAsync();
         }
 
@@ -354,7 +368,7 @@ namespace InkVerse.Api.Services.ServicesRepo
             return await _inkVerseDB.Books
                 .Include(b => b.Author)
                 .Where(b => !b.IsDeleted && b.VerseType == verseType)
-                .OrderByDescending(b => b.TotalViews)       // v1 “top” rule
+                .OrderByDescending(b => b.TotalViews)       // v1 �top� rule
                 .ThenByDescending(b => b.AverageRating)
                 .Take(take)
                 .Select(b => new BookReadDto

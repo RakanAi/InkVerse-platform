@@ -1,4 +1,4 @@
-import { RANKING_TABS } from "../ranking.presets";
+import { RANKING_TABS } from "../ranking.presets.jsx";
 
 export function buildRankingParams(query) {
   const preset = RANKING_TABS.find((t) => t.key === query.tab) ?? RANKING_TABS[0];

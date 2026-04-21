@@ -1,17 +1,25 @@
-import React from "react";
+import Surface from "../../Shared/ui/Surface";
 
 export default function AuthorContract() {
   return (
-    <div className="author-page">
-      <h1 className="author-page-title">Contract</h1>
-      <p className="author-page-subtitle">
-        View and manage your author agreements and contract terms.
-      </p>
-      <div className="author-page-panel">
-        <p>
-          Your contract details and agreements will appear here. Review terms and accept new agreements as needed.
+    <div className="authorx-page">
+      <section className="authorx-hero">
+        <div>
+          <h1>Contract & Terms</h1>
+          <p>Manage your author agreement status and upcoming contract updates.</p>
+        </div>
+      </section>
+
+      <Surface>
+        <div className="authorx-section-head">
+          <h3>Current Contract Status</h3>
+        </div>
+        <div className="authorx-contract-status success">Active - Author agreement accepted</div>
+        <p className="authorx-contract-note">
+          This is the temporary contract module. You can replace this section later
+          with your legal terms versioning, acceptance history, and payout policy details.
         </p>
-      </div>
+      </Surface>
     </div>
   );
 }

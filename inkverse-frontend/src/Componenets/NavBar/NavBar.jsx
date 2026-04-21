@@ -3,22 +3,41 @@ import { Link } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./NavBar.css";
 import AuthContext from "../../Context/AuthProvider";
-
-// ✅ Vite best practice: import the logo
 import logo from "../../assets/IncVerseLogo.png";
 
 function NavBar() {
   const { auth, openLogin, setAuth } = useContext(AuthContext);
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isNavHidden, setIsNavHidden] = useState(false);
   const closeTimer = useRef(null);
+  const lastScrollYRef = useRef(0);
 
-  // ✅ Mobile detection (Bootstrap md breakpoint = 768px)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const currentY = window.scrollY;
+      const previousY = lastScrollYRef.current;
+
+      if (currentY <= 24) {
+        setIsNavHidden(false);
+      } else if (currentY > previousY + 8) {
+        setIsNavHidden(true);
+      } else if (currentY < previousY - 8) {
+        setIsNavHidden(false);
+      }
+
+      lastScrollYRef.current = currentY;
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   const openMenu = () => {
@@ -30,12 +49,10 @@ function NavBar() {
     closeTimer.current = setTimeout(() => setMenuOpen(false), 120);
   };
 
-  // ✅ Offcanvas close helper
   const closeOffcanvas = () => {
     const el = document.getElementById("mobileNav");
     if (!el) return;
 
-    // Bootstrap JS must be loaded for this to work
     const instance = window.bootstrap?.Offcanvas?.getInstance(el);
     instance?.hide();
   };
@@ -46,36 +63,6 @@ function NavBar() {
     setMenuOpen(false);
     if (isMobile) closeOffcanvas();
   };
-
-  // Your search expand/collapse logic (unchanged)
-  useEffect(() => {
-    const searchContainer = document.querySelector(".search-container");
-    const searchInput = document.getElementById("search-input");
-    const searchBtn = document.getElementById("search-btn");
-
-    if (!searchContainer || !searchInput || !searchBtn) return;
-
-    const expandSearch = (event) => {
-      event.preventDefault();
-      searchContainer.classList.add("active");
-      searchInput.focus();
-    };
-
-    const collapseSearch = (event) => {
-      if (!searchContainer.contains(event.target)) {
-        searchContainer.classList.remove("active");
-        searchInput.value = "";
-      }
-    };
-
-    searchBtn.addEventListener("click", expandSearch);
-    document.addEventListener("click", collapseSearch);
-
-    return () => {
-      searchBtn.removeEventListener("click", expandSearch);
-      document.removeEventListener("click", collapseSearch);
-    };
-  }, []);
 
   const isLoggedIn = !!auth?.accessToken;
   const initials = auth?.user?.userName?.slice(0, 1)?.toUpperCase() ?? "?";
@@ -89,26 +76,24 @@ function NavBar() {
     ? roles.includes("Admin")
     : roles === "Admin";
 
-  // ✅ click handler used on mobile links
   const onMobileNavClick = () => {
     if (isMobile) closeOffcanvas();
   };
 
   return (
     <>
-      <nav className="navbar text-start navbar-expand-md fixed-top align-items-center ">
-        <div className="container" style={{ maxWidth: "1300px" }}>
-          {/* Brand */}
+      <nav
+        className={`navbar text-start navbar-expand-md fixed-top align-items-center ${isNavHidden ? "nav-hidden" : "nav-visible"}`}
+      >
+        <div className="container iv-navbar-shell" style={{ maxWidth: "1300px" }}>
           <Link
             className="navbar-brand p-0 text-light d-flex align-items-center"
             to="/"
             onClick={onMobileNavClick}
           >
-            <img src={logo} alt="InkVerse" className="iv-navbar-icon rounded-3  "/>
-            {/* <div className="ps-4 ms-5"></div> */}
+            <img src={logo} alt="InkVerse" className="iv-navbar-icon rounded-3" />
           </Link>
 
-          {/* ✅ Toggler: opens OFFCANVAS on mobile */}
           <button
             className="navbar-toggler shadow-none border-0 bg-light"
             type="button"
@@ -120,44 +105,46 @@ function NavBar() {
             <span className="navbar-toggler-icon"></span>
           </button>
 
-          {/* ✅ DESKTOP NAV (normal, no offcanvas) */}
           <div className="collapse navbar-collapse d-none d-md-flex">
-            <ul className="navbar-nav ms-auto col-lg-10 col-md-8 col-sm-12">
+            <ul className="navbar-nav iv-nav-links me-auto">
               <li className="nav-item">
-                <Link to="/Browser" className="nav-link text-light">
-                  Browser
+                <Link to="/Browser" className="nav-link iv-nav-link text-light">
+                  <span className="bi bi-compass iv-link-icon" aria-hidden="true" />
+                  <span>Browser</span>
                 </Link>
               </li>
               <li className="nav-item">
-                <Link to="/Ranking" className="nav-link text-light">
-                  Ranking
+                <Link to="/Ranking" className="nav-link iv-nav-link text-light">
+                  <span className="bi bi-trophy iv-link-icon" aria-hidden="true" />
+                  <span>Ranking</span>
                 </Link>
               </li>
               <li className="nav-item">
-                <Link to="/Author" className="nav-link text-light">
-                  Author
+                <Link to="/Author" className="nav-link iv-nav-link text-light">
+                  <span className="bi bi-pencil-square iv-link-icon" aria-hidden="true" />
+                  <span>Author</span>
                 </Link>
               </li>
               <li className="nav-item">
-                <Link to="/Trend" className="nav-link text-light fw-bold">
-                  Trends!
+                <Link to="/Trend" className="nav-link iv-nav-link iv-nav-link-trend text-light fw-bold">
+                  <span className="bi bi-stars iv-link-icon" aria-hidden="true" />
+                  <span>Trends!</span>
                 </Link>
               </li>
               {isLoggedIn && isAdmin && (
                 <li className="nav-item">
-                  <Link to="/admin" className="nav-link text-warning fw-bold">
-                    Admin
+                  <Link to="/admin" className="nav-link iv-nav-link iv-nav-link-admin text-warning fw-bold">
+                    <span className="bi bi-shield-lock iv-link-icon" aria-hidden="true" />
+                    <span>Admin</span>
                   </Link>
                 </li>
               )}
             </ul>
 
-            <div className="d-flex align-items-center gap-2">
+            <div className="d-flex align-items-center gap-2 iv-nav-actions w-auto">
               {isLoggedIn && (
-                <Link
-                  className="nav-link text-white btn loginBtn"
-                  to="/my-library"
-                >
+                <Link className="btn iv-ghost-btn d-flex" to="/my-library">
+                  <span className="bi bi-collection me-1" aria-hidden="true" />
                   Library
                 </Link>
               )}
@@ -177,33 +164,29 @@ function NavBar() {
                   {menuOpen && (
                     <div className="iv-menu shadow">
                       <Link className="iv-menu-item" to="/profilePage">
+                        <span className="bi bi-person-circle" aria-hidden="true" />
                         Profile
                       </Link>
                       <Link className="iv-menu-item" to="/profilePage">
+                        <span className="bi bi-gear" aria-hidden="true" />
                         Settings
                       </Link>
-                      <button
-                        className="iv-menu-item danger"
-                        onClick={handleLogout}
-                      >
+                      <button className="iv-menu-item danger" onClick={handleLogout}>
+                        <span className="bi bi-box-arrow-right" aria-hidden="true" />
                         Logout
                       </button>
                     </div>
                   )}
                 </div>
               ) : (
-                <button
-                  type="button"
-                  className="loginBtn btn btn-outline-dark text-white btn-sm border-0"
-                  onClick={openLogin}
-                >
+                <button type="button" className="btn iv-primary-btn" onClick={openLogin}>
+                  <span className="bi bi-box-arrow-in-right me-1" aria-hidden="true" />
                   SIGN IN
                 </button>
               )}
             </div>
           </div>
 
-          {/* ✅ OFFCANVAS (mobile only) */}
           <div
             className="offcanvas offcanvas-start d-md-none"
             tabIndex="-1"
@@ -225,38 +208,26 @@ function NavBar() {
             <div className="offcanvas-body backdropcan">
               <ul className="navbar-nav ps-2">
                 <li className="nav-item">
-                  <Link
-                    to="/Browser"
-                    className="nav-link"
-                    onClick={onMobileNavClick}
-                  >
+                  <Link to="/Browser" className="nav-link" onClick={onMobileNavClick}>
+                    <span className="bi bi-compass me-2" aria-hidden="true" />
                     Browser
                   </Link>
                 </li>
                 <li className="nav-item">
-                  <Link
-                    to="/Ranking"
-                    className="nav-link"
-                    onClick={onMobileNavClick}
-                  >
+                  <Link to="/Ranking" className="nav-link" onClick={onMobileNavClick}>
+                    <span className="bi bi-trophy me-2" aria-hidden="true" />
                     Ranking
                   </Link>
                 </li>
                 <li className="nav-item">
-                  <Link
-                    to="/Author"
-                    className="nav-link"
-                    onClick={onMobileNavClick}
-                  >
+                  <Link to="/Author" className="nav-link" onClick={onMobileNavClick}>
+                    <span className="bi bi-pencil-square me-2" aria-hidden="true" />
                     Author
                   </Link>
                 </li>
                 <li className="nav-item">
-                  <Link
-                    to="/Trend"
-                    className="nav-link fw-bold"
-                    onClick={onMobileNavClick}
-                  >
+                  <Link to="/Trend" className="nav-link fw-bold" onClick={onMobileNavClick}>
+                    <span className="bi bi-stars me-2" aria-hidden="true" />
                     Trends!
                   </Link>
                 </li>
@@ -268,6 +239,7 @@ function NavBar() {
                       className="nav-link text-warning fw-bold"
                       onClick={onMobileNavClick}
                     >
+                      <span className="bi bi-shield-lock me-2" aria-hidden="true" />
                       Admin
                     </Link>
                   </li>
@@ -277,36 +249,27 @@ function NavBar() {
 
                 {isLoggedIn && (
                   <>
-                    <hr />
                     <li className="nav-item">
-                      <Link
-                        to="/my-library"
-                        className="nav-link"
-                        onClick={onMobileNavClick}
-                      >
+                      <Link to="/my-library" className="nav-link" onClick={onMobileNavClick}>
+                        <span className="bi bi-collection me-2" aria-hidden="true" />
                         Library
                       </Link>
                     </li>
+                    <hr />
                   </>
                 )}
 
                 {isLoggedIn ? (
                   <>
                     <li className="nav-item">
-                      <Link
-                        to="/profilePage"
-                        className="nav-link"
-                        onClick={onMobileNavClick}
-                      >
+                      <Link to="/profilePage" className="nav-link" onClick={onMobileNavClick}>
+                        <span className="bi bi-person-circle me-2" aria-hidden="true" />
                         Profile
                       </Link>
                     </li>
                     <li className="nav-item">
-                      <Link
-                        to="/profilePage"
-                        className="nav-link"
-                        onClick={onMobileNavClick}
-                      >
+                      <Link to="/profilePage" className="nav-link" onClick={onMobileNavClick}>
+                        <span className="bi bi-gear me-2" aria-hidden="true" />
                         Settings
                       </Link>
                     </li>
@@ -316,6 +279,7 @@ function NavBar() {
                         style={{ textAlign: "left" }}
                         onClick={handleLogout}
                       >
+                        <span className="bi bi-box-arrow-right me-2" aria-hidden="true" />
                         Logout
                       </button>
                     </li>
@@ -331,6 +295,7 @@ function NavBar() {
                         openLogin();
                       }}
                     >
+                      <span className="bi bi-box-arrow-in-right me-2" aria-hidden="true" />
                       Sign In
                     </button>
                   </li>
@@ -340,8 +305,6 @@ function NavBar() {
           </div>
         </div>
       </nav>
-
-
     </>
   );
 }

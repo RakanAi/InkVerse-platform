@@ -277,13 +277,7 @@ export default function ContentSection() {
             className={`reader-content font-${prefs.font}`}
             style={{ fontSize: prefs.fontSize, lineHeight: prefs.lineHeight }}
           >
-            {String(chapter.content ?? "")
-              .split("\n")
-              .map((paragraph, idx) => {
-                const t = paragraph.trim();
-                if (!t) return <div key={idx} style={{ height: 12 }} />;
-                return <p key={idx}>{t}</p>;
-              })}
+            <pre className="reader-content-pre">{String(chapter.content ?? "")}</pre>
           </div>
 
           <div className="reader-bottom" onClick={(e) => e.stopPropagation()}>
@@ -593,3 +587,5 @@ function DesktopSettingsPanel({ value, onChange }) {
     </div>
   );
 }
+
+

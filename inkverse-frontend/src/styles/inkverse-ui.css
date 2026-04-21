@@ -64,11 +64,11 @@
 
 /* Light variant (for dark/image backgrounds) */
 .iv-page-header--light .iv-title {
-  color: #ffffff;
+  color: #111827;
 }
 
 .iv-page-header--light .iv-subtitle {
-  color: rgba(255, 255, 255, 0.85);
+  color: #4b5563;
 }
 /* States */
 .iv-state {
@@ -243,6 +243,10 @@
   border-radius: 16px;
   box-shadow: var(--iv-shadow);
   padding: 6px;
+  max-height: 260px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
 
   /* animation base (closed state) */
   opacity: 0;
@@ -396,6 +400,7 @@
   border-radius: 18px;
   border: 1px solid rgba(109, 40, 217, 0.18);
   justify-content: center;
+
 }
 
 /* Buttons */
@@ -433,6 +438,8 @@
 .iv-seg-btn:hover:not(.is-active) {
   background: rgba(109, 40, 217, 0.05);
 }
+
+
 
 /* each button */
 .iv-seg-btn {
@@ -476,3 +483,52 @@
 }
 
 
+
+
+.iv-dd-search {
+  width: 100%;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--iv-border);
+  border-radius: 10px;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+  color: var(--iv-text);
+}
+
+.iv-dd-search:focus {
+  outline: none;
+  border-color: var(--iv-primary);
+  box-shadow: 0 0 0 3px var(--iv-primary-soft);
+}
+
+.iv-dd-empty {
+  padding: 10px 12px;
+  color: var(--iv-muted);
+  font-size: 0.88rem;
+}
+
+.iv-dd-item-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.iv-dd-check {
+  width: 16px;
+  height: 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  color: transparent;
+  background: #fff;
+}
+
+.iv-dd-check.is-checked {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #fff;
+}

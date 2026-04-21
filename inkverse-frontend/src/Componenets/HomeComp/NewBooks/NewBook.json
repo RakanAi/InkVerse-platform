@@ -1,0 +1,50 @@
+  [
+  {
+    "id": 1,
+    "title": "The Great Gatsby",
+    "author": "F. Scott Fitzgerald",
+    "image": "src/assets/pics/AlbedoBase_XL_A_highly_detailed_and_ethereal_fantasy_female_ch_1.jpg",
+    "LatestUpdate": "2025-04-22T00:00:00Z"
+
+  },
+  {
+    "id": 2,
+    "title": "To Kill a Mockingbird",
+    "author": "Harper Lee",
+    "image": "src/assets/pics/AlbedoBase_XL_Eyes_Deep_captivating_violetblue_eyes_that_seem_0.jpg",
+    "LatestUpdate": "2025-04-22T00:00:00Z"
+
+  },
+  {
+    "id": 3,
+    "title": "1984",
+    "author": "George Orwell",
+    "image": "src/assets/pics/AlbedoBase_XL_Eyes_Deep_captivating_violetblue_eyes_that_seem_1 (1).jpg",
+    "LatestUpdate": "2025-04-22T00:00:00Z"
+
+  },
+  {
+    "id": 4,
+    "title": "Pride and Prejudice",
+    "author": "Jane Austen",
+    "image": "src/assets/pics/AlbedoBase_XL_Eyes_Deep_captivating_violetblue_eyes_that_seem_1.jpg",
+    "LatestUpdate": "2025-04-22T00:00:00Z"
+
+  },
+  {
+    "id": 5,
+    "title": "Moby Dick",
+    "author": "Herman Melville",
+    "image": "src/assets/pics/alchemyrefiner_alchemymagic_3_4a29463b-a69f-46ac-98f5-61ba645f5a55_0.jpg",
+    "LatestUpdate": "2025-04-22T00:00:00Z"
+
+  },
+  {
+    "id": 6,
+    "title": "War and Peace",
+    "author": "Leo Tolstoy",
+    "image": "src/assets/pics/rendernet_media_gen_YGELbHM7d3.png",
+    "LatestUpdate": "2025-04-22T00:00:00Z"
+
+  }
+]

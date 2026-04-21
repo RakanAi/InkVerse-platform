@@ -3,8 +3,15 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  padding-top: 78px;
 }
 
 .main-content {
   flex: 1;
+}
+
+@media (max-width: 768px) {
+  .layout-container {
+    padding-top: 70px;
+  }
 }

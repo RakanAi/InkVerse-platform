@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }) => {
           return;
         }
 
-        const res = await api.get("/account/me"); // ✅ interceptor attaches token
+        const res = await api.get("/account/me");
 
         setAuth((prev) => ({
           ...prev,
@@ -43,7 +43,6 @@ export const AuthProvider = ({ children }) => {
         }));
       } catch (e) {
         console.error("fetch /me failed:", e);
-        // if token is invalid/expired -> log out
         if (e?.response?.status === 401) setAuth(null);
       } finally {
         setLoading(false);

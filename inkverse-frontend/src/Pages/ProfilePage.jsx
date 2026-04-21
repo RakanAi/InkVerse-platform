@@ -4,6 +4,29 @@ import api from "../Api/api";
 import AuthContext from "../Context/AuthProvider";
 import "./ProfilePage.css";
 import { absUrl } from "../Utils/absUrl";
+import Surface from "../Shared/ui/Surface";
+import Button from "../Shared/ui/Button";
+import Chip from "../Shared/ui/Chip";
+import Segmented from "../Shared/ui/Segmented";
+import TextField from "../Shared/ui/TextField";
+import DropdownSelect from "../Shared/ui/DropdownSelect";
+import LoadingState from "../Shared/ui/LoadingState";
+import ErrorState from "../Shared/ui/ErrorState";
+import EmptyState from "../Shared/ui/EmptyState";
+
+const DEFAULT_SETTINGS = {
+  isProfilePublic: true,
+  emailNotificationsEnabled: true,
+  readingRemindersEnabled: false,
+  preferredLanguage: "en",
+};
+
+const LANGUAGE_OPTIONS = [
+  { value: "en", label: "English" },
+  { value: "ar", label: "Arabic" },
+  { value: "fr", label: "French" },
+  { value: "es", label: "Spanish" },
+];
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("profile");
@@ -11,18 +34,15 @@ export default function ProfilePage() {
   const { auth, setAuth } = useContext(AuthContext);
   const sessionUser = auth?.user;
 
-  // Profile data from backend
   const [profile, setProfile] = useState(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [profileErr, setProfileErr] = useState("");
 
-  // Edit mode
   const [editing, setEditing] = useState(false);
   const [editBio, setEditBio] = useState("");
   const [editAvatar, setEditAvatar] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
 
-  // Reviews
   const [myReviews, setMyReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
   const [reviewsErr, setReviewsErr] = useState("");
@@ -30,6 +50,12 @@ export default function ProfilePage() {
   const [booksReadCount, setBooksReadCount] = useState(0);
   const [booksReadLoading, setBooksReadLoading] = useState(true);
   const [booksReadErr, setBooksReadErr] = useState("");
+
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+  const [settingsLoading, setSettingsLoading] = useState(true);
+  const [settingsErr, setSettingsErr] = useState("");
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [settingsSavedText, setSettingsSavedText] = useState("");
 
   const [avatarUploading, setAvatarUploading] = useState(false);
 
@@ -40,7 +66,7 @@ export default function ProfilePage() {
       setAvatarUploading(true);
 
       const fd = new FormData();
-      fd.append("File", file); // must match dto name
+      fd.append("File", file);
 
       const res = await api.post("/uploads/users/avatar", fd, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -52,7 +78,6 @@ export default function ProfilePage() {
         return;
       }
 
-      // Put it in edit field (so user can Save)
       setEditAvatar(url);
     } catch (e) {
       console.error("uploadAvatar failed:", e);
@@ -67,15 +92,9 @@ export default function ProfilePage() {
       setBooksReadErr("");
       setBooksReadLoading(true);
 
-      // ✅ pick ONE endpoint that exists in your backend:
-      // Option A (most likely): library endpoint already used in Browse
       const res = await api.get("/me/library");
-
-      // if your DTO has: isInLibrary + lastReadChapterId OR lastReadAt etc.
       const items = Array.isArray(res.data) ? res.data : [];
 
-      // Count "read" books:
-      // If you store lastReadChapterId => treat as read
       const read = items.filter(
         (x) =>
           (x.lastReadChapterId ?? x.LastReadChapterId ?? null) != null ||
@@ -93,64 +112,6 @@ export default function ProfilePage() {
     }
   };
 
-  useEffect(() => {
-    if (!sessionUser?.id) return;
-    loadProfile();
-    loadReviews();
-    loadBooksRead();
-  }, [sessionUser?.id]);
-const getCreatedAt = (p) => p?.createdAt ?? p?.CreatedAt ?? null;
-
-const parseDateSafe = (value) => {
-  if (!value) return null;
-  if (value instanceof Date) return isNaN(value) ? null : value;
-
-  const s = String(value).trim();
-  if (!s) return null;
-
-  const d = new Date(s);
-  return isNaN(d.getTime()) ? null : d;
-};
-
-const createdDate = useMemo(() => parseDateSafe(getCreatedAt(profile)), [profile]);
-
-const joinedText = useMemo(() => {
-  return createdDate ? createdDate.toLocaleDateString() : "Unknown";
-}, [createdDate]);
-
-const memberForText = useMemo(() => {
-  if (!createdDate) return "—";
-
-  const now = new Date();
-  let months =
-    (now.getFullYear() - createdDate.getFullYear()) * 12 +
-    (now.getMonth() - createdDate.getMonth());
-
-  if (now.getDate() < createdDate.getDate()) months -= 1;
-
-  if (months <= 0) {
-    const days = Math.max(0, Math.floor((now - createdDate) / 86400000));
-    return days <= 1 ? "1 day" : `${days} days`;
-  }
-
-  const years = Math.floor(months / 12);
-  const remMonths = months % 12;
-
-  if (years <= 0) return remMonths === 1 ? "1 month" : `${remMonths} months`;
-  if (remMonths === 0) return years === 1 ? "1 year" : `${years} years`;
-  return `${years}y ${remMonths}m`;
-}, [createdDate]);
-
-  if (!sessionUser) {
-    return (
-      <div className="container my-4">
-        <div className="alert alert-warning mb-0">
-          Please sign in to view your profile.
-        </div>
-      </div>
-    );
-  }
-
   const loadProfile = async () => {
     try {
       setProfileErr("");
@@ -158,7 +119,6 @@ const memberForText = useMemo(() => {
       const res = await api.get("/me/profile");
       setProfile(res.data);
 
-      // preload edit fields
       setEditBio(res.data?.bio ?? "");
       setEditAvatar(res.data?.avatarUrl ?? "");
     } catch (e) {
@@ -195,9 +155,120 @@ const memberForText = useMemo(() => {
     }
   };
 
+  const normalizeSettings = (raw) => ({
+    isProfilePublic:
+      raw?.isProfilePublic ?? raw?.IsProfilePublic ?? DEFAULT_SETTINGS.isProfilePublic,
+    emailNotificationsEnabled:
+      raw?.emailNotificationsEnabled ??
+      raw?.EmailNotificationsEnabled ??
+      DEFAULT_SETTINGS.emailNotificationsEnabled,
+    readingRemindersEnabled:
+      raw?.readingRemindersEnabled ??
+      raw?.ReadingRemindersEnabled ??
+      DEFAULT_SETTINGS.readingRemindersEnabled,
+    preferredLanguage:
+      raw?.preferredLanguage ??
+      raw?.PreferredLanguage ??
+      DEFAULT_SETTINGS.preferredLanguage,
+  });
 
+  const loadSettings = async () => {
+    try {
+      setSettingsErr("");
+      setSettingsLoading(true);
+      const res = await api.get("/me/settings");
+      setSettings(normalizeSettings(res.data));
+    } catch (e) {
+      console.error("loadSettings failed:", e);
+      setSettings(DEFAULT_SETTINGS);
+      setSettingsErr("Failed to load settings.");
+    } finally {
+      setSettingsLoading(false);
+    }
+  };
 
+  const saveSettings = async () => {
+    try {
+      setSavingSettings(true);
+      setSettingsErr("");
+      const payload = {
+        isProfilePublic: !!settings.isProfilePublic,
+        emailNotificationsEnabled: !!settings.emailNotificationsEnabled,
+        readingRemindersEnabled: !!settings.readingRemindersEnabled,
+        preferredLanguage: settings.preferredLanguage || "en",
+      };
 
+      const res = await api.put("/me/settings", payload);
+      setSettings(normalizeSettings(res.data));
+      setSettingsSavedText(`Saved ${new Date().toLocaleTimeString()}`);
+    } catch (e) {
+      console.error("saveSettings failed:", e);
+      setSettingsErr(e?.response?.data?.message || "Failed to save settings.");
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!sessionUser?.id) return;
+    loadProfile();
+    loadReviews();
+    loadBooksRead();
+    loadSettings();
+  }, [sessionUser?.id]);
+
+  const getCreatedAt = (p) => p?.createdAt ?? p?.CreatedAt ?? null;
+
+  const parseDateSafe = (value) => {
+    if (!value) return null;
+    if (value instanceof Date) return Number.isNaN(value) ? null : value;
+
+    const s = String(value).trim();
+    if (!s) return null;
+
+    const d = new Date(s);
+    return Number.isNaN(d.getTime()) ? null : d;
+  };
+
+  const createdDate = useMemo(
+    () => parseDateSafe(getCreatedAt(profile)),
+    [profile],
+  );
+
+  const joinedText = useMemo(() => {
+    return createdDate ? createdDate.toLocaleDateString() : "Unknown";
+  }, [createdDate]);
+
+  const memberForText = useMemo(() => {
+    if (!createdDate) return "-";
+
+    const now = new Date();
+    let months =
+      (now.getFullYear() - createdDate.getFullYear()) * 12 +
+      (now.getMonth() - createdDate.getMonth());
+
+    if (now.getDate() < createdDate.getDate()) months -= 1;
+
+    if (months <= 0) {
+      const days = Math.max(0, Math.floor((now - createdDate) / 86400000));
+      return days <= 1 ? "1 day" : `${days} days`;
+    }
+
+    const years = Math.floor(months / 12);
+    const remMonths = months % 12;
+
+    if (years <= 0) return remMonths === 1 ? "1 month" : `${remMonths} months`;
+    if (remMonths === 0) return years === 1 ? "1 year" : `${years} years`;
+    return `${years}y ${remMonths}m`;
+  }, [createdDate]);
+
+  if (!sessionUser) {
+    return (
+      <div className="container my-4">
+        <div className="alert alert-warning mb-0">Please sign in to view your profile.</div>
+      </div>
+    );
+  }
 
   const displayName =
     profile?.userName || sessionUser?.userName || sessionUser?.email || "User";
@@ -219,7 +290,6 @@ const memberForText = useMemo(() => {
       setProfile(res.data);
       setEditing(false);
 
-      // Optional: reflect changes in AuthContext user
       setAuth?.((prev) => ({
         ...prev,
         user: {
@@ -236,290 +306,379 @@ const memberForText = useMemo(() => {
     }
   };
 
-  const tabs = [
-    { key: "profile", label: "Profile Info" },
-    { key: "works", label: "My Works" }, // under construction
-    { key: "reviews", label: "My Reviews" },
-    { key: "achievements", label: "Achievements" },
-    { key: "activity", label: "Activity Feed" },
-    { key: "settings", label: "Settings" },
+  const tabOptions = [
+    { value: "profile", label: "Overview" },
+    { value: "works", label: "My Works" },
+    { value: "reviews", label: "Reviews" },
+    { value: "achievements", label: "Achievements" },
+    { value: "activity", label: "Activity" },
+    { value: "settings", label: "Settings" },
+  ];
+
+  const statItems = [
+    {
+      label: "Books Read",
+      value: booksReadLoading ? "..." : booksReadCount,
+      help: booksReadErr,
+    },
+    {
+      label: "Reviews",
+      value: reviewsLoading ? "..." : myReviews.length,
+      help: reviewsErr,
+    },
+    {
+      label: "Member For",
+      value: profileLoading ? "..." : memberForText,
+    },
   ];
 
   return (
-    <div className="container my-4">
-      {/* Glass Header */}
-      <div className="profile-hero p-4 mb-4">
-        <div className="row align-items-center">
-          <div className="col-md-3 text-center">
-            <img className="profile-avatar" src={avatarSrc} alt={displayName} />
-          </div>
+    <div className="profile-page-wrap container my-4">
+      <section className="profile-hero-shell mb-4">
+        <div className="profile-hero-glow" />
 
-          <div className="col-md-9">
-            <div className="d-flex justify-content-between align-items-start gap-3">
-              <div>
-                <h2 className="text-start mb-1">{displayName}</h2>
-
-                <p className="text-muted text-start mb-0">
-                  {profileLoading
-                    ? "Loading bio..."
-                    : profile?.bio || "No bio yet."}
-                </p>
-              </div>
-
-              <div className="row justify-content-end  gap-2">
-                <button
-                  className="btn btn-outline-secondary w-auto me-4"
-                  type="button"
-                  onClick={() => {
-                    setEditing((v) => !v);
-                    setEditBio(profile?.bio ?? "");
-                    setEditAvatar(profile?.avatarUrl ?? "");
-                  }}
-                  disabled={profileLoading || !!profileErr}
-                >
-                  <i className="bi bi-pencil-square me-1" />
-                  Edit
-                </button>
-              </div>
+        <div className="profile-hero-main">
+          <div className="profile-identity-block">
+            <div className="profile-avatar-shell">
+              <img className="profile-avatar" src={avatarSrc} alt={displayName} />
             </div>
 
-            {profileErr && (
-              <div className="text-danger small mt-2">{profileErr}</div>
-            )}
+            <div className="profile-identity-copy">
+              <p className="profile-kicker mb-2">Inkverse Profile</p>
+              <h1 className="profile-display-name mb-2">{displayName}</h1>
+              <p className="profile-bio mb-3">
+                {profileLoading
+                  ? "Loading bio..."
+                  : profile?.bio || "No bio yet. Add one to introduce yourself."}
+              </p>
 
-            {/* Edit Box */}
-            {editing && (
-              <div className="mt-3 p-3 profile-stat">
-                <div className="row g-2">
-                  <div className="col-12">
-                    <label className="form-label small">Upload avatar</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="form-control"
-                      disabled={avatarUploading}
-                      onChange={(e) => uploadAvatar(e.target.files?.[0])}
-                    />
-                    {avatarUploading ? (
-                      <div className="small text-muted mt-1">Uploading...</div>
-                    ) : null}
-
-                    {editAvatar ? (
-                      <div className="mt-2">
-                        <img
-                          src={absUrl(editAvatar)}
-                          alt="preview"
-                          style={{
-                            width: 90,
-                            height: 90,
-                            borderRadius: "50%",
-                            objectFit: "cover",
-                          }}
-                        />
-                      </div>
-                    ) : null}
-                  </div>
-
-                  <div className="col-12">
-                    <label className="form-label small">Bio</label>
-                    <textarea
-                      className="form-control"
-                      rows={3}
-                      value={editBio}
-                      onChange={(e) => setEditBio(e.target.value)}
-                      placeholder="Write something about you..."
-                    />
-                  </div>
-
-                  <div className="col-12 d-flex justify-content-end gap-2">
-                    <button
-                      className="btn btn-outline-secondary"
-                      type="button"
-                      onClick={() => setEditing(false)}
-                      disabled={savingProfile}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      className="btn btn-primary"
-                      type="button"
-                      onClick={saveProfile}
-                      disabled={savingProfile}
-                    >
-                      {savingProfile ? "Saving..." : "Save"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Stats row */}
-            <div className="row mt-3">
-              <div className="col-md-4 mb-2">
-                <div className="profile-stat p-3 text-center">
-                  <div className="fw-bold fs-4">
-                    {booksReadLoading ? "..." : booksReadCount}
-                  </div>
-                  <div className="text-muted">Books read</div>
-                  {booksReadErr ? (
-                    <div className="text-danger small mt-1">{booksReadErr}</div>
-                  ) : null}
-                </div>
-              </div>
-
-              <div className="col-md-4 mb-2">
-                <div className="profile-stat p-3 text-center">
-                  <div className="fw-bold fs-4">
-                    {reviewsLoading ? "..." : myReviews.length}
-                  </div>
-                  <div className="text-muted">Reviews</div>
-                </div>
-              </div>
-
-              <div className="col-md-4 mb-2">
-                <div className="profile-stat p-3 text-center">
-                  <div className="fw-bold fs-4">
-                    {profileLoading ? "..." : memberForText}
-                  </div>
-                  <div className="text-muted">Member for</div>
-                </div>
+              <div className="profile-meta-row">
+                <Chip tone="neutral">Joined {joinedText}</Chip>
+                <Chip tone="neutral">Member {profileLoading ? "..." : memberForText}</Chip>
               </div>
             </div>
-
-            {/* Quick shortcuts */}
-            <div className="d-flex gap-2 mt-3 flex-wrap"></div>
           </div>
-        </div>
-      </div>
 
-      {/* Tabs */}
-      <ul className="nav mb-4 justify-content-between">
-        {tabs.map((t) => (
-          <li className="profile-tab profile-tabs nav-item" key={t.key}>
-            <button
-              className={`profile-tab ${activeTab === t.key ? "active" : ""}`}
-              onClick={() => setActiveTab(t.key)}
+          <div className="profile-action-block">
+            <Button
+              variant="primary"
               type="button"
+              onClick={() => {
+                setEditing((v) => !v);
+                setEditBio(profile?.bio ?? "");
+                setEditAvatar(profile?.avatarUrl ?? "");
+              }}
+              disabled={profileLoading || !!profileErr}
             >
-              {t.label}
-            </button>
-          </li>
-        ))}
-      </ul>
+              {editing ? "Close Editor" : "Edit Profile"}
+            </Button>
 
-      {/* Content */}
-      {activeTab === "profile" && (
-        <div className="border rounded p-4 text-start">
-          <h4>Account Details</h4>
-          <ul className="list-unstyled mb-3">
-            <li>
-              <strong>Username:</strong> {displayName}
-            </li>
-            <li>
-              <strong>Joined:</strong> {joinedText}
-            </li>
-            <li>
-              <strong>Member for:</strong>{" "}
-              {profileLoading ? "..." : memberForText}
-            </li>
-            <li>
-              <strong>Reviews Written:</strong>{" "}
-              {reviewsLoading ? "..." : myReviews.length}
-            </li>
-          </ul>
+            <Link to="/my-library" className="profile-library-link">
+              Open My Library
+            </Link>
+
+            {profileErr ? (
+              <div className="profile-shared-state profile-shared-state-sm">
+                <ErrorState title="Could not load profile" subtitle={profileErr} onRetry={loadProfile} />
+              </div>
+            ) : null}
+          </div>
         </div>
+
+        <div className="profile-stats-grid">
+          {statItems.map((item) => (
+            <Surface key={item.label} className="profile-stat-card">
+              <p className="profile-stat-label mb-1">{item.label}</p>
+              <p className="profile-stat-value mb-0">{item.value}</p>
+              {item.help ? <p className="profile-stat-help mb-0">{item.help}</p> : null}
+            </Surface>
+          ))}
+        </div>
+
+        {editing && (
+          <Surface className="profile-editor-card mt-3">
+            <h2 className="profile-editor-title">Edit your profile</h2>
+
+            <div className="profile-editor-grid">
+              <div>
+                <label className="profile-field-label" htmlFor="avatarUpload">
+                  Upload avatar
+                </label>
+                <input
+                  id="avatarUpload"
+                  type="file"
+                  accept="image/*"
+                  className="form-control"
+                  disabled={avatarUploading}
+                  onChange={(e) => uploadAvatar(e.target.files?.[0])}
+                />
+                {avatarUploading ? <div className="profile-field-help">Uploading...</div> : null}
+
+                <label className="profile-field-label mt-2" htmlFor="avatarUrlInput">
+                  Or paste avatar URL
+                </label>
+                <TextField
+                  id="avatarUrlInput"
+                  value={editAvatar}
+                  onChange={setEditAvatar}
+                  placeholder="https://..."
+                />
+
+                {editAvatar ? (
+                  <img
+                    className="profile-editor-avatar-preview"
+                    src={editAvatar.startsWith("http") ? editAvatar : absUrl(editAvatar)}
+                    alt="Avatar preview"
+                  />
+                ) : null}
+              </div>
+
+              <div>
+                <label className="profile-field-label" htmlFor="bioInput">
+                  Bio
+                </label>
+                <textarea
+                  id="bioInput"
+                  className="form-control"
+                  rows={4}
+                  value={editBio}
+                  onChange={(e) => setEditBio(e.target.value)}
+                  placeholder="Write something about yourself..."
+                />
+              </div>
+            </div>
+
+            <div className="profile-editor-actions">
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() => setEditing(false)}
+                disabled={savingProfile}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                type="button"
+                onClick={saveProfile}
+                disabled={savingProfile}
+              >
+                {savingProfile ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
+          </Surface>
+        )}
+      </section>
+
+      <Segmented
+        className="mb-4"
+        value={activeTab}
+        onChange={setActiveTab}
+        options={tabOptions}
+      />
+
+      {activeTab === "profile" && (
+        <Surface className="profile-content-panel">
+          <h3 className="profile-panel-title">Account Details</h3>
+          <dl className="profile-detail-grid mb-0">
+            <div>
+              <dt>Username</dt>
+              <dd>{displayName}</dd>
+            </div>
+            <div>
+              <dt>Joined</dt>
+              <dd>{joinedText}</dd>
+            </div>
+            <div>
+              <dt>Member For</dt>
+              <dd>{profileLoading ? "..." : memberForText}</dd>
+            </div>
+            <div>
+              <dt>Reviews Written</dt>
+              <dd>{reviewsLoading ? "..." : myReviews.length}</dd>
+            </div>
+          </dl>
+        </Surface>
       )}
 
       {activeTab === "works" && (
-        <div className="border rounded p-4 text-center">
-          <h4>My Works</h4>
-          <p className="text-muted mb-0 alert alert-info mb-0">
-            Under construction 🚧 — author features will live here soon...
-            Maybe...
-          </p>
-        </div>
+        <Surface className="profile-content-panel profile-placeholder-panel">
+          <h3 className="profile-panel-title">My Works</h3>
+          <p className="mb-0">Author features are under construction and will appear here.</p>
+        </Surface>
       )}
 
       {activeTab === "reviews" && (
-        <div className="rounded p-4">
-          <h4 className="mb-3">My Reviews</h4>
+        <Surface className="profile-content-panel">
+          <h3 className="profile-panel-title mb-3">My Reviews</h3>
+
           {reviewsLoading ? (
-            <p className="text-muted">Loading...</p>
+            <LoadingState text="Loading your reviews..." />
           ) : reviewsErr ? (
-            <p className="text-danger">{reviewsErr}</p>
+            <ErrorState title="Could not load reviews" subtitle={reviewsErr} onRetry={loadReviews} />
           ) : myReviews.length ? (
-            <div className="d-flex flex-column gap-2">
-              {myReviews.map((r) => (
-                <div key={r.id} className="border shadow reviewHo rounded p-3">
-                  <div className="d-flex gap-3">
-                    {r.bookCoverUrl ? (
+            <div className="profile-review-list">
+              {myReviews.map((r) => {
+                const coverSrc = r.bookCoverUrl
+                  ? r.bookCoverUrl.startsWith("http")
+                    ? r.bookCoverUrl
+                    : absUrl(r.bookCoverUrl)
+                  : "";
+                const reviewDate = r.createdAt
+                  ? new Date(r.createdAt).toLocaleString()
+                  : "Unknown date";
+
+                return (
+                  <Surface key={r.id} className="profile-review-card">
+                    {coverSrc ? (
                       <img
-                        src={r.bookCoverUrl}
-                        alt={r.bookTitle}
-                        style={{
-                          width: 104,
-                          height: 128,
-                          objectFit: "cover",
-                          borderRadius: 8,
-                        }}
+                        src={coverSrc}
+                        alt={r.bookTitle || "Book cover"}
+                        className="profile-review-cover"
                       />
                     ) : (
-                      <div
-                        style={{ width: 54, height: 78 }}
-                        className="border rounded"
-                      />
+                      <div className="profile-review-cover placeholder" />
                     )}
 
-                    <div className="flex-grow-1">
-                      <div className="d-flex justify-content-between align-items-center">
-                        <Link
-                          to={`/book/${r.bookId}`}
-                          className="fw-semibold text-decoration-none"
-                        >
+                    <div className="profile-review-copy">
+                      <div className="profile-review-head">
+                        <Link to={`/book/${r.bookId}`} className="profile-review-book-link">
                           {r.bookTitle}
                         </Link>
-                        <span className="bi bi-star-fill text-warning">
-                          <span className="text-black"> {r.rating}</span>
-                        </span>
+                        <Chip tone="neutral">{r.rating} / 5</Chip>
                       </div>
 
-                      <div className="small text-muted text-start border-bottom">
-                        {new Date(r.createdAt).toLocaleString()}
-                      </div>
-
-                      <div className="mt-2 text-start border rounded p-2">
-                        {r.content}
-                      </div>
+                      <p className="profile-review-date">{reviewDate}</p>
+                      <p className="profile-review-content mb-0">{r.content}</p>
                     </div>
-                  </div>
-                </div>
-              ))}
+                  </Surface>
+                );
+              })}
             </div>
           ) : (
-            <p className="text-muted mb-0">No reviews yet.</p>
+            <EmptyState
+              title="No reviews yet"
+              subtitle="Once you review books, they will appear here."
+            />
           )}
-        </div>
+        </Surface>
       )}
 
       {activeTab === "achievements" && (
-        <div className="border rounded p-4">
-          <h4>Achievements</h4>
-          <div className="alert alert-info mb-0">Under construction.</div>
-        </div>
+        <Surface className="profile-content-panel profile-placeholder-panel">
+          <h3 className="profile-panel-title">Achievements</h3>
+          <p className="mb-0">Achievement badges and milestones will be available soon.</p>
+        </Surface>
       )}
 
       {activeTab === "activity" && (
-        <div className="border rounded p-4">
-          <h4>Activity Feed</h4>
-          <div className="alert alert-info mb-0">Under construction.</div>
-        </div>
+        <Surface className="profile-content-panel profile-placeholder-panel">
+          <h3 className="profile-panel-title">Activity Feed</h3>
+          <p className="mb-0">Your reading and review activity timeline will appear here.</p>
+        </Surface>
       )}
 
       {activeTab === "settings" && (
-        <div className="border rounded p-4">
-          <h4>Settings</h4>
-          <div className="alert alert-info mb-0">Under construction.</div>
-        </div>
+        <Surface className="profile-content-panel">
+          <div className="d-flex justify-content-between align-items-start gap-3 mb-3 flex-wrap">
+            <div>
+              <h3 className="profile-panel-title mb-1">Settings</h3>
+              <p className="text-muted mb-0">Control privacy, notifications, and reading preferences.</p>
+            </div>
+            {settingsSavedText ? <Chip tone="neutral">{settingsSavedText}</Chip> : null}
+          </div>
+
+          {settingsLoading ? (
+            <LoadingState text="Loading settings..." />
+          ) : settingsErr ? (
+            <ErrorState title="Could not load settings" subtitle={settingsErr} onRetry={loadSettings} />
+          ) : (
+            <div className="profile-settings-form">
+              <label className="profile-settings-row">
+                <span>
+                  <strong>Public Profile</strong>
+                  <small>Allow other users to view your profile details.</small>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={!!settings.isProfilePublic}
+                  onChange={(e) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      isProfilePublic: e.target.checked,
+                    }))
+                  }
+                />
+              </label>
+
+              <label className="profile-settings-row">
+                <span>
+                  <strong>Email Notifications</strong>
+                  <small>Get updates about account and activity by email.</small>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={!!settings.emailNotificationsEnabled}
+                  onChange={(e) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      emailNotificationsEnabled: e.target.checked,
+                    }))
+                  }
+                />
+              </label>
+
+              <label className="profile-settings-row">
+                <span>
+                  <strong>Reading Reminders</strong>
+                  <small>Enable periodic reminders to continue reading.</small>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={!!settings.readingRemindersEnabled}
+                  onChange={(e) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      readingRemindersEnabled: e.target.checked,
+                    }))
+                  }
+                />
+              </label>
+
+              <div className="profile-settings-language">
+                <label className="profile-field-label" htmlFor="preferredLanguage">
+                  Preferred Language
+                </label>
+                <DropdownSelect
+                  value={settings.preferredLanguage}
+                  onChange={(value) =>
+                    setSettings((prev) => ({ ...prev, preferredLanguage: value }))
+                  }
+                  options={LANGUAGE_OPTIONS}
+                />
+              </div>
+
+              <div className="profile-editor-actions mt-2">
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={loadSettings}
+                  disabled={savingSettings}
+                >
+                  Reset
+                </Button>
+                <Button
+                  variant="primary"
+                  type="button"
+                  onClick={saveSettings}
+                  disabled={savingSettings}
+                >
+                  {savingSettings ? "Saving..." : "Save Settings"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </Surface>
       )}
     </div>
   );

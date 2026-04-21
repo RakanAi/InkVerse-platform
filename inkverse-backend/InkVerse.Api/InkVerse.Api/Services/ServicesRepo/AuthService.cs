@@ -1,11 +1,9 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System.Data;
 using System.Security.Claims;
 using InkVerse.Api.DTOs.User;
 using InkVerse.Api.Entities.Identity;
 using InkVerse.Api.Services.InterFace;
-
 
 namespace InkVerse.Api.Services.ServicesRepo
 {
@@ -19,6 +17,7 @@ namespace InkVerse.Api.Services.ServicesRepo
             _userManager = userManager;
             _tokenService = tokenService;
         }
+
         public async Task<AuthResultDto> RegisterAsync(RegisterDto model)
         {
             var user = new AppUser
@@ -36,10 +35,9 @@ namespace InkVerse.Api.Services.ServicesRepo
                     Error = string.Join(" | ", result.Errors.Select(e => e.Description))
                 };
             }
+
             await _userManager.AddToRoleAsync(user, "User");
-
             var roles = await _userManager.GetRolesAsync(user);
-
 
             return new AuthResultDto
             {
@@ -58,11 +56,7 @@ namespace InkVerse.Api.Services.ServicesRepo
         {
             var loginInput = loginDto.LoginInput.Trim().ToLower();
 
-
-            // Try finding by email
             var user = await _userManager.FindByEmailAsync(loginInput);
-
-            // If not found, try by username
             if (user == null)
             {
                 user = await _userManager.Users
@@ -78,8 +72,16 @@ namespace InkVerse.Api.Services.ServicesRepo
                 };
             }
 
-            var isPasswordValid = await _userManager.CheckPasswordAsync(user, loginDto.Password);
+            if (user.IsBlocked)
+            {
+                return new AuthResultDto
+                {
+                    Success = false,
+                    Error = "This account is blocked."
+                };
+            }
 
+            var isPasswordValid = await _userManager.CheckPasswordAsync(user, loginDto.Password);
             if (!isPasswordValid)
             {
                 return new AuthResultDto
@@ -102,7 +104,6 @@ namespace InkVerse.Api.Services.ServicesRepo
                     Roles = roles
                 }
             };
-
         }
 
         public async Task<AuthResultDto> GetMeAsync(ClaimsPrincipal userClaims)
@@ -116,6 +117,7 @@ namespace InkVerse.Api.Services.ServicesRepo
                     Error = "User not found"
                 };
             }
+
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
             {
@@ -123,6 +125,15 @@ namespace InkVerse.Api.Services.ServicesRepo
                 {
                     Success = false,
                     Error = "User not found"
+                };
+            }
+
+            if (user.IsBlocked)
+            {
+                return new AuthResultDto
+                {
+                    Success = false,
+                    Error = "This account is blocked."
                 };
             }
 
@@ -135,13 +146,10 @@ namespace InkVerse.Api.Services.ServicesRepo
                 {
                     UserName = user.UserName ?? "",
                     Email = user.Email ?? "",
-                    Token = _tokenService.CreateToken(user, roles), 
+                    Token = _tokenService.CreateToken(user, roles),
                     Roles = roles
-
                 }
             };
         }
-
-
     }
 }

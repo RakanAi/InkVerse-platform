@@ -78,7 +78,7 @@ export default function NewBooks() {
       <div className="d-flex align-items-center justify-content-between">
         <div className="d-flex">
            <PageHeader
-                        title="Inkverse Leatest"
+                        title="Inkverse Latest"
                         subtitle="Discover the latest stories and worlds just added to InkVerse."
             />
         </div>

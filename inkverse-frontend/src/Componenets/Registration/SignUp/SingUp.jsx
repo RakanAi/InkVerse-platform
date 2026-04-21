@@ -6,6 +6,7 @@ import api from "../../../Api/api";
 import { useNavigate, useLocation } from "react-router-dom";
 import AuthContext from "../../../Context/AuthProvider";
 import GoogleLoginButton from "../../LoginComp/GoogleLoginButton";
+import icon from "../../../assets/icons/InkVerseIcon.jpeg";
 
 const SignUpForm = ({ onLogin }) => {
   const { setAuth, closeLogin } = useContext(AuthContext);
@@ -159,12 +160,7 @@ const SignUpForm = ({ onLogin }) => {
     <>
       {success ? (
         <div
-          className="signup-container mx-auto border rounded-3 text-light shadow-lg d-flex align-items-center justify-content-center"
-          style={{
-            width: "900px",
-            height: "600px",
-            backgroundColor: "rgba(11, 11, 11, 1)",
-          }}
+          className="signup-container signup-success mx-auto rounded-3 text-light shadow-lg d-flex align-items-center justify-content-center"
         >
           <div className="text-center">
             <div className="success-icon mb-4">
@@ -209,18 +205,14 @@ const SignUpForm = ({ onLogin }) => {
         </div>
       ) : (
         <div
-          className="signup-container mx-auto  rounded-3 text-light shadow-lg"
-          style={{ width: "100%", backgroundColor: "rgba(11, 11, 11, 1)" }}
+          className="signup-container auth-pane mx-auto rounded-3 text-light shadow-lg"
         >
           <div className="row h-100 g-0">
             {/* Left Side - Rules & Guidelines */}
             <div className="col-md-5 rules-panel p-4 d-flex flex-column d-none d-md-block">
               <div className="rules-header text-center mb-4">
                 <img
-                  src="src\assets\icons\InkVerseIcon.jpeg"
-                  alt=""
-                  className=""
-                  style={{ width: "auto", height: "180px" }}
+                  src={icon} alt="InkVerse" className="auth-logo auth-logo-lg"
                 />
                 <h3 className="Greeting mb-2">Join InkVerse</h3>
               </div>

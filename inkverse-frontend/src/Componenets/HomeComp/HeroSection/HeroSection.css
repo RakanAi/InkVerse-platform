@@ -1,11 +1,6 @@
-div{
-    border :thick;
-    width: 100%;
-}
-
 .bgImgg {
     position: relative;
-    background-image: url(/public/images/HeroImg.jpg);
+    background-image: url(/images/HeroImg.jpg);
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -13,7 +8,7 @@ div{
     min-height: 300px; /* Changed from max-height to min-height for flexibility */
 }
 
-.bgImg::before {
+.bgImgg::before {
     content: "";
     position: absolute;
     inset: 0;

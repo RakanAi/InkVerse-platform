@@ -15,13 +15,13 @@ import {
   normalizeVerseType,
   ORIGIN_TYPES,
 } from "../Constants/bookEnums";
-import { DEFAULT_RANKING_STATE } from "@/features/ranking/ranking.defaults";
-import { buildRankingParams } from "@/features/ranking/utils/buildRankingParams";
+import { DEFAULT_RANKING_STATE } from "@/features/ranking/ranking.defaults.jsx";
+import { buildRankingParams } from "@/features/ranking/utils/buildRankingParams.jsx";
 import {
   RANKING_TABS,
   RANKING_TIME_RANGES,
   RANKING_STATUS_OPTIONS,
-} from "@/features/ranking/ranking.presets";
+} from "@/features/ranking/ranking.presets.jsx";
 
 export default function Ranking() {
   /** @type {import("@/features/ranking/ranking.types").RankingQuery} */

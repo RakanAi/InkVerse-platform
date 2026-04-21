@@ -1,7 +1,6 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Security.Claims;
@@ -11,29 +10,16 @@ using InkVerse.Api.Data;
 using InkVerse.Api.Entities.Identity;
 using InkVerse.Api.Helpers.ImageHelper;
 using InkVerse.Api.Services.Genres;
-
-
-//using InkVerse.Api.Helpers.ImageHelper;
 using InkVerse.Api.Services.InterFace;
 using InkVerse.Api.Services.InterFace.Auth;
 using InkVerse.Api.Services.ServicesRepo;
 using InkVerse.Api.Services.Tags;
 using InkVerse.Api.Services.Trends;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
-
 builder.Services.Configure<JWT>(builder.Configuration.GetSection("JWT"));
-
-
-// Add services to the container.
-
-//builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-
-//builder.Services.AddSwaggerGen();
 
 builder.Services.AddSwaggerGen(option =>
 {
@@ -54,22 +40,15 @@ builder.Services.AddSwaggerGen(option =>
             {
                 Reference = new OpenApiReference
                 {
-                    Type=ReferenceType.SecurityScheme,
-                    Id="Bearer"
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
                 }
             },
-            new string[]{}
+            new string[] { }
         }
     });
     option.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
-
 });
-
-
-
-
-
-
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -83,14 +62,11 @@ builder.Services.AddCors(options =>
         builder =>
         {
             builder.AllowAnyOrigin()
-                   .AllowAnyMethod()
-                   .AllowAnyHeader();
+                  .AllowAnyMethod()
+                  .AllowAnyHeader();
         });
 });
 
-
-
-// Adding DbContext with SQL Server
 builder.Services.AddDbContext<InkVerseDB>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
@@ -98,7 +74,6 @@ builder.Services.AddDbContext<InkVerseDB>(options =>
     options.EnableSensitiveDataLogging();
 });
 
-// Adding Identity services
 builder.Services.AddIdentity<AppUser, IdentityRole>(option =>
 {
     option.Password.RequireDigit = true;
@@ -107,8 +82,7 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(option =>
     option.Password.RequireUppercase = true;
     option.Password.RequireNonAlphanumeric = true;
     option.User.RequireUniqueEmail = true;
-}
-    )
+})
     .AddEntityFrameworkStores<InkVerseDB>()
     .AddDefaultTokenProviders();
 
@@ -127,7 +101,6 @@ builder.Services.ConfigureApplicationCookie(options =>
     };
 });
 
-// Adding custom services
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -150,12 +123,9 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(builder.Configuration["JWT:SigningKey"]!)
         ),
-
-        // optional but useful later for roles
         RoleClaimType = ClaimTypes.Role
     };
 
-    // ✅ IMPORTANT: stop redirect to /Account/Login, return 401 instead
     options.Events = new JwtBearerEvents
     {
         OnChallenge = context =>
@@ -188,14 +158,11 @@ builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
 builder.Services.AddScoped<IChapterImportService, ChapterImportService>();
 builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 
-
-// Registering ImageHelper
 var webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
 if (!Directory.Exists(webRootPath))
 {
     Directory.CreateDirectory(webRootPath);
 }
-
 
 var app = builder.Build();
 
@@ -214,7 +181,6 @@ await InkVerse.Api.Data.IdentitySeeder
 //        c.RoutePrefix = "swagger";
 //    });
 
-//}
 app.UseExceptionHandler("/error");
 
 if (app.Environment.IsDevelopment())
@@ -223,17 +189,39 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
-
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 app.UseRouting();
-
 app.UseCors("AllowAll");
 app.UseAuthentication();
+
+app.Use(async (context, next) =>
+{
+    if (context.User?.Identity?.IsAuthenticated == true)
+    {
+        var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!string.IsNullOrWhiteSpace(userId))
+        {
+            var userManager = context.RequestServices.GetRequiredService<UserManager<AppUser>>();
+            var user = await userManager.FindByIdAsync(userId);
+            if (user?.IsBlocked == true)
+            {
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                await context.Response.WriteAsJsonAsync(new { message = "Your account is blocked." });
+                return;
+            }
+        }
+    }
+
+    await next();
+});
+
 app.UseAuthorization();
 app.UseDefaultFiles();
 app.UseStaticFiles();
 app.MapFallbackToFile("index.html");
-
 app.MapControllers();
 
 app.Run();

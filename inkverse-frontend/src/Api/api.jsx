@@ -4,7 +4,7 @@ import qs from "qs";
 
 
 const api = axios.create({
-  baseURL: "http://raedodeh-001-site1.anytempurl.com/api",
+  baseURL: import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:7275/api",
   paramsSerializer: (params) =>
     qs.stringify(params, { arrayFormat: "repeat" }),
 });
