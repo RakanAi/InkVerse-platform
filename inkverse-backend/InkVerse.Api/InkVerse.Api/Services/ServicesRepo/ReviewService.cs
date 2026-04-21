@@ -319,7 +319,43 @@ namespace InkVerse.Api.Services.ServicesRepo
 
             await _db.SaveChangesAsync();
         }
+        public async Task<List<ReviewForAiDto>> GetLatestReviewsForAiAsync(int take)
+        {
+            take = take <= 0 ? 20 : Math.Min(take, 100);
 
+            return await _db.Reviews
+                .AsNoTracking()
+                .Include(r => r.Book)
+                .Include(r => r.User)
+                .OrderByDescending(r => r.CreatedAt)
+                .Take(take)
+                .Select(r => new ReviewForAiDto
+                {
+                    Id = r.ID,
+                    Content = r.Content,
+                    Rating = r.Rating,
+                    CreatedAt = r.CreatedAt,
+                    BookId = r.BookId,
+                    BookTitle = r.Book != null ? r.Book.Title : null,
+                    UserId = r.UserId,
+                    UserName = r.User != null ? r.User.UserName : null
+                })
+                .ToListAsync();
+        }
+
+        public async Task<bool> SaveAiAnalysisAsync(int reviewId, ReviewAnalysisDto dto)
+        {
+            var review = await _db.Reviews.FirstOrDefaultAsync(r => r.ID == reviewId);
+            if (review == null) return false;
+
+            review.AiClassification = dto.Classification?.Trim();
+            review.AiReason = dto.Reason?.Trim();
+            review.AiAnalyzedAt = DateTime.UtcNow;
+            review.UpdatedAt = DateTime.UtcNow;
+
+            await _db.SaveChangesAsync();
+            return true;
+        }
 
     }
 }

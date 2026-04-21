@@ -109,5 +109,19 @@ namespace InkVerse.Api.Controllers
 
             return null;
         }
+
+        [HttpGet("reviews/for-ai")]
+        public async Task<IActionResult> GetForAi([FromQuery] int take = 20)
+        {
+            var result = await _reviewService.GetLatestReviewsForAiAsync(take);
+            return Ok(result);
+        }
+
+        [HttpPost("reviews/{id:int}/analysis")]
+        public async Task<IActionResult> SaveAnalysis(int id, [FromBody] ReviewAnalysisDto dto)
+        {
+            var ok = await _reviewService.SaveAiAnalysisAsync(id, dto);
+            return ok ? Ok(new { message = "Analysis saved." }) : NotFound();
+        }
     }
 }

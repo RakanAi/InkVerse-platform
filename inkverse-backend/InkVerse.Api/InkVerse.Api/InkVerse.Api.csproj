@@ -26,6 +26,9 @@
   <ItemGroup>
     <Folder Include="Migrations\" />
     <Folder Include="Model\TagTreGen\" />
+    <Folder Include="wwwroot\uploads\books\user\" />
+    <Folder Include="wwwroot\uploads\trends\" />
+    <Folder Include="wwwroot\uploads\users\avatars\" />
   </ItemGroup>
 
 </Project>

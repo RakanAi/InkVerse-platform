@@ -26,6 +26,7 @@ namespace InkVerse.Api.Data
         public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
         public DbSet<ReviewReply> ReviewReplies { get; set; }
         public DbSet<ReviewReplyReaction> ReviewReplyReactions { get; set; }
+        public DbSet<ApiKey> ApiKeys { get; set; }
 
         public DbSet<ReadingProgress> ReadingProgress { get; set; } = null!;
 

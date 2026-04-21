@@ -169,6 +169,23 @@ var app = builder.Build();
 await InkVerse.Api.Data.IdentitySeeder
     .SeedRolesAndAdminAsync(app.Services, app.Configuration);
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<InkVerseDB>();
+
+    if (!await db.ApiKeys.AnyAsync())
+    {
+        db.ApiKeys.Add(new ApiKey
+        {
+            Name = "Clawbot Local",
+            Key = "inkverse-local-clawbot-key-123",
+            CreatedAt = DateTime.UtcNow
+        });
+
+        await db.SaveChangesAsync();
+    }
+}
+
 // Configure the HTTP request pipeline.
 //if (app.Environment.IsDevelopment())
 //{
@@ -195,6 +212,7 @@ if (!app.Environment.IsDevelopment())
 }
 app.UseRouting();
 app.UseCors("AllowAll");
+app.UseMiddleware<InkVerse.Api.Middleware.AiApiKeyMiddleware>();
 app.UseAuthentication();
 
 app.Use(async (context, next) =>

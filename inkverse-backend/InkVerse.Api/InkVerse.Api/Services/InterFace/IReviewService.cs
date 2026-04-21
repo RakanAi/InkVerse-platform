@@ -10,7 +10,8 @@ namespace InkVerse.Api.Services.InterFace
         Task<bool> DeleteReviewAsync(int reviewId, string userId);
         Task<bool> ReactToReviewAsync(int reviewId, string userId, string reactionType);
         Task<List<ReviewReadDto>> GetRecentReviewsAsync(int take);
-
+        Task<List<ReviewForAiDto>> GetLatestReviewsForAiAsync(int take);
+        Task<bool> SaveAiAnalysisAsync(int reviewId, ReviewAnalysisDto dto);
     }
 
 }
