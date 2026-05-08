@@ -1,91 +1,193 @@
-.iv-backdrop {
+.iv-auth-backdrop {
   position: fixed;
   inset: 0;
-  background:
-    radial-gradient(1200px 500px at 10% 0%, rgba(64, 126, 236, 0.18), transparent 58%),
-    radial-gradient(900px 500px at 100% 100%, rgba(14, 165, 145, 0.16), transparent 58%),
-    rgba(8, 12, 20, 0.58);
-  backdrop-filter: blur(18px) saturate(130%);
+  z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
-  padding: 20px;
+  padding: 22px;
+  background:
+    radial-gradient(1200px 540px at 0% 0%, rgba(72, 92, 240, 0.18), transparent 58%),
+    radial-gradient(860px 540px at 100% 100%, rgba(44, 196, 255, 0.12), transparent 56%),
+    rgba(9, 12, 22, 0.66);
+  backdrop-filter: blur(18px) saturate(120%);
 }
 
-.iv-modal {
-  position: relative;
-  width: min(980px, 100%);
-  max-height: 94vh;
-  overflow: auto;
-  border-radius: 24px;
-}
-
-.iv-card {
-  width: 100%;
-  border: 1px solid rgba(148, 163, 184, 0.22);
-  border-radius: 24px;
-  background: linear-gradient(160deg, rgba(8, 16, 30, 0.48), rgba(10, 20, 34, 0.42));
-  backdrop-filter: blur(16px) saturate(125%);
+.iv-auth-modal {
+  width: min(1120px, 100%);
+  display: grid;
+  grid-template-rows: auto auto;
+  max-height: min(calc(100vh - 44px), 1040px);
+  overflow: hidden;
+  border-radius: 32px;
+  border: 1px solid rgba(120, 137, 198, 0.18);
+  background: linear-gradient(180deg, rgba(15, 20, 38, 0.96), rgba(16, 22, 41, 0.98));
   box-shadow:
-    0 30px 60px rgba(2, 8, 24, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    0 34px 80px rgba(3, 8, 25, 0.46),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
-.iv-close {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  width: 34px;
-  height: 34px;
+.iv-auth-topbar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px 74px 16px 22px;
+  border-bottom: 1px solid rgba(120, 137, 198, 0.16);
+}
+
+.iv-auth-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: center;
+  gap: 6px;
+  width: min(100%, 470px);
+  padding: 6px;
   border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  background: rgba(15, 23, 42, 0.8);
-  color: #e2e8f0;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  z-index: 5;
-  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  border: 1px solid rgba(117, 132, 189, 0.18);
+  background: rgba(255, 255, 255, 0.05);
 }
 
-.iv-close:hover {
-  background: rgba(30, 41, 59, 0.95);
-  border-color: rgba(96, 165, 250, 0.65);
+.iv-auth-tab {
+  min-height: 40px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #b8c3ea;
+  font-size: 0.92rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease, transform 120ms ease;
+}
+
+.iv-auth-tab:hover {
+  color: #ffffff;
   transform: translateY(-1px);
 }
 
-@media (max-width: 900px) {
-  .iv-backdrop {
-    align-items: flex-end;
-    padding: 0;
+.iv-auth-tab.is-active {
+  background: linear-gradient(135deg, rgba(74, 94, 244, 0.98), rgba(116, 75, 255, 0.96));
+  color: #ffffff;
+  box-shadow: 0 10px 24px rgba(76, 90, 219, 0.3);
+}
+
+.iv-auth-close {
+  position: absolute;
+  top: 50%;
+  right: 22px;
+  transform: translateY(-50%);
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  font-size: 1.55rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 120ms ease, background-color 120ms ease, border-color 120ms ease;
+}
+
+.iv-auth-close:hover {
+  transform: translateY(-50%) scale(1.03);
+  border-color: rgba(164, 180, 255, 0.36);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.iv-auth-frame {
+  overflow: hidden;
+  border-radius: 0 0 32px 32px;
+  transition: height 360ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: height;
+}
+
+.iv-auth-frame__content {
+  min-width: 0;
+}
+
+.iv-auth-frame__content--animated {
+  animation: iv-auth-frame-enter 340ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes iv-auth-frame-enter {
+  0% {
+    opacity: 0.36;
+    transform: translateY(18px) scale(0.985);
   }
 
-  .iv-modal {
-    width: 100%;
-    max-height: 94vh;
-    border-radius: 22px 22px 0 0;
-    animation: slideUp 0.26s ease-out;
-  }
-
-  .iv-card {
-    border-radius: 22px 22px 0 0;
-    border-bottom: 0;
-  }
-
-  .iv-close {
-    top: 12px;
-    right: 12px;
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
-@keyframes slideUp {
-  from {
-    transform: translateY(60px);
-    opacity: 0;
+@media (max-width: 980px) {
+  .iv-auth-backdrop {
+    padding: 12px;
+    align-items: stretch;
   }
-  to {
-    transform: translateY(0);
-    opacity: 1;
+
+  .iv-auth-modal {
+    overflow: auto;
+    max-height: 100%;
+    border-radius: 28px;
+  }
+
+  .iv-auth-topbar {
+    padding: 14px 64px 14px 14px;
+  }
+
+  .iv-auth-tab {
+    min-height: 38px;
+  }
+
+  .iv-auth-frame {
+    height: auto !important;
+    transition: none;
+  }
+
+  .iv-auth-frame__content--animated {
+    animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .iv-auth-backdrop {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .iv-auth-modal {
+    width: 100%;
+    max-height: 96vh;
+    border-radius: 28px 28px 0 0;
+  }
+
+  .iv-auth-topbar {
+    padding: 12px 58px 12px 12px;
+  }
+
+  .iv-auth-close {
+    right: 12px;
+    width: 38px;
+    height: 38px;
+    font-size: 1.4rem;
+  }
+
+  .iv-auth-tabs {
+    gap: 4px;
+    padding: 4px;
+    width: 100%;
+  }
+
+  .iv-auth-tab {
+    min-height: 36px;
+    padding: 0 12px;
+    font-size: 0.88rem;
+  }
+
+  .iv-auth-frame {
+    border-radius: 0;
   }
 }

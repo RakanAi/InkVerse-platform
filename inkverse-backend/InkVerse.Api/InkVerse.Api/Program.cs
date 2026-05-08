@@ -17,6 +17,9 @@ using InkVerse.Api.Services.Tags;
 using InkVerse.Api.Services.Trends;
 
 var builder = WebApplication.CreateBuilder(args);
+var databaseProvider = builder.Configuration["DatabaseProvider"] ?? "SqlServer";
+var defaultConnection = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' was not found.");
 
 builder.Services.Configure<JWT>(builder.Configuration.GetSection("JWT"));
 builder.Services.AddEndpointsApiExplorer();
@@ -69,7 +72,15 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddDbContext<InkVerseDB>(options =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+    if (string.Equals(databaseProvider, "Sqlite", StringComparison.OrdinalIgnoreCase))
+    {
+        options.UseSqlite(defaultConnection);
+    }
+    else
+    {
+        options.UseSqlServer(defaultConnection);
+    }
+
     options.EnableDetailedErrors();
     options.EnableSensitiveDataLogging();
 });
@@ -165,6 +176,16 @@ if (!Directory.Exists(webRootPath))
 }
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<InkVerseDB>();
+
+    if (db.Database.IsSqlite())
+    {
+        await db.Database.EnsureCreatedAsync();
+    }
+}
 
 await InkVerse.Api.Data.IdentitySeeder
     .SeedRolesAndAdminAsync(app.Services, app.Configuration);

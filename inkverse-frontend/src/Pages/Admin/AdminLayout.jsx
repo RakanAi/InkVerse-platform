@@ -1,45 +1,36 @@
 import { NavLink, Outlet, useLocation } from "react-router-dom";
-import Surface from "../../Shared/ui/Surface";
+import {
+  ADMIN_NAV_ITEMS,
+  getAdminRouteMeta,
+} from "../../features/admin/admin.routes";
 import "./AdminExperience.css";
-
-const NAV_ITEMS = [
-  { to: "/admin", label: "Dashboard", exact: true },
-  { to: "/admin/books", label: "Books" },
-  { to: "/admin/trends", label: "Trends" },
-  { to: "/admin/tags", label: "Tags" },
-  { to: "/admin/genres", label: "Genres" },
-  { to: "/admin/users", label: "Manage Users" },
-];
-
-const ROUTE_TITLES = {
-  "/admin": "Admin Dashboard",
-  "/admin/books": "Book Management",
-  "/admin/trends": "Trend Management",
-  "/admin/tags": "Tag Management",
-  "/admin/genres": "Genre Management",
-  "/admin/users": "User Management",
-};
 
 export default function AdminLayout() {
   const { pathname } = useLocation();
-  const routeTitle =
-    Object.entries(ROUTE_TITLES).find(([key]) => pathname.startsWith(key))?.[1] ||
-    "Admin";
+  const routeMeta = getAdminRouteMeta(pathname);
+  const topbarHiddenRoutes = new Set([
+    "/admin",
+    "/admin/books",
+    "/admin/trends",
+    "/admin/tags",
+    "/admin/genres",
+    "/admin/users",
+  ]);
+  const showTopbar = !topbarHiddenRoutes.has(pathname);
 
   return (
     <div className="admin-shell">
       <div className="container-fluid admin-shell-grid">
         <aside className="admin-sidebar-col">
-          <Surface className="admin-sidebar-surface">
-            <div className="admin-brand-row">
-              <div>
-                <p className="admin-brand-kicker mb-1">Control Center</p>
-                <h2 className="admin-brand-title mb-0">InkVerse Admin</h2>
-              </div>
-            </div>
+          <div className="admin-sidebar-surface">
+            <p className="admin-sidebar-kicker">Admin workspace</p>
+            <h2 className="admin-sidebar-title">InkVerse</h2>
+            <p className="admin-sidebar-copy">
+              Books, moderation, taxonomy, and trend curation in one place.
+            </p>
 
             <nav className="admin-nav-list" aria-label="Admin navigation">
-              {NAV_ITEMS.map((item) => (
+              {ADMIN_NAV_ITEMS.map((item) => (
                 <NavLink
                   key={item.to}
                   to={item.to}
@@ -52,22 +43,25 @@ export default function AdminLayout() {
                 </NavLink>
               ))}
             </nav>
-          </Surface>
+          </div>
         </aside>
 
         <main className="admin-main-col">
-          <Surface className="admin-main-surface">
-            <div className="admin-main-topbar">
-              <div>
-                <p className="admin-main-kicker mb-1">Workspace</p>
-                <h1 className="admin-main-title mb-0">{routeTitle}</h1>
-              </div>
-            </div>
+          <div className="admin-main-frame">
+            {showTopbar ? (
+              <header className="admin-main-topbar">
+                <p className="admin-main-kicker">Admin</p>
+                <h1 className="admin-main-title">{routeMeta.title}</h1>
+                {routeMeta.subtitle ? (
+                  <p className="admin-main-subtitle">{routeMeta.subtitle}</p>
+                ) : null}
+              </header>
+            ) : null}
 
             <div className="admin-outlet-wrap">
               <Outlet />
             </div>
-          </Surface>
+          </div>
         </main>
       </div>
     </div>

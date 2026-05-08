@@ -1,0 +1,30 @@
+:root {
+  --iv-home-shell-max: 1320px;
+  --iv-home-shell-pad: 16px;
+  --iv-home-shell-pad-mobile: 7px;
+  --iv-home-gap: 34px;
+  --iv-home-gap-mobile: 22px;
+  --iv-home-card-radius: 24px;
+  --iv-home-card-radius-lg: 34px;
+  --iv-home-card-radius-mobile: 26px;
+
+  --iv-home-text: #16203d;
+  --iv-home-text-soft: #62708f;
+  --iv-home-text-muted: #6c7aa3;
+  --iv-home-text-dark-soft: #c4d3f5;
+
+  --iv-home-border: rgba(123, 144, 201, 0.14);
+  --iv-home-border-strong: rgba(93, 112, 186, 0.18);
+  --iv-home-shadow-soft: 0 18px 42px rgba(29, 41, 85, 0.12);
+  --iv-home-shadow-strong: 0 28px 80px rgba(4, 8, 22, 0.32);
+  --iv-home-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(243, 247, 255, 0.98));
+  --iv-home-surface-soft: rgba(234, 241, 255, 0.72);
+
+  --iv-home-accent-blue: #4454ef;
+  --iv-home-accent-blue-dark: #313ec4;
+  --iv-home-accent-indigo: #4c56d9;
+  --iv-home-accent-purple: #7449f5;
+  --iv-home-accent-overlay:
+    radial-gradient(circle at top left, rgba(109, 78, 255, 0.26), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(47, 124, 246, 0.2), transparent 30%);
+}

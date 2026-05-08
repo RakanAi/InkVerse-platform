@@ -1,11 +1,15 @@
-export const REVIEWS_MAX_WIDTH = 1300;
-
 export const RECENT_REVIEWS_QUERY = {
   take: 10,
 };
 
 export const RECENT_REVIEWS_SWIPER = {
   spaceBetween: 20,
+  speed: 1000,
+  autoplay: {
+    delay: 3200,
+    disableOnInteraction: false,
+    pauseOnMouseEnter: true,
+  },
   breakpoints: {
     340: { slidesPerView: 1 },
     768: { slidesPerView: 2 },

@@ -1,46 +1,43 @@
 import { useEffect, useMemo, useState } from "react";
-import api from "../../Api/api"; // adjust if needed
+import api from "../../Api/api";
+import Button from "../../Shared/ui/Button";
+import TextField from "../../Shared/ui/TextField";
+import LoadingState from "../../Shared/ui/LoadingState";
+import ErrorState from "../../Shared/ui/ErrorState";
+import AdminSection from "../../features/admin/components/AdminSection";
+import AdminTable from "../../features/admin/components/AdminTable";
+import AdminFormField from "../../features/admin/components/AdminFormField";
 
 export default function AdminTags() {
-  const API_BASE = "/admin/tags"; // change if needed
+  const API_BASE = "/admin/tags";
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
-
   const [q, setQ] = useState("");
-
-  // ✅ sorting
-  const [sortBy, setSortBy] = useState("name"); // "id" | "name" | "active"
-  const [sortDir, setSortDir] = useState("asc"); // "asc" | "desc"
-
-  // create
+  const [sortBy, setSortBy] = useState("name");
+  const [sortDir, setSortDir] = useState("asc");
   const [newName, setNewName] = useState("");
   const [newActive, setNewActive] = useState(true);
   const [creating, setCreating] = useState(false);
-
-  // edit
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState("");
   const [editActive, setEditActive] = useState(true);
   const [saving, setSaving] = useState(false);
-
-  // delete
   const [deletingId, setDeletingId] = useState(null);
 
-  const getId = (t) => t.id ?? t.Id ?? t.ID;
-  const getName = (t) => t.name ?? t.Name ?? "";
-  const getActive = (t) => (t.isActive ?? t.IsActive ?? true) === true;
+  const getId = (tag) => tag.id ?? tag.Id ?? tag.ID;
+  const getName = (tag) => tag.name ?? tag.Name ?? "";
+  const getActive = (tag) => (tag.isActive ?? tag.IsActive ?? true) === true;
 
   const load = async () => {
     try {
       setErr("");
       setLoading(true);
-
       const res = await api.get(`${API_BASE}?includeInactive=true`);
       setItems(Array.isArray(res.data) ? res.data : []);
-    } catch (e) {
-      console.error("Load tags failed:", e);
+    } catch (error) {
+      console.error("Load tags failed:", error);
       setItems([]);
       setErr("Failed to load tags.");
     } finally {
@@ -53,14 +50,14 @@ export default function AdminTags() {
   }, []);
 
   const onSort = (key) => {
-    setSortBy((prev) => {
-      if (prev !== key) {
+    setSortBy((current) => {
+      if (current !== key) {
         setSortDir("asc");
         return key;
       }
-      // same key => toggle dir
-      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-      return prev;
+
+      setSortDir((value) => (value === "asc" ? "desc" : "asc"));
+      return current;
     });
   };
 
@@ -70,39 +67,32 @@ export default function AdminTags() {
   };
 
   const filteredAndSorted = useMemo(() => {
-    const s = q.trim().toLowerCase();
+    const needle = q.trim().toLowerCase();
 
-    let arr = items;
-    if (s) {
-      arr = items.filter((t) => getName(t).toLowerCase().includes(s));
-    }
+    const filtered = needle
+      ? items.filter((tag) => getName(tag).toLowerCase().includes(needle))
+      : items;
 
     const dir = sortDir === "asc" ? 1 : -1;
 
-    const sorted = [...arr].sort((a, b) => {
+    return [...filtered].sort((left, right) => {
       if (sortBy === "id") {
-        return (Number(getId(a)) - Number(getId(b))) * dir;
+        return (Number(getId(left)) - Number(getId(right))) * dir;
       }
 
       if (sortBy === "active") {
-        // active first on asc
-        const av = getActive(a) ? 1 : 0;
-        const bv = getActive(b) ? 1 : 0;
-        return (av - bv) * dir;
+        return ((getActive(left) ? 1 : 0) - (getActive(right) ? 1 : 0)) * dir;
       }
 
-      // default: name
-      return getName(a).localeCompare(getName(b)) * dir;
+      return getName(left).localeCompare(getName(right)) * dir;
     });
-
-    return sorted;
   }, [items, q, sortBy, sortDir]);
 
-  const startEdit = (t) => {
+  const startEdit = (tag) => {
     setErr("");
-    setEditingId(getId(t));
-    setEditName(getName(t));
-    setEditActive(getActive(t));
+    setEditingId(getId(tag));
+    setEditName(getName(tag));
+    setEditActive(getActive(tag));
   };
 
   const cancelEdit = () => {
@@ -113,23 +103,21 @@ export default function AdminTags() {
 
   const create = async () => {
     const name = newName.trim();
-    if (!name) return setErr("Tag name is required.");
+    if (!name) {
+      setErr("Tag name is required.");
+      return;
+    }
 
     try {
       setCreating(true);
       setErr("");
-
-      await api.post(API_BASE, {
-        name,
-        isActive: newActive,
-      });
-
+      await api.post(API_BASE, { name, isActive: newActive });
       setNewName("");
       setNewActive(true);
       await load();
-    } catch (e) {
-      console.error("Create tag failed:", e);
-      setErr(e?.response?.data?.message || e?.response?.data || "Failed to create tag.");
+    } catch (error) {
+      console.error("Create tag failed:", error);
+      setErr(error?.response?.data?.message || error?.response?.data || "Failed to create tag.");
     } finally {
       setCreating(false);
     }
@@ -138,226 +126,176 @@ export default function AdminTags() {
   const saveEdit = async () => {
     const name = editName.trim();
     if (!editingId) return;
-    if (!name) return setErr("Tag name is required.");
+    if (!name) {
+      setErr("Tag name is required.");
+      return;
+    }
 
     try {
       setSaving(true);
       setErr("");
-
-      await api.put(`${API_BASE}/${editingId}`, {
-        name,
-        isActive: editActive,
-      });
-
+      await api.put(`${API_BASE}/${editingId}`, { name, isActive: editActive });
       cancelEdit();
       await load();
-    } catch (e) {
-      console.error("Update tag failed:", e);
-      setErr(e?.response?.data?.message || e?.response?.data || "Failed to update tag.");
+    } catch (error) {
+      console.error("Update tag failed:", error);
+      setErr(error?.response?.data?.message || error?.response?.data || "Failed to update tag.");
     } finally {
       setSaving(false);
     }
   };
 
   const remove = async (id) => {
-    const ok = window.confirm("Delete this tag? This cannot be undone.");
-    if (!ok) return;
+    if (!window.confirm("Delete this tag? This cannot be undone.")) return;
 
     try {
       setDeletingId(id);
       setErr("");
-
       await api.delete(`${API_BASE}/${id}`);
       await load();
-    } catch (e) {
-      console.error("Delete tag failed:", e);
-      setErr(e?.response?.data?.message || e?.response?.data || "Failed to delete tag.");
+    } catch (error) {
+      console.error("Delete tag failed:", error);
+      setErr(error?.response?.data?.message || error?.response?.data || "Failed to delete tag.");
     } finally {
       setDeletingId(null);
     }
   };
 
+  if (loading) return <LoadingState text="Loading tags..." />;
+  if (err && !items.length) return <ErrorState title="Cannot load tags" subtitle={err} onRetry={load} />;
+
   return (
-    <div>
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <div>
-          <h3 className="mb-1">Tags</h3>
-          <div className="text-muted small">Create, edit, activate/deactivate, and delete tags.</div>
-        </div>
+    <AdminSection flat>
+      {err ? <div className="admin-alert">{String(err)}</div> : null}
 
-        <button className="btn btn-outline-dark" onClick={load} disabled={loading}>
-          Refresh
-        </button>
-      </div>
+      <div className="admin-form-grid">
+        <AdminFormField label="Tag name" className="admin-col-8">
+          <input
+            className="admin-input"
+            value={newName}
+            onChange={(event) => setNewName(event.target.value)}
+            placeholder="Tag name"
+          />
+        </AdminFormField>
 
-      {err ? <div className="alert alert-danger">{String(err)}</div> : null}
-
-      {/* Create */}
-      <div className="border rounded p-3 mb-3">
-        <div className="fw-semibold mb-2">Add new tag</div>
-
-        <div className="row g-2 align-items-center">
-          <div className="col-12 col-md-6">
+        <div className="admin-col-2 admin-form-actions" style={{ justifyContent: "flex-start", alignItems: "flex-end" }}>
+          <label className="admin-inline-check">
             <input
-              className="form-control"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              placeholder="Tag name (e.g. Isekai)"
+              type="checkbox"
+              checked={newActive}
+              onChange={(event) => setNewActive(event.target.checked)}
             />
-          </div>
+            <span>Active</span>
+          </label>
+        </div>
 
-          <div className="col-6 col-md-3">
-            <div className="form-check">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id="tagActive"
-                checked={newActive}
-                onChange={(e) => setNewActive(e.target.checked)}
-              />
-              <label className="form-check-label" htmlFor="tagActive">
-                Active
-              </label>
-            </div>
-          </div>
-
-          <div className="col-6 col-md-3 text-end">
-            <button className="btn btn-dark w-100" onClick={create} disabled={creating}>
-              {creating ? "Adding..." : "Add"}
-            </button>
-          </div>
+        <div className="admin-col-2 admin-form-actions" style={{ alignItems: "flex-end" }}>
+          <Button onClick={create} disabled={creating}>
+            {creating ? "Adding..." : "Add tag"}
+          </Button>
         </div>
       </div>
 
-      {/* Search */}
-      <div className="d-flex gap-2 mb-2">
-        <input
-          className="form-control"
-          placeholder="Search tags..."
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-        />
-        <div className="text-muted small d-flex align-items-center">
-          {filteredAndSorted.length} / {items.length}
+      <div className="admin-toolbar">
+        <div className="admin-toolbar__group admin-toolbar__group--grow">
+          <TextField
+            className="admin-search-field"
+            value={q}
+            onChange={setQ}
+            placeholder="Search tags..."
+          />
         </div>
+        <span className="admin-page-note">
+          {filteredAndSorted.length} of {items.length}
+        </span>
       </div>
 
-      {/* List */}
-      <div className="border rounded overflow-hidden">
-        {loading ? (
-          <div className="p-3 text-muted">Loading...</div>
-        ) : !items.length ? (
-          <div className="p-3 text-muted">No tags yet.</div>
-        ) : (
-          <div className="table-responsive">
-            <table className="table mb-0 align-middle">
-              <thead className="table-light">
-                <tr>
-                  <th
-                    style={{ width: 90, cursor: "pointer" }}
-                    onClick={() => onSort("id")}
-                    title="Sort by ID"
+      <AdminTable
+        compact
+        columns={[
+          {
+            key: "id",
+            label: "Id",
+            width: 90,
+            onHeaderClick: () => onSort("id"),
+            sortIndicator: sortIndicator("id"),
+            render: (tag) => <span className="admin-row-note">{getId(tag)}</span>,
+          },
+          {
+            key: "name",
+            label: "Name",
+            onHeaderClick: () => onSort("name"),
+            sortIndicator: sortIndicator("name"),
+            render: (tag) =>
+              editingId === getId(tag) ? (
+                <input
+                  className="admin-input"
+                  value={editName}
+                  onChange={(event) => setEditName(event.target.value)}
+                />
+              ) : (
+                <p className="admin-row-title">{getName(tag)}</p>
+              ),
+          },
+          {
+            key: "active",
+            label: "Active",
+            width: 130,
+            onHeaderClick: () => onSort("active"),
+            sortIndicator: sortIndicator("active"),
+            render: (tag) =>
+              editingId === getId(tag) ? (
+                <label className="admin-inline-check">
+                  <input
+                    type="checkbox"
+                    checked={editActive}
+                    onChange={(event) => setEditActive(event.target.checked)}
+                  />
+                  <span>{editActive ? "Yes" : "No"}</span>
+                </label>
+              ) : (
+                <span className={`admin-pill ${getActive(tag) ? "admin-pill--success" : "admin-pill--neutral"}`}>
+                  {getActive(tag) ? "Active" : "Inactive"}
+                </span>
+              ),
+          },
+          {
+            key: "actions",
+            label: "Actions",
+            align: "right",
+            width: 240,
+            render: (tag) =>
+              editingId === getId(tag) ? (
+                <div className="admin-action-row">
+                  <Button variant="outline" size="sm" onClick={cancelEdit} disabled={saving}>
+                    Cancel
+                  </Button>
+                  <Button size="sm" onClick={saveEdit} disabled={saving}>
+                    {saving ? "Saving..." : "Save"}
+                  </Button>
+                </div>
+              ) : (
+                <div className="admin-action-row">
+                  <Button variant="outline" size="sm" onClick={() => startEdit(tag)}>
+                    Edit
+                  </Button>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => remove(getId(tag))}
+                    disabled={deletingId === getId(tag)}
                   >
-                    ID <span className="text-muted">{sortIndicator("id")}</span>
-                  </th>
-
-                  <th
-                    style={{ cursor: "pointer" }}
-                    onClick={() => onSort("name")}
-                    title="Sort by Name"
-                  >
-                    Name <span className="text-muted">{sortIndicator("name")}</span>
-                  </th>
-
-                  <th
-                    style={{ width: 120, cursor: "pointer" }}
-                    onClick={() => onSort("active")}
-                    title="Sort by Active"
-                  >
-                    Active <span className="text-muted">{sortIndicator("active")}</span>
-                  </th>
-
-                  <th style={{ width: 260 }} className="text-end">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {filteredAndSorted.map((t) => {
-                  const id = getId(t);
-                  const name = getName(t);
-                  const active = getActive(t);
-                  const isEditing = editingId === id;
-
-                  return (
-                    <tr key={id}>
-                      <td className="text-muted">{id}</td>
-
-                      <td>
-                        {isEditing ? (
-                          <input
-                            className="form-control"
-                            value={editName}
-                            onChange={(e) => setEditName(e.target.value)}
-                          />
-                        ) : (
-                          <div className="fw-semibold">{name}</div>
-                        )}
-                      </td>
-
-                      <td>
-                        {isEditing ? (
-                          <input
-                            type="checkbox"
-                            className="form-check-input"
-                            checked={editActive}
-                            onChange={(e) => setEditActive(e.target.checked)}
-                          />
-                        ) : (
-                          <span className={"badge " + (active ? "text-bg-success" : "text-bg-secondary")}>
-                            {active ? "Yes" : "No"}
-                          </span>
-                        )}
-                      </td>
-
-                      <td className="text-end">
-                        {isEditing ? (
-                          <div className="d-flex justify-content-end gap-2">
-                            <button className="btn btn-dark btn-sm" onClick={saveEdit} disabled={saving}>
-                              {saving ? "Saving..." : "Save"}
-                            </button>
-                            <button className="btn btn-outline-secondary btn-sm" onClick={cancelEdit} disabled={saving}>
-                              Cancel
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="d-flex justify-content-end gap-2">
-                            <button className="btn btn-outline-dark btn-sm" onClick={() => startEdit(t)}>
-                              Edit
-                            </button>
-                            <button
-                              className="btn btn-outline-danger btn-sm"
-                              onClick={() => remove(id)}
-                              disabled={deletingId === id}
-                            >
-                              {deletingId === id ? "Deleting..." : "Delete"}
-                            </button>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-
-            <div className="p-2 text-muted small border-top">
-              Tip: click column headers (ID / Name / Active) to sort.
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+                    {deletingId === getId(tag) ? "Deleting..." : "Delete"}
+                  </Button>
+                </div>
+              ),
+          },
+        ]}
+        rows={filteredAndSorted}
+        rowKey={(tag) => getId(tag)}
+        emptyTitle="No tags yet"
+        emptySubtitle="Create the first tag to organize discovery."
+      />
+    </AdminSection>
   );
 }

@@ -1,152 +1,134 @@
-import React from "react";
 import "./Footer.css";
-import inkVerseIcon from "../../assets/te.png"; // Assuming the icon is here
 import { Link } from "react-router-dom";
+import inkVerseIcon from "../../assets/te.png";
+
+const EXPLORE_LINKS = [
+  { to: "/", icon: "bi-house-door", label: "Home" },
+  { to: "/browser", icon: "bi-search", label: "Browse" },
+  { to: "/ranking", icon: "bi-trophy", label: "Rankings" },
+  { to: "/trend", icon: "bi-stars", label: "Trends" },
+];
+
+const SUPPORT_LINKS = [
+  { to: "/about", icon: "bi-info-circle", label: "About" },
+  { to: "/contact", icon: "bi-envelope", label: "Contact" },
+  { to: "/privacy", icon: "bi-shield-check", label: "Privacy" },
+  { to: "/dmca", icon: "bi-file-earmark-text", label: "DMCA" },
+];
 
 export default function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="iv-footer text-center">
-      <div className="container py-5">
-        <div className="row g-4 align-items-start">
-          {/* Brand */}
-          <div className="col-12 col-md-4">
-            <div className="iv-footer-brand">
-              <img
-                src={inkVerseIcon}
-                alt="InkVerse"
-                className="iv-footer-logo rounded-5 border border-2"
-              />
-              INKVERSE
+    <footer className="iv-footer">
+      <div className="iv-footer-shell">
+        <div className="iv-footer-frame">
+          <div className="iv-footer-top">
+            <div className="iv-footer-brandBlock">
+              <div className="iv-footer-brand">
+                <span className="iv-footer-brandMark">
+                  <img
+                    src={inkVerseIcon}
+                    alt="InkVerse"
+                    className="iv-footer-logo"
+                  />
+                </span>
+                <div className="iv-footer-brandCopy">
+                  <span className="iv-footer-kicker">Read. Write. Wander.</span>
+                  <span className="iv-footer-name">InkVerse</span>
+                </div>
+              </div>
+
+              <p className="iv-footer-summary">
+                A reading multiverse for original stories, wild fanfiction, and
+                the people who love getting lost in both.
+              </p>
+
+              <div className="iv-footer-socials">
+                <a
+                  className="iv-footer-social"
+                  href="mailto:InkVerseOdeh@gmail.com"
+                  aria-label="Email InkVerse"
+                >
+                  <i className="bi bi-envelope" />
+                </a>
+                <Link
+                  className="iv-footer-social"
+                  to="/contact"
+                  aria-label="Contact page"
+                >
+                  <i className="bi bi-chat-dots" />
+                </Link>
+                <Link
+                  className="iv-footer-social"
+                  to="/about"
+                  aria-label="About InkVerse"
+                >
+                  <i className="bi bi-info-circle" />
+                </Link>
+              </div>
             </div>
-            <div className="iv-footer-tagline">
-              Read. Write. Build worlds together.
+
+            <div className="iv-footer-linksBlock">
+              <div className="iv-footer-linkGroup">
+                <h3 className="iv-footer-title">Explore</h3>
+                <ul className="iv-footer-list">
+                  {EXPLORE_LINKS.map((item) => (
+                    <li key={item.to}>
+                      <Link className="iv-footer-link" to={item.to}>
+                        <i className={`bi ${item.icon}`} />
+                        <span>{item.label}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="iv-footer-linkGroup">
+                <h3 className="iv-footer-title">Support</h3>
+                <ul className="iv-footer-list">
+                  {SUPPORT_LINKS.map((item) => (
+                    <li key={item.to}>
+                      <Link className="iv-footer-link" to={item.to}>
+                        <i className={`bi ${item.icon}`} />
+                        <span>{item.label}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
-            <div className="d-flex gap-3 mt-3">
-              <a
-                className="iv-footer-social"
-                href="#"
-                onClick={() => alert("Coming soon")}
-                aria-label="Facebook"
-              >
-                <i className="bi bi-facebook"></i>
-              </a>
-              <a
-                className="iv-footer-social"
-                href="#"
-                onClick={() => alert("Coming soon")}
-                aria-label="Twitter/X"
-              >
-                <i className="bi bi-twitter-x"></i>
-              </a>
-              <a
-                className="iv-footer-social"
-                href="#"
-                onClick={() => alert("Coming soon")}
-                aria-label="Instagram"
-              >
-                <i className="bi bi-instagram"></i>
-              </a>
-              <a
-                className="iv-footer-social"
-                href="#"
-                aria-label="Discord"
-                onClick={() => alert("Coming soon")}
-              >
-                <i className="bi bi-discord"></i>
-              </a>
+
+            <div className="iv-footer-updateCard">
+              <p className="iv-footer-cardKicker">Now Live</p>
+              <h3 className="iv-footer-cardTitle">InkVerse demo is open.</h3>
+              <p className="iv-footer-cardText">
+                Browse live books, test ranking and moderation flows, and keep
+                an eye out for the upcoming author experience.
+              </p>
+
+              <div className="iv-footer-actions">
+                <Link className="iv-footer-pill iv-footer-pill--primary" to="/browser">
+                  Start browsing
+                </Link>
+                <a
+                  className="iv-footer-pill iv-footer-pill--ghost"
+                  href="mailto:InkVerseOdeh@gmail.com"
+                >
+                  Email us
+                </a>
+              </div>
+
+              <div className="iv-footer-note">
+                <span className="iv-footer-badge">v1.0 Demo</span>
+                <span>Author tools, profiles, and more are on the roadmap.</span>
+              </div>
             </div>
           </div>
 
-          {/* Links */}
-          <div className="col-6 col-md-2">
-            <div className="iv-footer-title text-lg-start">Explore</div>
-            <ul className="list-unstyled mt-2 mb-0">
-              <li>
-                <Link className="iv-footer-link" to="/">
-                  <i className="bi bi-house-door me-2"></i>Home
-                </Link>
-              </li>
-
-              <li>
-                <Link className="iv-footer-link" to="/browser">
-                  <i className="bi bi-search me-2"></i>Browse
-                </Link>
-              </li>
-
-              <li>
-                <Link className="iv-footer-link" to="/ranking">
-                  <i className="bi bi-trophy me-2"></i>Rankings
-                </Link>
-              </li>
-
-              <li>
-                <Link className="iv-footer-link" to="/Trend">
-                  <i className="bi bi-star-fill me-2"></i>Trends
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Support */}
-          <div className="col-6 col-md-2">
-            <div className="iv-footer-title text-lg-start">Support</div>
-            <ul className="list-unstyled mt-2 mb-0">
-              <li>
-                <Link className="iv-footer-link" to="/about">
-                  <i className="bi bi-info-circle me-2"></i>About
-                </Link>
-              </li>
-              <li>
-                <Link className="iv-footer-link" to="/contact">
-                  <i className="bi bi-envelope me-2"></i>Contact
-                </Link>
-              </li>
-              <li>
-                <Link className="iv-footer-link" to="/privacy">
-                  <i className="bi bi-shield-check me-2"></i>Privacy
-                </Link>
-              </li>
-              <li>
-                <Link className="iv-footer-link" to="/dmca">
-                  <i className="bi bi-file-earmark-text me-2"></i>DMCA
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Newsletter */}
-          <div className="col-12 col-md-4">
-  <div className="iv-footer-title">Stay Updated</div>
-  <p className="text-secondary mt-2 mb-3">
-    <span className="text-warning">V1 is live.</span> Author tools, character pages, and more are coming soon.
-  </p>
-
-  <div className="d-flex gap-2 flex-wrap justify-content-center">
-    <a className="btn btn-outline-light" href="" onClick={() => alert("Coming soon")} target="_blank" rel="noreferrer">
-      <i className="bi bi-discord me-2"></i>Discord
-    </a>
-
-    <a className="btn btn-outline-light" href="InkVerseOdeh@gmail.com">
-      <i className="bi bi-envelope me-2"></i>Contact
-    </a>
-  </div>
-
-  <div className="small text-secondary mt-2">
-    Newsletter coming later <br /> (maybe...)
-  </div>
-</div>
-        </div>
-
-        <hr className="iv-footer-divider my-4" />
-
-        <div className="d-flex flex-column flex-md-row gap-2 justify-content-between align-items-md-center">
-          <div className="text-secondary small">
-            © {year} InkVerse. All rights reserved.
-          </div>
-          <div className="text-secondary small">
-            <span className="badge bg-success">v1.0 - Demo Mode</span>
+          <div className="iv-footer-bottom">
+            <p className="iv-footer-meta">© {year} InkVerse. All rights reserved.</p>
+            <p className="iv-footer-meta">Built for readers who stay one chapter too long.</p>
           </div>
         </div>
       </div>

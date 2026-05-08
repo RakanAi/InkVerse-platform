@@ -1,25 +1,239 @@
-/* Container stays aligned right */
-.trend-sort {
+.iv-trends-page {
+  width: 100%;
+  padding: 28px 0 72px;
+}
+
+.iv-trends-shell {
+  width: 100%;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding-inline: 16px;
+  display: grid;
+  gap: 26px;
+}
+
+.iv-trends-head {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.iv-trends-head__copy {
+  display: grid;
+  gap: 12px;
+  max-width: 720px;
+}
+
+.iv-trends-kicker {
+  color: #6d7ba1;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.iv-trends-title {
+  margin: 0;
+  color: #101828;
+  font-size: clamp(2.2rem, 4vw, 4.4rem);
+  font-weight: 900;
+  line-height: 0.92;
+  letter-spacing: -0.06em;
+}
+
+.iv-trends-text {
+  margin: 0;
+  color: #5d6987;
+  font-size: 1rem;
+  line-height: 1.72;
+}
+
+.iv-trends-head__meta {
+  min-width: 280px;
+  display: grid;
+  gap: 14px;
+}
+
+.iv-trends-stat {
+  display: grid;
+  gap: 6px;
+}
+
+.iv-trends-stat__label,
+.iv-trends-sort__label {
+  color: #6d7ba1;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.iv-trends-stat__value {
+  color: #17213f;
+  font-size: 1.9rem;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.iv-trends-sort {
+  display: grid;
   gap: 8px;
-  justify-content: flex-end;
 }
 
-/* Label look like old UI */
-.trend-sort-label {
-  font-size: 0.9rem;
-  color: #6c757d;
+.iv-trends-sort .iv-dd-btn {
+  min-height: 46px;
+  border-radius: 16px;
 }
 
-/* Force dropdown compact size */
-.trend-sort-dd {
-  width: 190px;   /* adjust if you want 180–220 */
-  flex: 0 0 auto; /* prevent stretching */
+.iv-trends-spotlight {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.9fr);
+  gap: 18px;
 }
 
-/* If your DropdownSelect root is .iv-dd */
-.trend-sort-dd .iv-dd-btn {
-  height: 34px;   /* match old select height */
-  font-size: 0.9rem;
+.iv-trends-spotlight.is-single {
+  grid-template-columns: 1fr;
+}
+
+.iv-trends-spotlight__stack {
+  display: grid;
+  gap: 18px;
+}
+
+.iv-trends-library {
+  display: grid;
+  gap: 18px;
+}
+
+.iv-trends-library__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.iv-trends-library__copy {
+  display: grid;
+  gap: 10px;
+  max-width: 760px;
+}
+
+.iv-trends-library__title {
+  margin: 0;
+  color: #101828;
+  font-size: clamp(1.5rem, 2vw, 2rem);
+  font-weight: 850;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+}
+
+.iv-trends-library__text {
+  margin: 0;
+  color: #5d6987;
+  font-size: 0.98rem;
+  line-height: 1.68;
+}
+
+.iv-trends-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.iv-trends-pager {
+  padding-top: 4px;
+}
+
+.iv-trends-page .pagination {
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.iv-trends-page .page-item .page-link {
+  min-width: 42px;
+  min-height: 42px;
+  padding: 0 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(95, 112, 193, 0.14);
+  background: #ffffff;
+  color: #23304f;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+.iv-trends-page .page-item.active .page-link {
+  border-color: rgba(73, 86, 230, 0.24);
+  background: linear-gradient(135deg, rgba(72, 92, 240, 0.12), rgba(118, 72, 255, 0.14));
+  color: #4b59d7;
+}
+
+.iv-trends-page .page-item.disabled .page-link {
+  opacity: 0.45;
+  background: #ffffff;
+}
+
+.iv-trends-page .page-item:not(.active):not(.disabled) .page-link:hover {
+  border-color: rgba(73, 86, 230, 0.24);
+  background: rgba(245, 247, 255, 0.96);
+}
+
+@media (max-width: 1180px) {
+  .iv-trends-spotlight {
+    grid-template-columns: 1fr;
+  }
+
+  .iv-trends-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .iv-trends-page {
+    padding: 16px 0 52px;
+  }
+
+  .iv-trends-shell {
+    padding-inline: 8px;
+    gap: 20px;
+  }
+
+  .iv-trends-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 18px;
+  }
+
+  .iv-trends-head__copy,
+  .iv-trends-library__copy {
+    gap: 8px;
+  }
+
+  .iv-trends-text,
+  .iv-trends-library__text {
+    font-size: 0.94rem;
+    line-height: 1.66;
+  }
+
+  .iv-trends-head__meta {
+    min-width: 0;
+    gap: 12px;
+  }
+
+  .iv-trends-stat__value {
+    font-size: 1.6rem;
+  }
+
+  .iv-trends-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .iv-trends-page .page-item .page-link {
+    min-width: 38px;
+    min-height: 38px;
+    padding-inline: 12px;
+    font-size: 0.86rem;
+  }
 }

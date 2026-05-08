@@ -1,24 +1,153 @@
-import { useEffect, useContext, useRef, useState } from "react";
-import { Link } from "react-router-dom";
-import "bootstrap/dist/css/bootstrap.min.css";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import "./NavBar.css";
 import AuthContext from "../../Context/AuthProvider";
 import logo from "../../assets/IncVerseLogo.png";
 
+const PRIMARY_LINKS = [
+  {
+    label: "Browse",
+    to: "/Browser",
+    match: (pathname) => pathname.startsWith("/browser"),
+  },
+  {
+    label: "Ranking",
+    to: "/Ranking",
+    match: (pathname) => pathname.startsWith("/ranking"),
+  },
+  {
+    label: "Author Studio",
+    to: "/Author",
+    match: (pathname) => pathname.startsWith("/author"),
+  },
+  {
+    label: "Trends",
+    to: "/Trend",
+    match: (pathname) => pathname.startsWith("/trend"),
+    accent: "trend",
+  },
+];
+
+function NavItem({ item, pathname, onClick }) {
+  const isActive = item.match(pathname);
+
+  return (
+    <NavLink
+      to={item.to}
+      onClick={onClick}
+      className={`iv-nav-link ${isActive ? "is-active" : ""} ${
+        item.accent ? `iv-nav-link--${item.accent}` : ""
+      }`}
+    >
+      <span>{item.label}</span>
+    </NavLink>
+  );
+}
+
+function MobileMenuContent({
+  isLoggedIn,
+  isAdmin,
+  pathname,
+  onNavigate,
+  onLogout,
+  onOpenLogin,
+}) {
+  return (
+    <>
+      <div className="iv-mobile-menu-head">
+        <p className="iv-mobile-menu-kicker">Navigation</p>
+        <p className="iv-mobile-menu-title">Pick your next corner of InkVerse</p>
+      </div>
+
+      <div className="iv-mobile-menu-links">
+        {PRIMARY_LINKS.map((item) => (
+          <NavItem
+            key={item.to}
+            item={item}
+            pathname={pathname}
+            onClick={onNavigate}
+          />
+        ))}
+        {isLoggedIn && isAdmin && (
+          <NavLink
+            to="/admin"
+            onClick={onNavigate}
+            className={`iv-nav-link iv-nav-link--admin ${
+              pathname.startsWith("/admin") ? "is-active" : ""
+            }`}
+          >
+            <span>Admin</span>
+          </NavLink>
+        )}
+      </div>
+
+      <div className="iv-mobile-menu-footer">
+        {isLoggedIn ? (
+          <>
+            <Link
+              to="/my-library"
+              className="iv-mobile-utility"
+              onClick={onNavigate}
+            >
+              My library
+            </Link>
+            <Link
+              to="/profilePage"
+              className="iv-mobile-utility"
+              onClick={onNavigate}
+            >
+              Profile & settings
+            </Link>
+            <button
+              type="button"
+              className="iv-mobile-utility iv-mobile-utility--danger"
+              onClick={onLogout}
+            >
+              Log out
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            className="iv-action-pill iv-action-pill--primary iv-action-pill--full"
+            onClick={onOpenLogin}
+          >
+            Enter InkVerse
+          </button>
+        )}
+      </div>
+    </>
+  );
+}
+
 function NavBar() {
   const { auth, openLogin, setAuth } = useContext(AuthContext);
+  const location = useLocation();
+  const pathname = location.pathname.toLowerCase();
 
-  const [menuOpen, setMenuOpen] = useState(false);
   const [isNavHidden, setIsNavHidden] = useState(false);
-  const closeTimer = useRef(null);
-  const lastScrollYRef = useRef(0);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
+  const lastScrollYRef = useRef(0);
+  const profileMenuRef = useRef(null);
+  const mobileMenuRef = useRef(null);
+
+  const isLoggedIn = !!auth?.accessToken;
+  const roles = useMemo(() => {
+    const raw =
+      auth?.user?.roles ??
+      auth?.user?.Roles ??
+      auth?.user?.role ??
+      auth?.user?.Role ??
+      [];
+
+    return Array.isArray(raw) ? raw : [raw];
+  }, [auth]);
+
+  const isAdmin = roles.includes("Admin");
+  const initials = auth?.user?.userName?.slice(0, 2)?.toUpperCase() ?? "IV";
+  const displayName = auth?.user?.userName ?? "Reader";
 
   useEffect(() => {
     const onScroll = () => {
@@ -27,9 +156,9 @@ function NavBar() {
 
       if (currentY <= 24) {
         setIsNavHidden(false);
-      } else if (currentY > previousY + 8) {
+      } else if (currentY > previousY + 10) {
         setIsNavHidden(true);
-      } else if (currentY < previousY - 8) {
+      } else if (currentY < previousY - 10) {
         setIsNavHidden(false);
       }
 
@@ -40,272 +169,258 @@ function NavBar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const openMenu = () => {
-    if (closeTimer.current) clearTimeout(closeTimer.current);
-    setMenuOpen(true);
-  };
+  useEffect(() => {
+    setIsProfileMenuOpen(false);
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
 
-  const closeMenu = () => {
-    closeTimer.current = setTimeout(() => setMenuOpen(false), 120);
-  };
+  useEffect(() => {
+    const onPointerDown = (event) => {
+      if (
+        isProfileMenuOpen &&
+        profileMenuRef.current &&
+        !profileMenuRef.current.contains(event.target)
+      ) {
+        setIsProfileMenuOpen(false);
+      }
 
-  const closeOffcanvas = () => {
-    const el = document.getElementById("mobileNav");
-    if (!el) return;
+      if (
+        isMobileMenuOpen &&
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(event.target)
+      ) {
+        setIsMobileMenuOpen(false);
+      }
+    };
 
-    const instance = window.bootstrap?.Offcanvas?.getInstance(el);
-    instance?.hide();
-  };
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setIsProfileMenuOpen(false);
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [isMobileMenuOpen, isProfileMenuOpen]);
+
+  useEffect(() => {
+    document.body.style.overflow = isMobileMenuOpen ? "hidden" : "";
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMobileMenuOpen]);
+
+  useEffect(() => {
+    const onResize = () => {
+      if (window.innerWidth >= 992) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   const handleLogout = () => {
     setAuth(null);
     localStorage.removeItem("auth");
-    setMenuOpen(false);
-    if (isMobile) closeOffcanvas();
+    setIsProfileMenuOpen(false);
+    setIsMobileMenuOpen(false);
   };
 
-  const isLoggedIn = !!auth?.accessToken;
-  const initials = auth?.user?.userName?.slice(0, 1)?.toUpperCase() ?? "?";
-  const roles =
-    auth?.user?.roles ??
-    auth?.user?.Roles ??
-    auth?.user?.role ??
-    auth?.user?.Role ??
-    [];
-  const isAdmin = Array.isArray(roles)
-    ? roles.includes("Admin")
-    : roles === "Admin";
-
-  const onMobileNavClick = () => {
-    if (isMobile) closeOffcanvas();
-  };
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   return (
-    <>
-      <nav
-        className={`navbar text-start navbar-expand-md fixed-top align-items-center ${isNavHidden ? "nav-hidden" : "nav-visible"}`}
-      >
-        <div className="container iv-navbar-shell" style={{ maxWidth: "1300px" }}>
-          <Link
-            className="navbar-brand p-0 text-light d-flex align-items-center"
-            to="/"
-            onClick={onMobileNavClick}
-          >
-            <img src={logo} alt="InkVerse" className="iv-navbar-icon rounded-3" />
+    <header
+      className={`iv-navbar ${isNavHidden ? "nav-hidden" : "nav-visible"} ${
+        isMobileMenuOpen ? "is-mobile-menu-open" : ""
+      }`}
+    >
+      <div className="iv-navbar-shell">
+        <div className="iv-navbar-frame">
+          <Link className="iv-brand" to="/">
+            <span className="iv-brand-mark">
+              <img src={logo} alt="InkVerse" className="iv-brand-logo" />
+            </span>
+            <span className="iv-brand-copy">
+              <span className="iv-brand-kicker">Read. Write. Wander.</span>
+              <span className="iv-brand-title">InkVerse</span>
+            </span>
           </Link>
 
-          <button
-            className="navbar-toggler shadow-none border-0 bg-light"
-            type="button"
-            data-bs-toggle="offcanvas"
-            data-bs-target="#mobileNav"
-            aria-controls="mobileNav"
-            onClick={() => setMenuOpen(false)}
-          >
-            <span className="navbar-toggler-icon"></span>
-          </button>
+          <nav className="iv-nav-track" aria-label="Primary navigation">
+            {PRIMARY_LINKS.map((item) => (
+              <NavItem key={item.to} item={item} pathname={pathname} />
+            ))}
+            {isLoggedIn && isAdmin && (
+              <NavLink
+                to="/admin"
+                className={`iv-nav-link iv-nav-link--admin ${
+                  pathname.startsWith("/admin") ? "is-active" : ""
+                }`}
+              >
+                <span>Admin</span>
+              </NavLink>
+            )}
+          </nav>
 
-          <div className="collapse navbar-collapse d-none d-md-flex">
-            <ul className="navbar-nav iv-nav-links me-auto">
-              <li className="nav-item">
-                <Link to="/Browser" className="nav-link iv-nav-link text-light">
-                  <span className="bi bi-compass iv-link-icon" aria-hidden="true" />
-                  <span>Browser</span>
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link to="/Ranking" className="nav-link iv-nav-link text-light">
-                  <span className="bi bi-trophy iv-link-icon" aria-hidden="true" />
-                  <span>Ranking</span>
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link to="/Author" className="nav-link iv-nav-link text-light">
-                  <span className="bi bi-pencil-square iv-link-icon" aria-hidden="true" />
-                  <span>Author</span>
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link to="/Trend" className="nav-link iv-nav-link iv-nav-link-trend text-light fw-bold">
-                  <span className="bi bi-stars iv-link-icon" aria-hidden="true" />
-                  <span>Trends!</span>
-                </Link>
-              </li>
-              {isLoggedIn && isAdmin && (
-                <li className="nav-item">
-                  <Link to="/admin" className="nav-link iv-nav-link iv-nav-link-admin text-warning fw-bold">
-                    <span className="bi bi-shield-lock iv-link-icon" aria-hidden="true" />
-                    <span>Admin</span>
-                  </Link>
-                </li>
-              )}
-            </ul>
+          <div className="iv-nav-actions">
+            {isLoggedIn && (
+              <Link to="/my-library" className="iv-action-pill iv-action-pill--ghost">
+                Library
+              </Link>
+            )}
 
-            <div className="d-flex align-items-center gap-2 iv-nav-actions w-auto">
-              {isLoggedIn && (
-                <Link className="btn iv-ghost-btn d-flex" to="/my-library">
-                  <span className="bi bi-collection me-1" aria-hidden="true" />
-                  Library
-                </Link>
-              )}
-
-              {isLoggedIn ? (
-                <div
-                  className="iv-profile-dropdown"
-                  onMouseEnter={openMenu}
-                  onMouseLeave={closeMenu}
+            {isLoggedIn ? (
+              <div className="iv-profile-wrap" ref={profileMenuRef}>
+                <button
+                  type="button"
+                  className={`iv-profile-trigger ${
+                    isProfileMenuOpen ? "is-open" : ""
+                  }`}
+                  onClick={() => setIsProfileMenuOpen((open) => !open)}
+                  aria-expanded={isProfileMenuOpen}
+                  aria-haspopup="menu"
                 >
-                  <Link to="/profilePage" className="text-decoration-none">
-                    <div className="iv-avatar" title="Profile">
-                      {initials}
-                    </div>
-                  </Link>
-
-                  {menuOpen && (
-                    <div className="iv-menu shadow">
-                      <Link className="iv-menu-item" to="/profilePage">
-                        <span className="bi bi-person-circle" aria-hidden="true" />
-                        Profile
-                      </Link>
-                      <Link className="iv-menu-item" to="/profilePage">
-                        <span className="bi bi-gear" aria-hidden="true" />
-                        Settings
-                      </Link>
-                      <button className="iv-menu-item danger" onClick={handleLogout}>
-                        <span className="bi bi-box-arrow-right" aria-hidden="true" />
-                        Logout
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <button type="button" className="btn iv-primary-btn" onClick={openLogin}>
-                  <span className="bi bi-box-arrow-in-right me-1" aria-hidden="true" />
-                  SIGN IN
+                  <span className="iv-avatar">{initials}</span>
+                  <span className="iv-profile-copy">
+                    <span className="iv-profile-label">Signed in</span>
+                    <span className="iv-profile-name">{displayName}</span>
+                  </span>
+                  <span className="iv-chevron" aria-hidden="true">
+                    {isProfileMenuOpen ? "−" : "+"}
+                  </span>
                 </button>
-              )}
-            </div>
-          </div>
 
-          <div
-            className="offcanvas offcanvas-start d-md-none"
-            tabIndex="-1"
-            id="mobileNav"
-            aria-labelledby="mobileNavLabel"
-          >
-            <div className="offcanvas-header">
-              <h5 className="offcanvas-title" id="mobileNavLabel">
-                InkVerse
-              </h5>
-              <button
-                type="button"
-                className="btn-close"
-                data-bs-dismiss="offcanvas"
-                aria-label="Close"
-              ></button>
-            </div>
-
-            <div className="offcanvas-body backdropcan">
-              <ul className="navbar-nav ps-2">
-                <li className="nav-item">
-                  <Link to="/Browser" className="nav-link" onClick={onMobileNavClick}>
-                    <span className="bi bi-compass me-2" aria-hidden="true" />
-                    Browser
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link to="/Ranking" className="nav-link" onClick={onMobileNavClick}>
-                    <span className="bi bi-trophy me-2" aria-hidden="true" />
-                    Ranking
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link to="/Author" className="nav-link" onClick={onMobileNavClick}>
-                    <span className="bi bi-pencil-square me-2" aria-hidden="true" />
-                    Author
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link to="/Trend" className="nav-link fw-bold" onClick={onMobileNavClick}>
-                    <span className="bi bi-stars me-2" aria-hidden="true" />
-                    Trends!
-                  </Link>
-                </li>
-
-                {isLoggedIn && isAdmin && (
-                  <li className="nav-item">
-                    <Link
-                      to="/admin"
-                      className="nav-link text-warning fw-bold"
-                      onClick={onMobileNavClick}
-                    >
-                      <span className="bi bi-shield-lock me-2" aria-hidden="true" />
-                      Admin
+                {isProfileMenuOpen && (
+                  <div className="iv-profile-menu" role="menu">
+                    <Link to="/profilePage" className="iv-profile-menu-item" role="menuitem">
+                      Profile
                     </Link>
-                  </li>
-                )}
-
-                <hr />
-
-                {isLoggedIn && (
-                  <>
-                    <li className="nav-item">
-                      <Link to="/my-library" className="nav-link" onClick={onMobileNavClick}>
-                        <span className="bi bi-collection me-2" aria-hidden="true" />
-                        Library
+                    <Link to="/profilePage" className="iv-profile-menu-item" role="menuitem">
+                      Settings
+                    </Link>
+                    {isAdmin && (
+                      <Link to="/admin" className="iv-profile-menu-item" role="menuitem">
+                        Admin dashboard
                       </Link>
-                    </li>
-                    <hr />
-                  </>
-                )}
-
-                {isLoggedIn ? (
-                  <>
-                    <li className="nav-item">
-                      <Link to="/profilePage" className="nav-link" onClick={onMobileNavClick}>
-                        <span className="bi bi-person-circle me-2" aria-hidden="true" />
-                        Profile
-                      </Link>
-                    </li>
-                    <li className="nav-item">
-                      <Link to="/profilePage" className="nav-link" onClick={onMobileNavClick}>
-                        <span className="bi bi-gear me-2" aria-hidden="true" />
-                        Settings
-                      </Link>
-                    </li>
-                    <li className="nav-item">
-                      <button
-                        className="nav-link btn btn-link text-danger p-0"
-                        style={{ textAlign: "left" }}
-                        onClick={handleLogout}
-                      >
-                        <span className="bi bi-box-arrow-right me-2" aria-hidden="true" />
-                        Logout
-                      </button>
-                    </li>
-                  </>
-                ) : (
-                  <li className="nav-item">
+                    )}
                     <button
                       type="button"
-                      className="nav-link btn btn-link p-0"
-                      style={{ textAlign: "left" }}
-                      onClick={() => {
-                        closeOffcanvas();
-                        openLogin();
-                      }}
+                      className="iv-profile-menu-item iv-profile-menu-item--danger"
+                      onClick={handleLogout}
                     >
-                      <span className="bi bi-box-arrow-in-right me-2" aria-hidden="true" />
-                      Sign In
+                      Log out
                     </button>
-                  </li>
+                  </div>
                 )}
-              </ul>
-            </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="iv-action-pill iv-action-pill--primary"
+                onClick={openLogin}
+              >
+                Enter InkVerse
+              </button>
+            )}
+
+            <button
+              type="button"
+              className={`iv-mobile-toggle ${isMobileMenuOpen ? "is-open" : ""}`}
+              onClick={() => setIsMobileMenuOpen((open) => !open)}
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="iv-mobile-menu"
+            >
+              <span className="iv-mobile-toggle-lines" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </span>
+              <span className="iv-mobile-toggle-label">Menu</span>
+            </button>
           </div>
         </div>
-      </nav>
-    </>
+
+        <div className="iv-navbar-phone">
+          <button
+            type="button"
+            className={`iv-phone-menuToggle ${isMobileMenuOpen ? "is-open" : ""}`}
+            onClick={() => setIsMobileMenuOpen((open) => !open)}
+            aria-expanded={isMobileMenuOpen}
+            aria-controls="iv-mobile-menu"
+            aria-label="Open navigation menu"
+          >
+            <span className="iv-mobile-toggle-lines" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </span>
+          </button>
+
+          <Link className="iv-phone-brand" to="/">
+            <span className="iv-phone-brandMark">
+              <img src={logo} alt="InkVerse" className="iv-phone-brandLogo" />
+            </span>
+            <span className="iv-phone-brandCopy">
+              <span className="iv-phone-brandTitle">InkVerse</span>
+              <span className="iv-phone-brandHint">Read. Write. Wander.</span>
+            </span>
+          </Link>
+
+          <div className="iv-phone-actions">
+            {isLoggedIn ? (
+              <Link to="/profilePage" className="iv-phone-profile" aria-label="Profile">
+                <span className="iv-avatar">{initials}</span>
+              </Link>
+            ) : (
+              <button
+                type="button"
+                className="iv-phone-entry"
+                onClick={openLogin}
+              >
+                Enter
+              </button>
+            )}
+          </div>
+        </div>
+
+        {isMobileMenuOpen && (
+          <>
+            <button
+              type="button"
+              className="iv-mobile-backdrop"
+              aria-label="Close navigation menu"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            <div
+              id="iv-mobile-menu"
+              className="iv-mobile-menu"
+              ref={mobileMenuRef}
+            >
+              <MobileMenuContent
+                isLoggedIn={isLoggedIn}
+                isAdmin={isAdmin}
+                pathname={pathname}
+                onNavigate={closeMobileMenu}
+                onLogout={handleLogout}
+                onOpenLogin={() => {
+                  closeMobileMenu();
+                  openLogin();
+                }}
+              />
+            </div>
+          </>
+        )}
+      </div>
+    </header>
   );
 }
 

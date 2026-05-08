@@ -1,97 +1,68 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import "./TagSec.css";
-import api from "../../../Api/api";
+import tagArt from "../../../assets/Diamond.jpeg";
 
 import LoadingState from "@/Shared/ui/LoadingState";
 import ErrorState from "@/Shared/ui/ErrorState";
 import EmptyState from "@/Shared/ui/EmptyState";
+import LinkButton from "@/Shared/ui/LinkButton";
+import HomeSection from "@/features/home/shared/HomeSection";
+import useHomeCollection from "@/features/home/shared/useHomeCollection";
 
-import {
-  TOPTAGS_MAX_WIDTH,
-  TOPTAGS_QUERY,
-  TOPTAGS_LABELS,
-} from "@/features/home/toptags/toptags.presets";
+import { TOPTAGS_QUERY, TOPTAGS_LABELS } from "@/features/home/toptags/toptags.presets";
 import { buildPopularTagsEndpoint } from "@/features/home/toptags/utils/buildPopularTagsEndpoint";
 import { getTagName } from "@/features/home/toptags/utils/getTagName";
-import PageHeader from "@/Shared/ui/PageHeader";
+import { getCollectionItems } from "@/features/home/shared/home.models";
 
 export default function TopTags() {
-  const [bookTags, setBookTags] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  const endpoint = useMemo(() => buildPopularTagsEndpoint(TOPTAGS_QUERY), []);
-
-  const fetchTags = useCallback(() => {
-    let alive = true;
-
-    (async () => {
-      try {
-        setLoading(true);
-        setError("");
-
-        const res = await api.get(endpoint);
-        const list = Array.isArray(res.data)
-          ? res.data
-          : (res.data?.items ?? []);
-
-        if (alive) setBookTags(list);
-      } catch (e) {
-        console.error(e);
-        if (alive) {
-          setBookTags([]);
-          setError("Failed to load tags.");
-        }
-      } finally {
-        if (alive) setLoading(false);
-      }
-    })();
-
-    return () => {
-      alive = false;
-    };
-  }, [endpoint]);
-
-  useEffect(() => {
-    const cleanup = fetchTags();
-    return cleanup;
-  }, [fetchTags]);
+  const endpoint = buildPopularTagsEndpoint(TOPTAGS_QUERY);
+  const {
+    items: bookTags,
+    loading,
+    error,
+    refetch,
+  } = useHomeCollection({
+    endpoint,
+    errorMessage: TOPTAGS_LABELS.error,
+    selectItems: getCollectionItems,
+  });
 
   return (
-    <div style={{ maxWidth: `${TOPTAGS_MAX_WIDTH}px`, margin: "auto" }}>
-      <div className="d-flex">
-        <h2 className="borderStart mt-2"></h2>
-        <p className="mt-4 ms-2 text-start">
-          <PageHeader
-            title={TOPTAGS_LABELS.title}
-            subtitle={TOPTAGS_LABELS.subtitle}
-          />{" "}
-        </p>
-      </div>
+    <HomeSection
+      className="iv-home-tags"
+      title={TOPTAGS_LABELS.title}
+      subtitle={TOPTAGS_LABELS.subtitle}
+      actions={
+        <LinkButton to="/Browser" variant="outline" size="sm">
+          {TOPTAGS_LABELS.cta}
+        </LinkButton>
+      }
+    >
+      <div className="iv-home-tags__body">
+        <div className="iv-home-tags__visual">
+          <img src={tagArt} alt="InkVerse tags artwork" className="iv-home-tags__visualImg" />
+          <div className="iv-home-tags__visualOverlay" />
+          <div className="iv-home-tags__visualCard">
+            <span className="iv-home-tags__badge">{TOPTAGS_LABELS.badge}</span>
+            <p className="iv-home-tags__hint">{TOPTAGS_LABELS.visualHint}</p>
+          </div>
+        </div>
 
-      <div
-        className="row cardd d-flex"
-        style={{ maxWidth: `${TOPTAGS_MAX_WIDTH}px`, margin: "auto" }}
-      >
-        <div className="container d-flex">
-          <span className="shadow__btn mx-1 justify-content-between align-items-center d-flex ms-auto fluid">
-            {TOPTAGS_LABELS.badge}
-          </span>
+        <div className="iv-home-tags__content">
+          <div className="iv-home-tags__contentHead">
+            <p className="iv-home-tags__contentKicker">{TOPTAGS_LABELS.directoryKicker}</p>
+            <p className="iv-home-tags__contentText">{TOPTAGS_LABELS.directoryText}</p>
+          </div>
 
-          <div className="d-flex flex-wrap gap-2">
-            {loading ? (
-              <LoadingState text="Loading tags..." />
-            ) : error ? (
-              <ErrorState
-                title={error}
-                subtitle="Please try again."
-                onRetry={() => fetchTags()}
-              />
-            ) : !bookTags?.length ? (
-              <EmptyState title="No tags yet." subtitle={null} />
-            ) : (
-              bookTags.map((tag, index) => {
+          {loading ? (
+            <LoadingState text={TOPTAGS_LABELS.loading} />
+          ) : error ? (
+            <ErrorState title={error} subtitle="Please try again." onRetry={refetch} />
+          ) : !bookTags?.length ? (
+            <EmptyState title={TOPTAGS_LABELS.empty} subtitle={null} />
+          ) : (
+            <div className="iv-home-tags__cloud">
+              {bookTags.map((tag, index) => {
                 const name = getTagName(tag);
                 if (!name) return null;
 
@@ -99,16 +70,16 @@ export default function TopTags() {
                   <Link
                     key={tag.id ?? tag.ID ?? index}
                     to={`/Browser?tag=${encodeURIComponent(name)}`}
-                    className="btn btn-outline-primary btn-sm rounded-pill"
+                    className="iv-home-tags__chip"
                   >
                     #{name}
                   </Link>
                 );
-              })
-            )}
-          </div>
+              })}
+            </div>
+          )}
         </div>
       </div>
-    </div>
+    </HomeSection>
   );
 }

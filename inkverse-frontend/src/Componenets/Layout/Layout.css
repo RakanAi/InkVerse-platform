@@ -1,17 +1,26 @@
 /* Layout.css */
 .layout-container {
+  width: 100%;
+  min-width: 0;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  padding-top: 78px;
+  padding-top: 112px;
 }
 
 .main-content {
+  width: 100%;
   flex: 1;
 }
 
 @media (max-width: 768px) {
   .layout-container {
-    padding-top: 70px;
+    padding-top: 72px;
+  }
+}
+
+@media (max-width: 480px) {
+  .layout-container {
+    padding-top: 68px;
   }
 }

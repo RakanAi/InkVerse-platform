@@ -1,0 +1,83 @@
+.iv-home {
+  width: 100%;
+  overflow-x: clip;
+  padding: 28px 0 72px;
+}
+
+.iv-home-shell {
+  width: 100%;
+  max-width: var(--iv-home-shell-max);
+  box-sizing: border-box;
+  padding-inline: var(--iv-home-shell-pad);
+  margin: 0 auto;
+  display: grid;
+  gap: var(--iv-home-gap);
+  overflow-x: clip;
+}
+
+.iv-home-grid {
+  display: grid;
+  gap: 26px;
+  align-items: start;
+}
+
+.iv-home-col {
+  min-width: 0;
+}
+
+.iv-home-section,
+.iv-home-panel {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.iv-home-section .iv-page-header,
+.iv-home-panel .iv-page-header {
+  margin-bottom: 18px;
+}
+
+.iv-home-section .iv-title,
+.iv-home-panel .iv-title {
+  font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
+  font-weight: 800;
+}
+
+.iv-home-section .iv-subtitle,
+.iv-home-panel .iv-subtitle {
+  max-width: 62ch;
+  color: var(--iv-home-text-soft);
+}
+
+.iv-home .iv-btn,
+.iv-home .iv-btn:hover {
+  text-decoration: none;
+}
+
+.iv-home .iv-state {
+  background: linear-gradient(180deg, rgba(232, 239, 255, 0.7), rgba(245, 248, 255, 0.92));
+  border-style: solid;
+}
+
+@media (max-width: 767px) {
+  .iv-home {
+    padding-top: 14px;
+    padding-bottom: 52px;
+  }
+
+  .iv-home-shell {
+    padding-inline: var(--iv-home-shell-pad-mobile);
+    gap: var(--iv-home-gap-mobile);
+  }
+
+  .iv-home-grid {
+    gap: 18px;
+  }
+
+  .iv-home-section,
+  .iv-home-panel {
+    padding: 0;
+  }
+}

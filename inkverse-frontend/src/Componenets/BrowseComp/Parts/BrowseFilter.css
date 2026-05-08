@@ -1,23 +1,207 @@
-.hightLimiter{
-    max-height: 265px;
-      overflow:hidden;
-      overflow-y: scroll;
-    overflow: -moz-scrollbars-none;
-    scrollbar-width: none;
-    /* height: 190px; */
-    font-size: x-small;
+.iv-browse-filters {
+  display: grid;
+  gap: 18px;
 }
 
-/* Tablets */
-@media (max-width: 991.98px) {
-.hightLimiter{
-    max-height: 965px;
-}
+.iv-browse-filters__top {
+  display: grid;
+  gap: 14px;
 }
 
-/* Mobile */
-@media (max-width: 767.98px) {
-.hightLimiter{
-    max-height: 465px;
+.iv-browse-filters__verse {
+  min-width: 0;
+  display: flex;
 }
+
+.iv-browse-filters__segmented {
+  width: 100%;
+  min-height: 56px;
+}
+
+.iv-browse-filters__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.iv-browse-filters__actions .iv-browse-filters__topButton {
+  height: 56px;
+  min-height: 56px;
+  padding-inline: 18px;
+  border-radius: 18px;
+  box-sizing: border-box;
+}
+
+.iv-browse-filters__topButton--toggle {
+  min-width: 56px;
+}
+
+.iv-browse-filters__toggleIcon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  display: block;
+}
+
+.iv-browse-filters__topButtonText {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.iv-browse-filters__searchRow,
+.iv-browse-filters__grid {
+  display: grid;
+  gap: 14px;
+}
+
+.iv-browse-filters__field {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.iv-browse-filters__field--search {
+  min-width: 0;
+}
+
+.iv-browse-filters__label {
+  color: #6a789a;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.iv-browse-filters__direction {
+  width: 100%;
+  min-height: 40px;
+  justify-content: center;
+}
+
+.iv-browse-filters__advanced {
+  display: grid;
+  gap: 18px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(103, 121, 181, 0.14);
+}
+
+.iv-browse-filters__guide {
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: rgba(237, 242, 255, 0.78);
+  color: #5f6f95;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.iv-browse-filters__group {
+  display: grid;
+  gap: 12px;
+}
+
+.iv-browse-filters__groupHead,
+.iv-browse-filters__selectedHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.iv-browse-filters__groupTitle {
+  color: #16203d;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.iv-browse-filters__groupHint {
+  color: #7a87a7;
+  font-size: 0.88rem;
+}
+
+.iv-browse-filters__chips,
+.iv-browse-filters__selectedChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.iv-browse-filters__chips--scroll {
+  max-height: 260px;
+  overflow-y: auto;
+  align-content: flex-start;
+  padding-right: 4px;
+  scrollbar-width: thin;
+}
+
+.iv-browse-filters__selected {
+  display: grid;
+  gap: 12px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(103, 121, 181, 0.14);
+}
+
+@media (min-width: 900px) {
+  .iv-browse-filters__top {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: stretch;
+  }
+
+  .iv-browse-filters__actions {
+    align-items: stretch;
+  }
+
+  .iv-browse-filters__searchRow {
+    grid-template-columns: minmax(0, 2.2fr) repeat(3, minmax(0, 1fr));
+    align-items: end;
+  }
+
+  .iv-browse-filters__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 899px) {
+  .iv-browse-filters__actions {
+    justify-content: flex-start;
+  }
+
+  .iv-browse-filters__actions .iv-browse-filters__topButton {
+    height: 46px;
+    min-height: 46px;
+    border-radius: 14px;
+  }
+}
+
+@media (max-width: 767px) {
+  .iv-browse-filters {
+    gap: 16px;
+  }
+
+  .iv-browse-filters__topButton--toggle {
+    width: 44px;
+    min-width: 44px;
+    padding-inline: 0;
+  }
+
+  .iv-browse-filters__topButton--toggle .iv-browse-filters__topButtonText {
+    display: none;
+  }
+
+  .iv-browse-filters__advanced,
+  .iv-browse-filters__selected {
+    padding-top: 16px;
+  }
+
+  .iv-browse-filters__guide {
+    padding: 11px 12px;
+    font-size: 0.86rem;
+  }
+
+  .iv-browse-filters__chips,
+  .iv-browse-filters__selectedChips {
+    gap: 8px;
+  }
 }

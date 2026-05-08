@@ -1,9 +1,10 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useContext, useEffect } from "react";
 import AuthContext from "../../Context/AuthProvider";
 
 export default function ProtectedRoute({ allowedRoles }) {
   const { auth, openLogin } = useContext(AuthContext);
+  const location = useLocation();
 
   const isLoggedIn = !!auth?.accessToken;
 
@@ -12,7 +13,7 @@ export default function ProtectedRoute({ allowedRoles }) {
   }, [isLoggedIn, openLogin]);
 
   if (!isLoggedIn) {
-    return <Navigate to="/signin" replace />;
+    return <Navigate to="/signin" replace state={{ from: location }} />;
   }
 
   if (!allowedRoles || allowedRoles.length === 0) return <Outlet />;

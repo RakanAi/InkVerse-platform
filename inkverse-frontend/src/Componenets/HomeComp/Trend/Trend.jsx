@@ -1,110 +1,85 @@
-import React, { useEffect, useState } from "react";
 import Carousel from "react-bootstrap/Carousel";
-import { Link } from "react-router-dom";
-import api from "../../../Api/api";
 import "./Trend.css";
-import { absUrl } from "../../../Utils/absUrl";
-import Button from "@/Shared/ui/Button";
 
-import PageHeader from "@/Shared/ui/PageHeader";
+import { absUrl } from "../../../Utils/absUrl";
+import LinkButton from "@/Shared/ui/LinkButton";
 import LoadingState from "@/Shared/ui/LoadingState";
 import EmptyState from "@/Shared/ui/EmptyState";
+import ErrorState from "@/Shared/ui/ErrorState";
+import HomeSection from "@/features/home/shared/HomeSection";
+import useHomeCollection from "@/features/home/shared/useHomeCollection";
+import {
+  TRENDS_LABELS,
+  TRENDS_QUERY,
+} from "@/features/home/trends/trends.presets";
+import {
+  getCollectionItems,
+  normalizeHomeTrendPreview,
+  shuffleItems,
+} from "@/features/home/shared/home.models";
+
+function selectTrendingItems(data) {
+  return shuffleItems(getCollectionItems(data))
+    .slice(0, TRENDS_QUERY.take)
+    .map(normalizeHomeTrendPreview);
+}
 
 export default function TrendCora() {
-  const [trends, setTrends] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const getImg = (t) => t.imageUrl ?? t.ImageUrl ?? "";
-  const getName = (t) => t.name ?? t.Name ?? "";
-  const getSlug = (t) => t.slug ?? t.Slug ?? "";
-  const getDesc = (t) => t.description ?? t.Description ?? "";
-  const getId = (t) => t.id ?? t.Id ?? t.ID;
-
-  useEffect(() => {
-    let alive = true;
-
-    (async () => {
-      try {
-        setLoading(true);
-        const res = await api.get("/trends");
-        const list = Array.isArray(res.data) ? res.data : [];
-
-        // shuffle + take 7
-        const randomSeven = shuffleArray(list).slice(0, 7);
-
-        if (alive) setTrends(randomSeven);
-      } catch (e) {
-        console.error("Error fetching trends:", e);
-        if (alive) setTrends([]);
-      } finally {
-        if (alive) setLoading(false);
-      }
-    })();
-
-    return () => {
-      alive = false;
-    };
-  }, []);
-  const limited = trends.slice(0, 7);
-
-  function shuffleArray(arr) {
-    const copy = [...arr];
-    for (let i = copy.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [copy[i], copy[j]] = [copy[j], copy[i]];
-    }
-    return copy;
-  }
+  const { items: trends, loading, error } = useHomeCollection({
+    endpoint: "/trends",
+    errorMessage: TRENDS_LABELS.error,
+    selectItems: selectTrendingItems,
+  });
 
   return (
-    <section
-      className="iv-trends iv iv-container mt-3"
-      style={{ maxWidth: "1300px", justifySelf: "center" }}
+    <HomeSection
+      className="iv-trends"
+      title={TRENDS_LABELS.title}
+      subtitle={TRENDS_LABELS.subtitle}
+      actions={
+        <LinkButton to="/trend" variant="outline" size="sm">
+          {TRENDS_LABELS.cta}
+        </LinkButton>
+      }
     >
-      <div className="iv-trends__header mb-2">
-
-          <span className="borderStart mt-2" />
-            <PageHeader
-              title="Trending Concepts"
-              subtitle="Fresh ideas and worlds readers are exploring right now."
-            />
-
-        <Button className="text-white small" to="/trend">
-          SeeAll→
-        </Button>
-      </div>
-
       {loading ? (
-        <LoadingState title="Loading trends…" />
+        <LoadingState text={TRENDS_LABELS.loading} />
+      ) : error ? (
+        <ErrorState title={error} />
       ) : trends.length === 0 ? (
-        <EmptyState title="No trending items yet." />
+        <EmptyState title={TRENDS_LABELS.empty} />
       ) : (
         <Carousel className="iv-trends__carousel" interval={5000} pause="hover">
-          {limited.map((t) => (
-            <Carousel.Item key={getId(t)}>
-                <img
-                  className="iv-trends__img"
-                  src={absUrl(getImg(t))}
-                  alt={getName(t)}
-                  onError={(e) => (e.currentTarget.style.display = "none")}
-                />
-                <div className="iv-trends__overlay" />
-                <div className="iv-trends__caption text-white">
-                  <div className="iv-trends__badge">
-                    🔥 Trending : {getSlug(t)}
-                  </div>
-                  <p className="iv-trends__title text-white">{getName(t)}</p>
-                  {getDesc(t) ? (
-                    <p className="iv-trends__desc">{getDesc(t)}</p>
-                  ) : null}
-                  <Button className="iv-trends__cta btn btn-outline-light btn-sm" to={`/trend/${getId(t)}`}>
-                    Explore
-                  </Button>
-                </div>
+          {trends.map((trend) => (
+            <Carousel.Item key={trend.id}>
+              <img
+                className="iv-trends__img"
+                src={absUrl(trend.imageUrl)}
+                alt={trend.name}
+                onError={(event) => {
+                  event.currentTarget.style.display = "none";
+                }}
+              />
+              <div className="iv-trends__overlay" />
+              <div className="iv-trends__caption text-white">
+                <div className="iv-trends__badge">{TRENDS_LABELS.badge}</div>
+                <p className="iv-trends__title text-white">{trend.name}</p>
+                {trend.description ? (
+                  <p className="iv-trends__desc">{trend.description}</p>
+                ) : null}
+                <LinkButton
+                  to={`/trend/${trend.id}`}
+                  variant="ghost"
+                  size="sm"
+                  className="iv-trends__cta"
+                >
+                  {TRENDS_LABELS.action}
+                </LinkButton>
+              </div>
             </Carousel.Item>
           ))}
         </Carousel>
       )}
-    </section>
+    </HomeSection>
   );
 }

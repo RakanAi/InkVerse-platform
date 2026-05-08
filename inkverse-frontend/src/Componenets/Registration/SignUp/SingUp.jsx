@@ -1,12 +1,19 @@
-import React from "react";
-// import styled from 'styled-components';
-import "./SignUp.css";
-import { useState, useContext } from "react";
+import { useContext, useMemo, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+
 import api from "../../../Api/api";
-import { useNavigate, useLocation } from "react-router-dom";
 import AuthContext from "../../../Context/AuthProvider";
 import GoogleLoginButton from "../../LoginComp/GoogleLoginButton";
-import icon from "../../../assets/icons/InkVerseIcon.jpeg";
+
+import AuthAside from "@/features/auth/components/AuthAside";
+import AuthChecklist from "@/features/auth/components/AuthChecklist";
+import AuthField from "@/features/auth/components/AuthField";
+import AuthPanel from "@/features/auth/components/AuthPanel";
+import { REGISTER_FEATURES } from "@/features/auth/auth.copy";
+import {
+  getRegisterErrorMessage,
+  getRegistrationState,
+} from "@/features/auth/auth.validation";
 
 const SignUpForm = ({ onLogin }) => {
   const { setAuth, closeLogin } = useContext(AuthContext);
@@ -22,613 +29,239 @@ const SignUpForm = ({ onLogin }) => {
     password: "",
     confirmPassword: "",
   });
-
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const isFormFilled =
-    formData.firstName.trim() !== "" &&
-    formData.lastName.trim() !== "" &&
-    formData.username.trim() !== "" &&
-    formData.email.trim() !== "" &&
-    formData.password.trim() !== "" &&
-    formData.confirmPassword.trim() !== "" &&
-    formData.password === formData.confirmPassword;
+  const registrationState = useMemo(
+    () => getRegistrationState(formData),
+    [formData],
+  );
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setLoading(true);
     setError("");
 
     try {
-      // Prepare the data for API call
-      const userData = {
+      const response = await api.post("/account/register", {
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
         username: formData.username.trim(),
         email: formData.email.trim(),
         password: formData.password,
-      };
-
-      // Make API call to register user
-      const response = await api.post(
-        "/account/register",
-        userData,
-      );
+      });
 
       if (response.status === 200 || response.status === 201) {
         setSuccess(true);
       }
     } catch (err) {
-      console.error("Registration error:", err);
-      console.error("Error response data:", err.response?.data);
-      console.error("Error status:", err.response?.status);
-      if (err.response) {
-        // Server responded with error status
-        const status = err.response.status;
-        const errorData = err.response.data;
-        let errorMessage = "";
-
-        // Handle different error response formats - check errors field first
-        if (errorData?.errors) {
-          // Handle validation errors array or string
-          if (typeof errorData.errors === "string") {
-            errorMessage = errorData.errors.toLowerCase();
-          } else if (Array.isArray(errorData.errors)) {
-            errorMessage = errorData.errors.join(" ").toLowerCase();
-          }
-        } else if (errorData?.message) {
-          errorMessage = errorData.message.toLowerCase();
-        } else if (errorData?.error) {
-          errorMessage = errorData.error.toLowerCase();
-        } else if (typeof errorData === "string") {
-          errorMessage = errorData.toLowerCase();
-        }
-
-        if (status === 409 || status === 400) {
-          // Check for duplicate username/email errors
-          if (
-            errorMessage.includes("username") &&
-            (errorMessage.includes("already taken") ||
-              errorMessage.includes("is already"))
-          ) {
-            setError(
-              "This username is already taken. Please choose a different username.",
-            );
-          } else if (
-            errorMessage.includes("email") &&
-            (errorMessage.includes("already taken") ||
-              errorMessage.includes("is already"))
-          ) {
-            setError(
-              "This email address is already registered. Please use a different email or try logging in.",
-            );
-          } else if (
-            errorMessage.includes("username") &&
-            errorMessage.includes("email")
-          ) {
-            // Both username and email are taken
-            setError(
-              "Both the username and email address are already in use. Please choose different credentials.",
-            );
-          } else {
-            // Fallback to server message
-            setError(
-              errorData?.message ||
-                errorData?.errors ||
-                "Registration failed. Please check your information.",
-            );
-          }
-        } else if (status === 422) {
-          // Unprocessable entity - validation failed
-          setError(
-            "Please ensure all fields are filled correctly and meet the requirements.",
-          );
-        } else if (status === 500) {
-          // Server error
-          setError("Server error. Please try again later.");
-        } else {
-          // Other server errors
-          setError(
-            errorData?.message ||
-              errorData?.errors ||
-              "Registration failed. Please try again.",
-          );
-        }
-      } else if (err.request) {
-        // Network error
-        setError("Network error. Please check your connection and try again.");
-      } else {
-        // Other error
-        setError("An unexpected error occurred. Please try again.");
-      }
+      setError(getRegisterErrorMessage(err));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <>
-      {success ? (
-        <div
-          className="signup-container signup-success mx-auto rounded-3 text-light shadow-lg d-flex align-items-center justify-content-center"
+    <AuthPanel
+      aside={
+        <AuthAside
+          eyebrow={REGISTER_FEATURES.eyebrow}
+          title={REGISTER_FEATURES.title}
+          text={REGISTER_FEATURES.text}
         >
-          <div className="text-center">
-            <div className="success-icon mb-4">
-              <svg
-                width="80"
-                height="80"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <circle
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="#28a745"
-                  strokeWidth="2"
-                  fill="#28a745"
-                  opacity="0.1"
-                />
-                <path
-                  d="M8 12l2 2 4-4"
-                  stroke="#28a745"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
-            <h1 className="text-success mb-3">Account Created Successfully!</h1>
-            <p className="mb-4">
-              Welcome to InkVerse! Your account has been created and you can now
-              start exploring our collection of books.
+          <AuthChecklist
+            sections={registrationState.sections}
+            completed={registrationState.completed}
+            total={registrationState.total}
+            percent={registrationState.percent}
+          />
+        </AuthAside>
+      }
+      formEyebrow={success ? "Account ready" : "Create your pass"}
+      formTitle={
+        success ? "Your account is ready." : "Create your InkVerse account"
+      }
+      formText={
+        success
+          ? "Sign in with your new credentials and start shaping your shelf."
+          : "Set up a reader identity for reviews, saved books, rankings, and your personal library."
+      }
+      footer={
+        <p className="iv-auth-legal">
+          By creating an account, you agree to InkVerse&apos;s{" "}
+          <Link to="/terms">Terms of Service</Link> and{" "}
+          <Link to="/privacy">Privacy Policy</Link>.
+        </p>
+      }
+    >
+      {success ? (
+        <div className="iv-auth-success">
+          <span className="iv-auth-success__badge" aria-hidden="true">
+            ✓
+          </span>
+          <div>
+            <h2 className="iv-auth-success__title">
+              Welcome to InkVerse.
+            </h2>
+            <p className="iv-auth-success__text">
+              Your reader account is live. You can sign in now with your new
+              username and password, or continue with Google whenever you like.
             </p>
+          </div>
+          <div className="iv-auth-success__actions">
             <button
               type="button"
-              className="btn btn-success btn-lg px-4 py-2"
-              onClick={onLogin}
+              className="iv-auth-submit"
+              onClick={() => onLogin?.()}
             >
-              Continue to Login
+              Sign in now
+            </button>
+            <button
+              type="button"
+              className="iv-auth-secondaryAction"
+              onClick={closeLogin}
+            >
+              Continue browsing
             </button>
           </div>
         </div>
       ) : (
-        <div
-          className="signup-container auth-pane mx-auto rounded-3 text-light shadow-lg"
-        >
-          <div className="row h-100 g-0">
-            {/* Left Side - Rules & Guidelines */}
-            <div className="col-md-5 rules-panel p-4 d-flex flex-column d-none d-md-block">
-              <div className="rules-header text-center mb-4">
-                <img
-                  src={icon} alt="InkVerse" className="auth-logo auth-logo-lg"
-                />
-                <h3 className="Greeting mb-2">Join InkVerse</h3>
-              </div>
+        <>
+          {error ? (
+            <div className="iv-auth-alert" role="alert">
+              {error}
+            </div>
+          ) : null}
 
-              <div className="rules-content">
-                <h5 className="rules-title mb-3">
-                  Account Creation Guidelines
-                </h5>
+          <form className="iv-auth-form" onSubmit={handleSubmit}>
+            <div className="iv-auth-nameGrid">
+              <AuthField
+                id="register-first-name"
+                label="First name"
+                name="firstName"
+                type="text"
+                value={formData.firstName}
+                onChange={handleInputChange}
+                placeholder="Rakan"
+                autoComplete="given-name"
+              />
 
-                {/* Name Fields Rules */}
-                <div className="rule-section mb-3">
-                  <h6 className="rule-heading text-start px-3">
-                    Name Information:
-                  </h6>
-                  <ul className="rule-list">
-                    <li
-                      className={`rule-item ${formData.firstName.trim().length >= 2 ? "completed" : ""}`}
-                    >
-                      <span className="rule-check">✓</span>
-                      First name: at least 2 characters
-                    </li>
-                    <li
-                      className={`rule-item ${formData.lastName.trim().length >= 2 ? "completed" : ""}`}
-                    >
-                      <span className="rule-check">✓</span>
-                      Last name: at least 2 characters
-                    </li>
-                  </ul>
-                </div>
-
-                {/* Username Rules */}
-                <div className="rule-section mb-3">
-                  <h6 className="rule-heading text-start px-3"> Username:</h6>
-                  <ul className="rule-list">
-                    <li
-                      className={`rule-item ${formData.username.trim().length >= 3 ? "completed" : ""}`}
-                    >
-                      <span className="rule-check">✓</span>
-                      At least 3 characters long
-                    </li>
-                    <li
-                      className={`rule-item ${formData.username.trim().length > 0 && /^[a-zA-Z0-9_]+$/.test(formData.username) ? "completed" : ""}`}
-                    >
-                      <span className="rule-check">✓</span>
-                      Letters, numbers, and underscores only
-                    </li>
-                    <li
-                      className={`rule-item ${formData.username.trim().length > 0 && !/^\d/.test(formData.username) ? "completed" : ""}`}
-                    >
-                      <span className="rule-check">✓</span>
-                      Cannot start with a number
-                    </li>
-                    <li
-                      className={`rule-item ${formData.username.trim().length <= 20 ? "completed" : ""}`}
-                    >
-                      <span className="rule-check">✓</span>
-                      Maximum 20 characters
-                    </li>
-                  </ul>
-                </div>
-
-                {/* Email Rules */}
-                <div className="rule-section mb-3 px-3">
-                  <h6 className="rule-heading text-start">Email Address:</h6>
-                  <ul className="rule-list">
-                    <li
-                      className={`rule-item ${formData.email.includes("@") && formData.email.includes(".") ? "completed" : ""}`}
-                    >
-                      <span className="rule-check">✓</span>
-                      Valid email format (name@domain.com)
-                    </li>
-                    <li
-                      className={`rule-item ${formData.email.trim().length > 0 ? "completed" : ""}`}
-                    >
-                      <span className="rule-check">✓</span>
-                      Required field
-                    </li>
-                  </ul>
-                </div>
-
-                {/* Password Rules */}
-                <div className="rule-section mb-3 px-3">
-                  <h6 className="rule-heading text-start">
-                    Password Requirements:
-                  </h6>
-                  <ul className="rule-list">
-                    <li
-                      className={`rule-item ${formData.password.length >= 8 ? "completed" : ""}`}
-                    >
-                      <span className="rule-check">✓</span>
-                      At least 8 characters long
-                    </li>
-                    <li
-                      className={`rule-item ${/[A-Z]/.test(formData.password) ? "completed" : ""}`}
-                    >
-                      <span className="rule-check">✓</span>
-                      One uppercase letter (A-Z)
-                    </li>
-                    <li
-                      className={`rule-item ${/[a-z]/.test(formData.password) ? "completed" : ""}`}
-                    >
-                      <span className="rule-check">✓</span>
-                      One lowercase letter (a-z)
-                    </li>
-                    <li
-                      className={`rule-item ${/[0-9]/.test(formData.password) ? "completed" : ""}`}
-                    >
-                      <span className="rule-check">✓</span>
-                      One number (0-9)
-                    </li>
-                    <li
-                      className={`rule-item ${/[^A-Za-z0-9]/.test(formData.password) ? "completed" : ""}`}
-                    >
-                      <span className="rule-check">✓</span>
-                      One special character (!@#$%^&*)
-                    </li>
-                  </ul>
-                </div>
-
-                {/* Password Confirmation */}
-                <div className="rule-section mb-3 px-3">
-                  <h6 className="rule-heading text-start">
-                    Password Confirmation:
-                  </h6>
-                  <ul className="rule-list">
-                    <li
-                      className={`rule-item ${formData.confirmPassword.length > 0 ? "completed" : ""}`}
-                    >
-                      <span className="rule-check">✓</span>
-                      Password confirmation entered
-                    </li>
-                    <li
-                      className={`rule-item ${formData.password === formData.confirmPassword && formData.confirmPassword.length > 0 ? "completed" : ""}`}
-                    >
-                      <span className="rule-check">✓</span>
-                      Passwords match
-                    </li>
-                  </ul>
-                </div>
-
-                {/* Overall Progress */}
-                <div className="progress-section mt-4">
-                  <div className="d-flex justify-content-between align-items-center mb-2">
-                    <span className="progress-label">Setup Progress</span>
-                    <span className="progress-percentage">
-                      {Math.round(
-                        (((formData.firstName.trim().length >= 2 ? 1 : 0) +
-                          (formData.lastName.trim().length >= 2 ? 1 : 0) +
-                          (formData.firstName.trim().length > 0 &&
-                          /^[a-zA-Z\s]+$/.test(formData.firstName)
-                            ? 1
-                            : 0) +
-                          (formData.lastName.trim().length > 0 &&
-                          /^[a-zA-Z\s]+$/.test(formData.lastName)
-                            ? 1
-                            : 0) +
-                          (formData.username.trim().length >= 3 ? 1 : 0) +
-                          (formData.username.trim().length > 0 &&
-                          /^[a-zA-Z0-9_]+$/.test(formData.username)
-                            ? 1
-                            : 0) +
-                          (formData.username.trim().length > 0 &&
-                          !/^\d/.test(formData.username)
-                            ? 1
-                            : 0) +
-                          (formData.username.trim().length <= 20 ? 1 : 0) +
-                          (formData.email.includes("@") &&
-                          formData.email.includes(".")
-                            ? 1
-                            : 0) +
-                          (formData.password.length >= 8 ? 1 : 0) +
-                          (/[A-Z]/.test(formData.password) ? 1 : 0) +
-                          (/[a-z]/.test(formData.password) ? 1 : 0) +
-                          (/[0-9]/.test(formData.password) ? 1 : 0) +
-                          (/[^A-Za-z0-9]/.test(formData.password) ? 1 : 0) +
-                          (formData.password === formData.confirmPassword &&
-                          formData.confirmPassword.length > 0
-                            ? 1
-                            : 0)) /
-                          14) *
-                          100,
-                      )}
-                      %
-                    </span>
-                  </div>
-                  <div className="progress">
-                    <div
-                      className="progress-bar bg-success"
-                      role="progressbar"
-                      style={{
-                        width: `${Math.round(
-                          (((formData.firstName.trim().length >= 2 ? 1 : 0) +
-                            (formData.lastName.trim().length >= 2 ? 1 : 0) +
-                            (formData.firstName.trim().length > 0 &&
-                            /^[a-zA-Z\s]+$/.test(formData.firstName)
-                              ? 1
-                              : 0) +
-                            (formData.lastName.trim().length > 0 &&
-                            /^[a-zA-Z\s]+$/.test(formData.lastName)
-                              ? 1
-                              : 0) +
-                            (formData.username.trim().length >= 3 ? 1 : 0) +
-                            (formData.username.trim().length > 0 &&
-                            /^[a-zA-Z0-9_]+$/.test(formData.username)
-                              ? 1
-                              : 0) +
-                            (formData.username.trim().length > 0 &&
-                            !/^\d/.test(formData.username)
-                              ? 1
-                              : 0) +
-                            (formData.username.trim().length <= 20 ? 1 : 0) +
-                            (formData.email.includes("@") &&
-                            formData.email.includes(".")
-                              ? 1
-                              : 0) +
-                            (formData.password.length >= 8 ? 1 : 0) +
-                            (/[A-Z]/.test(formData.password) ? 1 : 0) +
-                            (/[a-z]/.test(formData.password) ? 1 : 0) +
-                            (/[0-9]/.test(formData.password) ? 1 : 0) +
-                            (/[^A-Za-z0-9]/.test(formData.password) ? 1 : 0) +
-                            (formData.password === formData.confirmPassword &&
-                            formData.confirmPassword.length > 0
-                              ? 1
-                              : 0)) /
-                            14) *
-                            100,
-                        )}%`,
-                      }}
-                      aria-valuenow={Math.round(
-                        (((formData.firstName.trim().length >= 2 ? 1 : 0) +
-                          (formData.lastName.trim().length >= 2 ? 1 : 0) +
-                          (formData.firstName.trim().length > 0 &&
-                          /^[a-zA-Z\s]+$/.test(formData.firstName)
-                            ? 1
-                            : 0) +
-                          (formData.lastName.trim().length > 0 &&
-                          /^[a-zA-Z\s]+$/.test(formData.lastName)
-                            ? 1
-                            : 0) +
-                          (formData.username.trim().length >= 3 ? 1 : 0) +
-                          (formData.username.trim().length > 0 &&
-                          /^[a-zA-Z0-9_]+$/.test(formData.username)
-                            ? 1
-                            : 0) +
-                          (formData.username.trim().length > 0 &&
-                          !/^\d/.test(formData.username)
-                            ? 1
-                            : 0) +
-                          (formData.username.trim().length <= 20 ? 1 : 0) +
-                          (formData.email.includes("@") &&
-                          formData.email.includes(".")
-                            ? 1
-                            : 0) +
-                          (formData.password.length >= 8 ? 1 : 0) +
-                          (/[A-Z]/.test(formData.password) ? 1 : 0) +
-                          (/[a-z]/.test(formData.password) ? 1 : 0) +
-                          (/[0-9]/.test(formData.password) ? 1 : 0) +
-                          (/[^A-Za-z0-9]/.test(formData.password) ? 1 : 0) +
-                          (formData.password === formData.confirmPassword &&
-                          formData.confirmPassword.length > 0
-                            ? 1
-                            : 0)) /
-                          14) *
-                          100,
-                      )}
-                      aria-valuemin="0"
-                      aria-valuemax="100"
-                    ></div>
-                  </div>
-                </div>
-              </div>
+              <AuthField
+                id="register-last-name"
+                label="Last name"
+                name="lastName"
+                type="text"
+                value={formData.lastName}
+                onChange={handleInputChange}
+                placeholder="Odeh"
+                autoComplete="family-name"
+              />
             </div>
 
-            {/* Right Side - Form */}
-            <div className="col-md-7 form-panel p-4 d-flex flex-column justify-content-center rounded">
-              {error && (
-                <div className="alert alert-danger mb-3" role="alert">
-                  {error}
-                </div>
-              )}
-              <form className="form" onSubmit={handleSubmit}>
-                <div className="my-5">
-                  <h2>Welcome To InkVerse</h2>
-                  <p>Access tons of Fanfic Universes by a single tap!</p>
-                </div>
-                <hr />
-                <div className="">
-                  <div className="input-group">
-                    <input
-                      placeholder="First Name"
-                      type="text"
-                      name="firstName"
-                      value={formData.firstName}
-                      onChange={handleInputChange}
-                      id="firstName"
-                    />
-                  </div>
+            <AuthField
+              id="register-username"
+              label="Username"
+              name="username"
+              type="text"
+              value={formData.username}
+              onChange={handleInputChange}
+              placeholder="inkverse_reader"
+              autoComplete="username"
+              helper="3 to 20 characters, starting with a letter. Letters, numbers, and underscores only."
+            />
 
-                  <div>
-                    <div className="input-group">
-                      <input
-                        placeholder="Last Name"
-                        type="text"
-                        name="lastName"
-                        value={formData.lastName}
-                        onChange={handleInputChange}
-                        id="lastName"
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="input-group">
-                  <input
-                    placeholder="Choose a Username"
-                    type="text"
-                    name="username"
-                    value={formData.username}
-                    onChange={handleInputChange}
-                    id="signup-username"
-                  />
-                </div>
-                <div className="input-group">
-                  <input
-                    placeholder="Enter your Email"
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    id="email"
-                  />
-                </div>
-                <div className="input-group password-group">
-                  <input
-                    placeholder="Create Password"
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    id="signup-password"
-                  />
-                </div>
-                <div className="input-group password-group">
-                  <input
-                    placeholder="Confirm Password"
-                    type="password"
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
-                    id="confirmPassword"
-                  />
-                </div>
+            <AuthField
+              id="register-email"
+              label="Email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              placeholder="name@example.com"
+              autoComplete="email"
+            />
+
+            <AuthField
+              id="register-password"
+              label="Password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              value={formData.password}
+              onChange={handleInputChange}
+              placeholder="Create a secure password"
+              autoComplete="new-password"
+              helper="Use 8+ characters with upper, lower, number, and symbol."
+              action={
                 <button
-                  type="submit"
-                  className={`sign mt-3 login-btn ${isFormFilled ? "show" : ""}`}
-                  disabled={!isFormFilled || loading}
+                  type="button"
+                  onClick={() => setShowPassword((current) => !current)}
                 >
-                  {loading ? (
-                    <>
-                      <span
-                        className="spinner-border spinner-border-sm me-2"
-                        role="status"
-                        aria-hidden="true"
-                      ></span>
-                      Creating Account...
-                    </>
-                  ) : (
-                    "Create Account"
-                  )}
+                  {showPassword ? "Hide" : "Show"}
                 </button>
-                <hr />
-                <p className="text-center mt-3">
-                  Already have an account?{" "}
-                  <button
-                    type="button"
-                    className="btn btn-link p-0"
-                    onClick={onLogin}
-                  >
-                    Sign in
-                  </button>
-                </p>
+              }
+            />
 
-                <div className="text-center mt-3">
-                  <div className="d-flex justify-content-center gap-2">
-                   <span>
-                                   <GoogleLoginButton
-                                     onSuccess={(authObj) => {
-                                       setAuth(authObj);
-                                       closeLogin();
-                                       navigate(from, { replace: true });
-                                       
-                                     }}
-                                   />
-                                 </span>
-                  </div>
-                </div>
+            <AuthField
+              id="register-confirm-password"
+              label="Confirm password"
+              name="confirmPassword"
+              type={showConfirmPassword ? "text" : "password"}
+              value={formData.confirmPassword}
+              onChange={handleInputChange}
+              placeholder="Repeat your password"
+              autoComplete="new-password"
+              action={
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowConfirmPassword((current) => !current)
+                  }
+                >
+                  {showConfirmPassword ? "Hide" : "Show"}
+                </button>
+              }
+            />
 
-                <footer className="text-center mt-4 footerr">
-                  <p className="mb-0">
-                    © 2026 InkVerse |{" "}
-                    <a href="/terms" className="text-decoration-none text-primary">
-                      Terms of Service
-                    </a>{" "}
-                    |{" "}
-                    <a href="/privacy" className="text-decoration-none text-primary">
-                      Privacy Policy
-                    </a>
-                  </p>
-                </footer>
-              </form>
+            <button
+              type="submit"
+              className="iv-auth-submit"
+              disabled={!registrationState.isReady || loading}
+            >
+              {loading ? "Creating account..." : "Create account"}
+            </button>
+          </form>
+
+          <div className="iv-auth-bridge">or continue with</div>
+
+          <div className="iv-auth-social iv-auth-social--standalone">
+            <div className="iv-auth-googleShell">
+              <GoogleLoginButton
+                width={320}
+                text="continue_with"
+                theme="filled_blue"
+                locale="en"
+                onSuccess={(authObj) => {
+                  setAuth(authObj);
+                  closeLogin();
+                  navigate(from, { replace: true });
+                }}
+              />
             </div>
-
-            {/* Footer */}
           </div>
-        </div>
+        </>
       )}
-    </>
+    </AuthPanel>
   );
 };
 

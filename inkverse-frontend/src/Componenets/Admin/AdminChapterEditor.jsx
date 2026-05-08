@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../../Api/api";
+import Button from "../../Shared/ui/Button";
+import LoadingState from "../../Shared/ui/LoadingState";
+import AdminSection from "../../features/admin/components/AdminSection";
+import AdminFormField from "../../features/admin/components/AdminFormField";
 
 export default function AdminChapterEditor({ mode }) {
   const nav = useNavigate();
@@ -12,10 +16,8 @@ export default function AdminChapterEditor({ mode }) {
 
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
-
   const [arcs, setArcs] = useState([]);
   const [newArcName, setNewArcName] = useState("");
-
   const [form, setForm] = useState({
     title: "",
     content: "",
@@ -33,17 +35,17 @@ export default function AdminChapterEditor({ mode }) {
 
       if (isEdit && cId) {
         const res = await api.get(`/admin/books/${bId}/chapters/${cId}`);
-        const c = res.data;
+        const chapter = res.data;
 
         setForm({
-          title: c.title ?? "",
-          content: c.content ?? "",
-          chapterNumber: c.chapterNumber ?? 1,
-          arcId: c.arcId ?? null,
+          title: chapter.title ?? "",
+          content: chapter.content ?? "",
+          chapterNumber: chapter.chapterNumber ?? 1,
+          arcId: chapter.arcId ?? null,
         });
       }
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
       setErr("Failed to load chapter.");
     } finally {
       setLoading(false);
@@ -57,27 +59,23 @@ export default function AdminChapterEditor({ mode }) {
     try {
       const res = await api.post(`/admin/books/${bId}/arcs`, { name });
       const created = res.data;
-
       const arcsRes = await api.get(`/admin/books/${bId}/arcs`);
       const list = Array.isArray(arcsRes.data) ? arcsRes.data : [];
       setArcs(list);
-
-      // auto-select new arc
-const newId = created?.id ?? created?.ID ?? created?.Id ?? null;
-setForm((f) => ({ ...f, arcId: newId }));
-
+      const newId = created?.id ?? created?.ID ?? created?.Id ?? null;
+      setForm((current) => ({ ...current, arcId: newId }));
       setNewArcName("");
-    } catch (e) {
-      console.error(e);
-      setErr(e?.response?.data?.message || "Failed to create arc.");
+    } catch (error) {
+      console.error(error);
+      setErr(error?.response?.data?.message || "Failed to create arc.");
     }
   };
 
-useEffect(() => {
-  if (!bId) return;
-  load();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [bId, cId]);
+  useEffect(() => {
+    if (!bId) return;
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bId, cId]);
 
   const save = async () => {
     try {
@@ -91,11 +89,8 @@ useEffect(() => {
         setErr("Content is required.");
         return;
       }
-      if (
-        isEdit &&
-        (!Number(form.chapterNumber) || Number(form.chapterNumber) < 1)
-      ) {
-        setErr("ChapterNumber must be >= 1.");
+      if (isEdit && (!Number(form.chapterNumber) || Number(form.chapterNumber) < 1)) {
+        setErr("Chapter number must be at least 1.");
         return;
       }
 
@@ -103,10 +98,8 @@ useEffect(() => {
         title: form.title,
         content: form.content,
         arcId: form.arcId,
-         chapterNumber: Number(form.chapterNumber)
+        chapterNumber: Number(form.chapterNumber),
       };
-
-      if (isEdit) payload.chapterNumber = Number(form.chapterNumber);
 
       if (!isEdit) {
         await api.post(`/admin/books/${bId}/chapters`, payload);
@@ -115,122 +108,104 @@ useEffect(() => {
       }
 
       nav(`/admin/books/${bId}/chapters`);
-    } catch (e) {
-      console.error(e);
-      setErr(e?.response?.data?.message || "Save failed.");
+    } catch (error) {
+      console.error(error);
+      setErr(error?.response?.data?.message || "Save failed.");
     }
   };
 
-  if (loading)
-    return <div className="border rounded p-3 text-muted">Loading...</div>;
+  if (loading) return <LoadingState text="Loading chapter editor..." />;
 
   return (
-    <div className="border rounded p-3">
-      <div className="d-flex justify-content-between align-items-center">
-        <h4 className="mb-0">{isEdit ? "Edit Chapter" : "New Chapter"}</h4>
-        <button
-          className="btn btn-outline-secondary"
-          onClick={() => nav(`/admin/books/${bId}/chapters`)}
-        >
+    <AdminSection
+      actions={
+        <Button variant="outline" onClick={() => nav(`/admin/books/${bId}/chapters`)}>
           Back
-        </button>
-      </div>
+        </Button>
+      }
+    >
+      {err ? <div className="admin-alert">{err}</div> : null}
 
-      {err ? <div className="alert alert-danger mt-3">{err}</div> : null}
-
-      <div className="row g-3 mt-1">
-        <div className="col-12">
-          <label className="form-label">Title</label>
+      <div className="admin-form-grid">
+        <AdminFormField label="Title" className="admin-col-12">
           <input
-            className="form-control"
+            className="admin-input"
             value={form.title}
-            onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+            onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
           />
-        </div>
+        </AdminFormField>
 
-        {isEdit && (
-          <div className="col-12 col-md-4">
-            <label className="form-label">Chapter Number</label>
+        {isEdit ? (
+          <AdminFormField label="Chapter number" className="admin-col-4">
             <input
               type="number"
-              className="form-control"
+              className="admin-input"
               value={form.chapterNumber}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, chapterNumber: e.target.value }))
+              onChange={(event) =>
+                setForm((current) => ({ ...current, chapterNumber: event.target.value }))
               }
             />
-          </div>
-        )}
+          </AdminFormField>
+        ) : null}
 
-        <div className="col-12">
-          <label className="form-label">Arc (optional)</label>
-
+        <AdminFormField label="Arc" className="admin-col-8">
           <select
-            className="form-select"
+            className="admin-select"
             value={form.arcId ?? ""}
-            onChange={(e) =>
-              setForm((f) => ({
-                ...f,
-                arcId: e.target.value === "" ? null : Number(e.target.value),
+            onChange={(event) =>
+              setForm((current) => ({
+                ...current,
+                arcId: event.target.value === "" ? null : Number(event.target.value),
               }))
             }
           >
-            <option value="">No Arc</option>
-                {arcs.map((a) => {
-                const id = a.id ?? a.ID;
-                const name = a.name ?? a.Name;
-                return (
-                    <option key={id} value={id}>
-                    {name}
-                    </option>
-                );
-                })}
+            <option value="">No arc</option>
+            {arcs.map((arc) => {
+              const id = arc.id ?? arc.ID;
+              const name = arc.name ?? arc.Name;
+              return (
+                <option key={id} value={id}>
+                  {name}
+                </option>
+              );
+            })}
           </select>
+        </AdminFormField>
 
-          <div className="d-flex gap-2 mt-2">
+        <AdminFormField label="Create new arc" className="admin-col-12">
+          <div className="admin-inline-actions">
             <input
-              className="form-control"
-              placeholder="New arc name..."
+              className="admin-input"
+              placeholder="Arc name"
               value={newArcName}
-              onChange={(e) => setNewArcName(e.target.value)}
+              onChange={(event) => setNewArcName(event.target.value)}
             />
-            <button
-              type="button"
-              className="btn btn-outline-primary"
-              onClick={createArc}
-            >
-              Create
-            </button>
+            <Button variant="outline" onClick={createArc}>
+              Create arc
+            </Button>
           </div>
-        </div>
+        </AdminFormField>
 
-        <div className="col-12">
-          <label className="form-label">Content</label>
+        <AdminFormField
+          label="Content"
+          hint="Multi-line text is fine here. JSON escaping is handled by Axios."
+          className="admin-col-12"
+        >
           <textarea
-            className="form-control"
-            rows={14}
+            className="admin-textarea"
+            rows={16}
             value={form.content}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, content: e.target.value }))
-            }
+            onChange={(event) => setForm((current) => ({ ...current, content: event.target.value }))}
           />
-          <div className="text-muted small mt-1">
-            Tip: multi-line text is fine here (Axios handles JSON escaping).
-          </div>
-        </div>
+        </AdminFormField>
 
-        <div className="col-12 d-flex justify-content-end gap-2">
-          <button
-            className="btn btn-outline-secondary"
-            onClick={() => nav(`/admin/books/${bId}/chapters`)}
-          >
+        <div className="admin-col-12 admin-form-actions">
+          <Button variant="outline" onClick={() => nav(`/admin/books/${bId}/chapters`)}>
             Cancel
-          </button>
-          <button className="btn btn-primary" onClick={save}>
-            Save
-          </button>
+          </Button>
+          <Button onClick={save}>Save chapter</Button>
         </div>
       </div>
-    </div>
+    </AdminSection>
   );
 }

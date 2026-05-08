@@ -5,4 +5,4 @@ export const TREND_SORT_OPTIONS = [
 ];
 
 export const TREND_PAGE_SIZE = 12;
-export const TREND_FEATURED_COUNT = 5;
+export const TREND_FEATURED_COUNT = 3;

@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
 import "./ReviewCardV2.css";
 
-import Button from "@/Shared/ui/Button";
 import BookCover from "@/Shared/books/BookCover/BookCover";
 import { getBookCoverSrc } from "@/domain/books/book-cover";
 import { absUrl } from "@/Utils/absUrl";
+import LinkButton from "@/Shared/ui/LinkButton";
 
 const FALLBACK_USER_IMG = "https://ui-avatars.com/api/?name=User";
 
@@ -12,7 +12,6 @@ export default function ReviewCardV2({
   review,
   height = 350,
 }) {
-  // Normalize common shapes (your API sometimes mixes casing)
   const bookId = review?.bookId ?? review?.BookId ?? null;
   const bookTitle =
     review?.bookTitle ??
@@ -45,10 +44,8 @@ export default function ReviewCardV2({
     review?.Image ??
     "";
 
-const userAvatarUrl = rawAvatar ? absUrl(rawAvatar) : FALLBACK_USER_IMG;
-  // Try to resolve a cover from either:
-  // 1) review.book object (best)
-  // 2) direct cover fields
+  const userAvatarUrl = rawAvatar ? absUrl(rawAvatar) : FALLBACK_USER_IMG;
+  const ratingValue = review?.rating ?? review?.Rating ?? null;
   const bookLike =
     review?.book ??
     review?.Book ??
@@ -62,13 +59,13 @@ const userAvatarUrl = rawAvatar ? absUrl(rawAvatar) : FALLBACK_USER_IMG;
 
   return (
     <div className="iv-rv2-card mb-3" style={{ height }}>
-      {/* Top cover strip */}
       <Link to={bookId ? `/book/${bookId}` : "#"} className="iv-rv2-coverLink">
         <div className="iv-rv2-cover">
-          {/* BookCover keeps your cover logic consistent */}
           <BookCover variant="tile" src={coverSrc} alt={bookTitle} />
-          {/* overlay gradient for readability */}
           <div className="iv-rv2-coverFade" />
+          {typeof ratingValue === "number" ? (
+            <span className="iv-rv2-rating">★ {ratingValue.toFixed(1)}</span>
+          ) : null}
         </div>
       </Link>
 
@@ -82,7 +79,6 @@ const userAvatarUrl = rawAvatar ? absUrl(rawAvatar) : FALLBACK_USER_IMG;
         </div>
 
         <div className="iv-rv2-footer">
-          {/* user chip (replaces Git icon + Code) */}
           <div className="iv-rv2-user">
             <img
               className="iv-rv2-userImg"
@@ -97,15 +93,12 @@ const userAvatarUrl = rawAvatar ? absUrl(rawAvatar) : FALLBACK_USER_IMG;
             </span>
           </div>
 
-          {/* action (replaces Preview) */}
           {bookId ? (
-            <Link to={`/book/${bookId}`} className="iv-rv2-action">
-              <Button size="sm">Read</Button>
-            </Link>
+            <LinkButton to={`/book/${bookId}`} variant="ghost" size="sm" className="iv-rv2-action">
+              Open
+            </LinkButton>
           ) : (
-            <Button size="sm" disabled>
-              Read
-            </Button>
+            <span className="iv-rv2-action iv-rv2-action--disabled">Open</span>
           )}
         </div>
       </div>

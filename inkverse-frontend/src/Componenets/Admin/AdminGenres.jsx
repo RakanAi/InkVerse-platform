@@ -1,39 +1,39 @@
 import { useEffect, useMemo, useState } from "react";
-import api from "../../Api/api"; // adjust if needed
+import api from "../../Api/api";
+import Button from "../../Shared/ui/Button";
+import TextField from "../../Shared/ui/TextField";
+import LoadingState from "../../Shared/ui/LoadingState";
+import ErrorState from "../../Shared/ui/ErrorState";
+import AdminSection from "../../features/admin/components/AdminSection";
+import AdminTable from "../../features/admin/components/AdminTable";
+import AdminFormField from "../../features/admin/components/AdminFormField";
 
 export default function AdminGenres() {
-  const API_BASE = "/admin/genres"; // ✅ change if your controller route differs
+  const API_BASE = "/admin/genres";
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
-
   const [q, setQ] = useState("");
-
-  // create
   const [newName, setNewName] = useState("");
   const [newSlug, setNewSlug] = useState("");
   const [newActive, setNewActive] = useState(true);
   const [creating, setCreating] = useState(false);
-
-  // edit
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState("");
   const [editSlug, setEditSlug] = useState("");
   const [editActive, setEditActive] = useState(true);
   const [saving, setSaving] = useState(false);
-
   const [deletingId, setDeletingId] = useState(null);
 
   const load = async () => {
     try {
       setErr("");
       setLoading(true);
-
       const res = await api.get(`${API_BASE}?includeInactive=true`);
       setItems(Array.isArray(res.data) ? res.data : []);
-    } catch (e) {
-      console.error("Load genres failed:", e);
+    } catch (error) {
+      console.error("Load genres failed:", error);
       setItems([]);
       setErr("Failed to load genres.");
     } finally {
@@ -46,26 +46,21 @@ export default function AdminGenres() {
   }, []);
 
   const filtered = useMemo(() => {
-    const s = q.trim().toLowerCase();
-    if (!s) return items;
+    const needle = q.trim().toLowerCase();
+    if (!needle) return items;
 
-    return items.filter((g) => {
-      const name = String(g.name ?? g.Name ?? "").toLowerCase();
-      const slug = String(g.slug ?? g.Slug ?? "").toLowerCase();
-      return name.includes(s) || slug.includes(s);
+    return items.filter((genre) => {
+      const name = String(genre.name ?? genre.Name ?? "").toLowerCase();
+      const slug = String(genre.slug ?? genre.Slug ?? "").toLowerCase();
+      return name.includes(needle) || slug.includes(needle);
     });
   }, [items, q]);
 
-  const startEdit = (g) => {
-    const id = g.id ?? g.Id ?? g.ID;
-    const name = g.name ?? g.Name ?? "";
-    const slug = g.slug ?? g.Slug ?? "";
-    const active = g.isActive ?? g.IsActive ?? true;
-
-    setEditingId(id);
-    setEditName(name);
-    setEditSlug(slug || "");
-    setEditActive(active);
+  const startEdit = (genre) => {
+    setEditingId(genre.id ?? genre.Id ?? genre.ID);
+    setEditName(genre.name ?? genre.Name ?? "");
+    setEditSlug(genre.slug ?? genre.Slug ?? "");
+    setEditActive(genre.isActive ?? genre.IsActive ?? true);
   };
 
   const cancelEdit = () => {
@@ -77,27 +72,26 @@ export default function AdminGenres() {
 
   const create = async () => {
     const name = newName.trim();
-    const slug = newSlug.trim() || null;
-
-    if (!name) return setErr("Genre name is required.");
+    if (!name) {
+      setErr("Genre name is required.");
+      return;
+    }
 
     try {
       setCreating(true);
       setErr("");
-
       await api.post(API_BASE, {
         name,
-        slug,
+        slug: newSlug.trim() || null,
         isActive: newActive,
       });
-
       setNewName("");
       setNewSlug("");
       setNewActive(true);
       await load();
-    } catch (e) {
-      console.error("Create genre failed:", e);
-      setErr(e?.response?.data?.message || e?.response?.data || "Failed to create genre.");
+    } catch (error) {
+      console.error("Create genre failed:", error);
+      setErr(error?.response?.data?.message || error?.response?.data || "Failed to create genre.");
     } finally {
       setCreating(false);
     }
@@ -105,228 +99,217 @@ export default function AdminGenres() {
 
   const saveEdit = async () => {
     const name = editName.trim();
-    const slug = editSlug.trim() || null;
     if (!editingId) return;
-    if (!name) return setErr("Genre name is required.");
+    if (!name) {
+      setErr("Genre name is required.");
+      return;
+    }
 
     try {
       setSaving(true);
       setErr("");
-
       await api.put(`${API_BASE}/${editingId}`, {
         name,
-        slug,
+        slug: editSlug.trim() || null,
         isActive: editActive,
       });
-
       cancelEdit();
       await load();
-    } catch (e) {
-      console.error("Update genre failed:", e);
-      setErr(e?.response?.data?.message || e?.response?.data || "Failed to update genre.");
+    } catch (error) {
+      console.error("Update genre failed:", error);
+      setErr(error?.response?.data?.message || error?.response?.data || "Failed to update genre.");
     } finally {
       setSaving(false);
     }
   };
 
   const remove = async (id) => {
-    if (!id) return;
-    const ok = window.confirm("Delete this genre? It will be removed from any books using it.");
-    if (!ok) return;
+    if (!window.confirm("Delete this genre? It will be removed from any books using it.")) {
+      return;
+    }
 
     try {
       setDeletingId(id);
       setErr("");
-
       await api.delete(`${API_BASE}/${id}`);
       await load();
-    } catch (e) {
-      console.error("Delete genre failed:", e);
-      setErr(e?.response?.data?.message || e?.response?.data || "Failed to delete genre.");
+    } catch (error) {
+      console.error("Delete genre failed:", error);
+      setErr(error?.response?.data?.message || error?.response?.data || "Failed to delete genre.");
     } finally {
       setDeletingId(null);
     }
   };
 
+  if (loading) return <LoadingState text="Loading genres..." />;
+  if (err && !items.length) return <ErrorState title="Cannot load genres" subtitle={err} onRetry={load} />;
+
   return (
-    <div>
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <div>
-          <h3 className="mb-1">Genres</h3>
-          <div className="text-muted small">Create, edit, activate/deactivate, delete genres.</div>
-        </div>
+    <AdminSection flat>
+      {err ? <div className="admin-alert">{String(err)}</div> : null}
 
-        <button className="btn btn-outline-dark" onClick={load} disabled={loading}>
-          Refresh
-        </button>
-      </div>
-
-      {err ? <div className="alert alert-danger">{String(err)}</div> : null}
-
-      {/* Create */}
-      <div className="border rounded p-3 mb-3">
-        <div className="fw-semibold mb-2">Add new genre</div>
-
-        <div className="row g-2 align-items-center">
-          <div className="col-12 col-md-4">
-            <input
-              className="form-control"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              placeholder="Name (e.g. Fantasy)"
-            />
-          </div>
-
-          <div className="col-12 col-md-4">
-            <input
-              className="form-control"
-              value={newSlug}
-              onChange={(e) => setNewSlug(e.target.value)}
-              placeholder="Slug (optional, e.g. fantasy)"
-            />
-          </div>
-
-          <div className="col-6 col-md-2">
-            <div className="form-check">
+      <div className="admin-taxonomy-toolbar">
+        <div className="admin-taxonomy-toolbar__composer">
+          <div className="admin-taxonomy-toolbar__fields">
+            <AdminFormField label="Genre name" className="admin-taxonomy-toolbar__field">
               <input
-                className="form-check-input"
-                type="checkbox"
-                id="genreActive"
-                checked={newActive}
-                onChange={(e) => setNewActive(e.target.checked)}
+                className="admin-input"
+                value={newName}
+                onChange={(event) => setNewName(event.target.value)}
+                placeholder="Fantasy"
               />
-              <label className="form-check-label" htmlFor="genreActive">
-                Active
-              </label>
-            </div>
+            </AdminFormField>
+
+            <AdminFormField label="Slug" className="admin-taxonomy-toolbar__field">
+              <input
+                className="admin-input"
+                value={newSlug}
+                onChange={(event) => setNewSlug(event.target.value)}
+                placeholder="fantasy"
+              />
+            </AdminFormField>
           </div>
 
-          <div className="col-6 col-md-2 text-end">
-            <button className="btn btn-dark w-100" onClick={create} disabled={creating}>
-              {creating ? "Adding..." : "Add"}
-            </button>
+          <div className="admin-taxonomy-toolbar__actions">
+            <label className="admin-inline-check admin-taxonomy-toolbar__toggle">
+              <input
+                type="checkbox"
+                checked={newActive}
+                onChange={(event) => setNewActive(event.target.checked)}
+              />
+              <span>Active</span>
+            </label>
+
+            <Button
+              onClick={create}
+              disabled={creating}
+              className="admin-taxonomy-toolbar__submit"
+            >
+              {creating ? "Adding..." : "Add genre"}
+            </Button>
           </div>
+        </div>
+
+        <div className="admin-taxonomy-toolbar__search-row">
+          <div className="admin-taxonomy-toolbar__search-wrap">
+          <TextField
+            className="admin-search-field"
+            value={q}
+            onChange={setQ}
+            placeholder="Search name or slug..."
+          />
+          </div>
+          <span className="admin-taxonomy-toolbar__count">
+            {filtered.length} of {items.length}
+          </span>
         </div>
       </div>
 
-      {/* Search */}
-      <div className="d-flex gap-2 mb-2">
-        <input
-          className="form-control"
-          placeholder="Search genres (name or slug)..."
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-        />
-        <div className="text-muted small d-flex align-items-center">
-          {filtered.length} / {items.length}
-        </div>
-      </div>
+      <AdminTable
+        compact
+        columns={[
+          {
+            key: "id",
+            label: "Id",
+            width: 90,
+            render: (genre) => (
+              <span className="admin-row-note">{genre.id ?? genre.Id ?? genre.ID}</span>
+            ),
+          },
+          {
+            key: "name",
+            label: "Genre",
+            render: (genre) =>
+              editingId === (genre.id ?? genre.Id ?? genre.ID) ? (
+                <input
+                  className="admin-input"
+                  value={editName}
+                  onChange={(event) => setEditName(event.target.value)}
+                />
+              ) : (
+                <p className="admin-row-title">{genre.name ?? genre.Name ?? ""}</p>
+              ),
+          },
+          {
+            key: "slug",
+            label: "Slug",
+            render: (genre) =>
+              editingId === (genre.id ?? genre.Id ?? genre.ID) ? (
+                <input
+                  className="admin-input"
+                  value={editSlug}
+                  onChange={(event) => setEditSlug(event.target.value)}
+                />
+              ) : (
+                <span className="admin-row-note">{genre.slug ?? genre.Slug ?? "—"}</span>
+              ),
+          },
+          {
+            key: "active",
+            label: "Active",
+            width: 130,
+            render: (genre) =>
+              editingId === (genre.id ?? genre.Id ?? genre.ID) ? (
+                <label className="admin-inline-check">
+                  <input
+                    type="checkbox"
+                    checked={editActive}
+                    onChange={(event) => setEditActive(event.target.checked)}
+                  />
+                  <span>{editActive ? "Yes" : "No"}</span>
+                </label>
+              ) : (
+                <span
+                  className={`admin-pill ${
+                    (genre.isActive ?? genre.IsActive ?? true)
+                      ? "admin-pill--success"
+                      : "admin-pill--neutral"
+                  }`}
+                >
+                  {(genre.isActive ?? genre.IsActive ?? true) ? "Active" : "Inactive"}
+                </span>
+              ),
+          },
+          {
+            key: "actions",
+            label: "Actions",
+            align: "right",
+            width: 250,
+            render: (genre) => {
+              const id = genre.id ?? genre.Id ?? genre.ID;
 
-      {/* List */}
-      <div className="border rounded overflow-hidden">
-        {loading ? (
-          <div className="p-3 text-muted">Loading...</div>
-        ) : !items.length ? (
-          <div className="p-3 text-muted">No genres yet.</div>
-        ) : (
-          <div className="table-responsive">
-            <table className="table mb-0 align-middle">
-              <thead className="table-light">
-                <tr>
-                  <th style={{ width: 90 }}>ID</th>
-                  <th>Name</th>
-                  <th>Slug</th>
-                  <th style={{ width: 120 }}>Active</th>
-                  <th style={{ width: 260 }} className="text-end">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((g) => {
-                  const id = g.id ?? g.Id ?? g.ID;
-                  const name = g.name ?? g.Name ?? "";
-                  const slug = g.slug ?? g.Slug ?? "";
-                  const active = g.isActive ?? g.IsActive ?? true;
-
-                  const isEditing = editingId === id;
-
-                  return (
-                    <tr key={id}>
-                      <td className="text-muted">{id}</td>
-
-                      <td>
-                        {isEditing ? (
-                          <input
-                            className="form-control"
-                            value={editName}
-                            onChange={(e) => setEditName(e.target.value)}
-                          />
-                        ) : (
-                          <div className="fw-semibold">{name}</div>
-                        )}
-                      </td>
-
-                      <td>
-                        {isEditing ? (
-                          <input
-                            className="form-control"
-                            value={editSlug}
-                            onChange={(e) => setEditSlug(e.target.value)}
-                          />
-                        ) : (
-                          <span className="text-muted">{slug || "—"}</span>
-                        )}
-                      </td>
-
-                      <td>
-                        {isEditing ? (
-                          <input
-                            type="checkbox"
-                            className="form-check-input"
-                            checked={editActive}
-                            onChange={(e) => setEditActive(e.target.checked)}
-                          />
-                        ) : (
-                          <span className={"badge " + (active ? "text-bg-success" : "text-bg-secondary")}>
-                            {active ? "Yes" : "No"}
-                          </span>
-                        )}
-                      </td>
-
-                      <td className="text-end">
-                        {isEditing ? (
-                          <div className="d-flex justify-content-end gap-2">
-                            <button className="btn btn-dark btn-sm" onClick={saveEdit} disabled={saving}>
-                              {saving ? "Saving..." : "Save"}
-                            </button>
-                            <button className="btn btn-outline-secondary btn-sm" onClick={cancelEdit} disabled={saving}>
-                              Cancel
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="d-flex justify-content-end gap-2">
-                            <button className="btn btn-outline-dark btn-sm" onClick={() => startEdit(g)}>
-                              Edit
-                            </button>
-                            <button
-                              className="btn btn-outline-danger btn-sm"
-                              onClick={() => remove(id)}
-                              disabled={deletingId === id}
-                            >
-                              {deletingId === id ? "Deleting..." : "Delete"}
-                            </button>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    </div>
+              return editingId === id ? (
+                <div className="admin-action-row">
+                  <Button variant="outline" size="sm" onClick={cancelEdit} disabled={saving}>
+                    Cancel
+                  </Button>
+                  <Button size="sm" onClick={saveEdit} disabled={saving}>
+                    {saving ? "Saving..." : "Save"}
+                  </Button>
+                </div>
+              ) : (
+                <div className="admin-action-row">
+                  <Button variant="outline" size="sm" onClick={() => startEdit(genre)}>
+                    Edit
+                  </Button>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => remove(id)}
+                    disabled={deletingId === id}
+                  >
+                    {deletingId === id ? "Deleting..." : "Delete"}
+                  </Button>
+                </div>
+              );
+            },
+          },
+        ]}
+        rows={filtered}
+        rowKey={(genre) => genre.id ?? genre.Id ?? genre.ID}
+        emptyTitle="No genres yet"
+        emptySubtitle="Create the first genre to shape your browse lanes."
+      />
+    </AdminSection>
   );
 }

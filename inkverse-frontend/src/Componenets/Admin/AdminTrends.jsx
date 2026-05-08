@@ -1,64 +1,79 @@
 import { useEffect, useMemo, useState } from "react";
-import api from "../../Api/api"; // adjust path if needed
+import api from "../../Api/api";
 import { absUrl } from "../../Utils/absUrl";
+import Button from "../../Shared/ui/Button";
+import TextField from "../../Shared/ui/TextField";
+import LoadingState from "../../Shared/ui/LoadingState";
+import ErrorState from "../../Shared/ui/ErrorState";
+import AdminSection from "../../features/admin/components/AdminSection";
+import AdminTable from "../../features/admin/components/AdminTable";
+import AdminFormField from "../../features/admin/components/AdminFormField";
+
+function sortIndicatorFor(sortBy, sortDir, key) {
+  if (sortBy !== key) return "↕";
+  return sortDir === "asc" ? "↑" : "↓";
+}
+
+function CoverPreview({ src, alt = "" }) {
+  const [failed, setFailed] = useState(false);
+  const resolved = src && !failed ? src : "";
+
+  return (
+    <div className="admin-cover-thumb--wide">
+      {resolved ? (
+        <img src={resolved} alt={alt} onError={() => setFailed(true)} />
+      ) : (
+        <div className="admin-cover-thumb__placeholder">No image</div>
+      )}
+    </div>
+  );
+}
 
 export default function AdminTrends() {
   const API_BASE = "/admin/trends";
 
-
-
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
-
   const [q, setQ] = useState("");
-
-  // sorting
-  const [sortBy, setSortBy] = useState("sortOrder"); // id|name|active|sortOrder
+  const [sortBy, setSortBy] = useState("sortOrder");
   const [sortDir, setSortDir] = useState("asc");
 
-  // create
   const [newName, setNewName] = useState("");
   const [newSlug, setNewSlug] = useState("");
   const [newDesc, setNewDesc] = useState("");
-  const [newImageUrl, setNewImageUrl] = useState(""); // will be set after upload
-  const [newImagePreview, setNewImagePreview] = useState(""); // local preview
+  const [newImageUrl, setNewImageUrl] = useState("");
+  const [newImagePreview, setNewImagePreview] = useState("");
   const [uploadingCreateImg, setUploadingCreateImg] = useState(false);
-
   const [newActive, setNewActive] = useState(true);
   const [newSortOrder, setNewSortOrder] = useState(0);
   const [creating, setCreating] = useState(false);
 
-  // edit
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState("");
   const [editSlug, setEditSlug] = useState("");
   const [editDesc, setEditDesc] = useState("");
-  const [editImageUrl, setEditImageUrl] = useState(""); // set after upload
-  const [editImagePreview, setEditImagePreview] = useState(""); // local preview
+  const [editImageUrl, setEditImageUrl] = useState("");
+  const [editImagePreview, setEditImagePreview] = useState("");
   const [uploadingEditImg, setUploadingEditImg] = useState(false);
-
   const [editActive, setEditActive] = useState(true);
   const [editSortOrder, setEditSortOrder] = useState(0);
   const [saving, setSaving] = useState(false);
 
-  // delete
   const [deletingId, setDeletingId] = useState(null);
-
-  // linked books map: trendId -> [{id, title}]
   const [booksMap, setBooksMap] = useState({});
   const [booksLoadingMap, setBooksLoadingMap] = useState({});
-  const [linkBookIdMap, setLinkBookIdMap] = useState({}); // trendId -> input value
-  const [linkingMap, setLinkingMap] = useState({}); // trendId -> true/false
-  const [unlinkingMap, setUnlinkingMap] = useState({}); // `${trendId}:${bookId}` -> true/false
+  const [linkBookIdMap, setLinkBookIdMap] = useState({});
+  const [linkingMap, setLinkingMap] = useState({});
+  const [unlinkingMap, setUnlinkingMap] = useState({});
 
-  const getId = (t) => t.id ?? t.Id ?? t.ID;
-  const getName = (t) => t.name ?? t.Name ?? "";
-  const getSlug = (t) => t.slug ?? t.Slug ?? "";
-  const getDesc = (t) => t.description ?? t.Description ?? "";
-  const getImageUrl = (t) => t.imageUrl ?? t.ImageUrl ?? "";
-  const getActive = (t) => (t.isActive ?? t.IsActive ?? true) === true;
-  const getSortOrder = (t) => Number(t.sortOrder ?? t.SortOrder ?? 0);
+  const getId = (trend) => trend.id ?? trend.Id ?? trend.ID;
+  const getName = (trend) => trend.name ?? trend.Name ?? "";
+  const getSlug = (trend) => trend.slug ?? trend.Slug ?? "";
+  const getDesc = (trend) => trend.description ?? trend.Description ?? "";
+  const getImageUrl = (trend) => trend.imageUrl ?? trend.ImageUrl ?? "";
+  const getActive = (trend) => (trend.isActive ?? trend.IsActive ?? true) === true;
+  const getSortOrder = (trend) => Number(trend.sortOrder ?? trend.SortOrder ?? 0);
 
   const load = async () => {
     try {
@@ -66,8 +81,8 @@ export default function AdminTrends() {
       setLoading(true);
       const res = await api.get(`${API_BASE}?includeInactive=true`);
       setItems(Array.isArray(res.data) ? res.data : []);
-    } catch (e) {
-      console.error("Load trends failed:", e);
+    } catch (error) {
+      console.error("Load trends failed:", error);
       setItems([]);
       setErr("Failed to load trends.");
     } finally {
@@ -79,12 +94,21 @@ export default function AdminTrends() {
     load();
   }, []);
 
-  // --- upload helper ---
+  useEffect(() => {
+    return () => {
+      if (newImagePreview?.startsWith("blob:")) {
+        URL.revokeObjectURL(newImagePreview);
+      }
+      if (editImagePreview?.startsWith("blob:")) {
+        URL.revokeObjectURL(editImagePreview);
+      }
+    };
+  }, [newImagePreview, editImagePreview]);
+
   const uploadTrendImage = async (file) => {
     const form = new FormData();
     form.append("file", file);
 
-    // backend route: /api/uploads/trends
     const res = await api.post("/uploads/trends", form, {
       headers: { "Content-Type": "multipart/form-data" },
     });
@@ -93,60 +117,56 @@ export default function AdminTrends() {
   };
 
   const onSort = (key) => {
-    setSortBy((prev) => {
-      if (prev !== key) {
+    setSortBy((current) => {
+      if (current !== key) {
         setSortDir("asc");
         return key;
       }
-      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-      return prev;
-    });
-  };
 
-  const sortIndicator = (key) => {
-    if (sortBy !== key) return "↕";
-    return sortDir === "asc" ? "↑" : "↓";
+      setSortDir((value) => (value === "asc" ? "desc" : "asc"));
+      return current;
+    });
   };
 
   const filteredAndSorted = useMemo(() => {
-    const s = q.trim().toLowerCase();
+    const needle = q.trim().toLowerCase();
 
-    let arr = items;
-    if (s) {
-      arr = items.filter((t) => {
-        const name = getName(t).toLowerCase();
-        const slug = getSlug(t).toLowerCase();
-        const desc = getDesc(t).toLowerCase();
-        return name.includes(s) || slug.includes(s) || desc.includes(s);
-      });
-    }
+    const filtered = needle
+      ? items.filter((trend) => {
+          const name = getName(trend).toLowerCase();
+          const slug = getSlug(trend).toLowerCase();
+          const desc = getDesc(trend).toLowerCase();
+          return name.includes(needle) || slug.includes(needle) || desc.includes(needle);
+        })
+      : items;
 
-    const dir = sortDir === "asc" ? 1 : -1;
+    const direction = sortDir === "asc" ? 1 : -1;
 
-    return [...arr].sort((a, b) => {
-      if (sortBy === "id") return (Number(getId(a)) - Number(getId(b))) * dir;
-      if (sortBy === "active") {
-        const av = getActive(a) ? 1 : 0;
-        const bv = getActive(b) ? 1 : 0;
-        return (av - bv) * dir;
+    return [...filtered].sort((left, right) => {
+      if (sortBy === "id") {
+        return (Number(getId(left)) - Number(getId(right))) * direction;
       }
-      if (sortBy === "sortOrder")
-        return (getSortOrder(a) - getSortOrder(b)) * dir;
+      if (sortBy === "active") {
+        return ((getActive(left) ? 1 : 0) - (getActive(right) ? 1 : 0)) * direction;
+      }
+      if (sortBy === "sortOrder") {
+        return (getSortOrder(left) - getSortOrder(right)) * direction;
+      }
 
-      return getName(a).localeCompare(getName(b)) * dir;
+      return getName(left).localeCompare(getName(right)) * direction;
     });
   }, [items, q, sortBy, sortDir]);
 
-  const startEdit = (t) => {
+  const startEdit = (trend) => {
     setErr("");
-    setEditingId(getId(t));
-    setEditName(getName(t));
-    setEditSlug(getSlug(t) || "");
-    setEditDesc(getDesc(t) || "");
-    setEditImageUrl(getImageUrl(t) || "");
-    setEditImagePreview(""); // reset local preview
-    setEditActive(getActive(t));
-    setEditSortOrder(getSortOrder(t));
+    setEditingId(getId(trend));
+    setEditName(getName(trend));
+    setEditSlug(getSlug(trend) || "");
+    setEditDesc(getDesc(trend) || "");
+    setEditImageUrl(getImageUrl(trend) || "");
+    setEditImagePreview("");
+    setEditActive(getActive(trend));
+    setEditSortOrder(getSortOrder(trend));
   };
 
   const cancelEdit = () => {
@@ -162,12 +182,14 @@ export default function AdminTrends() {
 
   const create = async () => {
     const name = newName.trim();
-    if (!name) return setErr("Trend name is required.");
+    if (!name) {
+      setErr("Trend name is required.");
+      return;
+    }
 
     try {
       setCreating(true);
       setErr("");
-
       await api.post(API_BASE, {
         name,
         slug: newSlug.trim() || null,
@@ -184,15 +206,10 @@ export default function AdminTrends() {
       setNewImagePreview("");
       setNewActive(true);
       setNewSortOrder(0);
-
       await load();
-    } catch (e) {
-      console.error("Create trend failed:", e);
-      setErr(
-        e?.response?.data?.message ||
-          e?.response?.data ||
-          "Failed to create trend.",
-      );
+    } catch (error) {
+      console.error("Create trend failed:", error);
+      setErr(error?.response?.data?.message || error?.response?.data || "Failed to create trend.");
     } finally {
       setCreating(false);
     }
@@ -201,63 +218,50 @@ export default function AdminTrends() {
   const saveEdit = async () => {
     const name = editName.trim();
     if (!editingId) return;
-    if (!name) return setErr("Trend name is required.");
+    if (!name) {
+      setErr("Trend name is required.");
+      return;
+    }
 
     try {
       setSaving(true);
       setErr("");
-
       await api.put(`${API_BASE}/${editingId}`, {
         name,
         slug: editSlug.trim() || null,
         description: editDesc.trim() || null,
-        imageUrl: editImageUrl.trim() || null, // comes from upload
+        imageUrl: editImageUrl.trim() || null,
         isActive: editActive,
         sortOrder: Number(editSortOrder || 0),
       });
-
       cancelEdit();
       await load();
-    } catch (e) {
-      console.error("Update trend failed:", e);
-      setErr(
-        e?.response?.data?.message ||
-          e?.response?.data ||
-          "Failed to update trend.",
-      );
+    } catch (error) {
+      console.error("Update trend failed:", error);
+      setErr(error?.response?.data?.message || error?.response?.data || "Failed to update trend.");
     } finally {
       setSaving(false);
     }
   };
 
- 
-
   const remove = async (id) => {
-    const ok = window.confirm(
-      "Delete this trend? (Links to books will be removed too)",
-    );
-    if (!ok) return;
+    if (!window.confirm("Delete this trend? Linked books will be removed too.")) {
+      return;
+    }
 
     try {
       setDeletingId(id);
       setErr("");
-
       await api.delete(`${API_BASE}/${id}`);
-
-      setBooksMap((m) => {
-        const copy = { ...m };
+      setBooksMap((prev) => {
+        const copy = { ...prev };
         delete copy[id];
         return copy;
       });
-
       await load();
-    } catch (e) {
-      console.error("Delete trend failed:", e);
-      setErr(
-        e?.response?.data?.message ||
-          e?.response?.data ||
-          "Failed to delete trend.",
-      );
+    } catch (error) {
+      console.error("Delete trend failed:", error);
+      setErr(error?.response?.data?.message || error?.response?.data || "Failed to delete trend.");
     } finally {
       setDeletingId(null);
     }
@@ -265,54 +269,40 @@ export default function AdminTrends() {
 
   const loadLinkedBooks = async (trendId) => {
     try {
-      setBooksLoadingMap((m) => ({ ...m, [trendId]: true }));
-
-      const res = await api.get(`${API_BASE}/${trendId}/books`, {
-        params: { take: 50 },
-      });
-
-      const list = Array.isArray(res.data) ? res.data : [];
-      const books = list.map((b) => ({
-        id: b.id ?? b.ID,
-        title: b.title ?? b.Title ?? `Book ${b.id ?? b.ID}`,
-        coverImageUrl: b.coverImageUrl ?? b.CoverImageUrl ?? "",
+      setBooksLoadingMap((prev) => ({ ...prev, [trendId]: true }));
+      const res = await api.get(`${API_BASE}/${trendId}/books`, { params: { take: 50 } });
+      const books = (Array.isArray(res.data) ? res.data : []).map((book) => ({
+        id: book.id ?? book.ID,
+        title: book.title ?? book.Title ?? `Book ${book.id ?? book.ID}`,
+        coverImageUrl: book.coverImageUrl ?? book.CoverImageUrl ?? "",
       }));
-
-      setBooksMap((m) => ({ ...m, [trendId]: books }));
-    } catch (e) {
-      console.error("Load linked books failed:", e);
-      setBooksMap((m) => ({ ...m, [trendId]: [] }));
+      setBooksMap((prev) => ({ ...prev, [trendId]: books }));
+    } catch (error) {
+      console.error("Load linked books failed:", error);
+      setBooksMap((prev) => ({ ...prev, [trendId]: [] }));
     } finally {
-      setBooksLoadingMap((m) => ({ ...m, [trendId]: false }));
+      setBooksLoadingMap((prev) => ({ ...prev, [trendId]: false }));
     }
   };
 
   const linkBook = async (trendId) => {
-    const raw = linkBookIdMap[trendId];
-    const bookId = Number(raw);
-
+    const bookId = Number(linkBookIdMap[trendId]);
     if (!bookId || bookId <= 0) {
       setErr("BookId must be a positive number.");
       return;
     }
 
     try {
-      setLinkingMap((m) => ({ ...m, [trendId]: true }));
+      setLinkingMap((prev) => ({ ...prev, [trendId]: true }));
       setErr("");
-
       await api.post(`${API_BASE}/${trendId}/books`, { bookId });
-
-      setLinkBookIdMap((m) => ({ ...m, [trendId]: "" }));
+      setLinkBookIdMap((prev) => ({ ...prev, [trendId]: "" }));
       await loadLinkedBooks(trendId);
-    } catch (e) {
-      console.error("Link book failed:", e);
-      setErr(
-        e?.response?.data ||
-          e?.response?.data?.message ||
-          "Failed to link book.",
-      );
+    } catch (error) {
+      console.error("Link book failed:", error);
+      setErr(error?.response?.data?.message || error?.response?.data || "Failed to link book.");
     } finally {
-      setLinkingMap((m) => ({ ...m, [trendId]: false }));
+      setLinkingMap((prev) => ({ ...prev, [trendId]: false }));
     }
   };
 
@@ -320,126 +310,83 @@ export default function AdminTrends() {
     const key = `${trendId}:${bookId}`;
 
     try {
-      setUnlinkingMap((m) => ({ ...m, [key]: true }));
+      setUnlinkingMap((prev) => ({ ...prev, [key]: true }));
       setErr("");
-
       await api.delete(`${API_BASE}/${trendId}/books/${bookId}`);
       await loadLinkedBooks(trendId);
-    } catch (e) {
-      console.error("Unlink book failed:", e);
-      setErr(
-        e?.response?.data ||
-          e?.response?.data?.message ||
-          "Failed to unlink book.",
-      );
+    } catch (error) {
+      console.error("Unlink book failed:", error);
+      setErr(error?.response?.data?.message || error?.response?.data || "Failed to unlink book.");
     } finally {
-      setUnlinkingMap((m) => ({ ...m, [key]: false }));
+      setUnlinkingMap((prev) => ({ ...prev, [key]: false }));
     }
   };
 
-  // CLEANUP object URLs
-  useEffect(() => {
-    return () => {
-      if (newImagePreview?.startsWith("blob:"))
-        URL.revokeObjectURL(newImagePreview);
-      if (editImagePreview?.startsWith("blob:"))
-        URL.revokeObjectURL(editImagePreview);
-    };
-  }, [newImagePreview, editImagePreview]);
+  if (loading) return <LoadingState text="Loading trends..." />;
+  if (err && !items.length) return <ErrorState title="Cannot load trends" subtitle={err} onRetry={load} />;
 
   return (
-    <div>
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <div>
-          <h3 className="mb-1">Trends</h3>
-          <div className="text-muted small">
-            Create trends, control order, and link/unlink books.
-          </div>
-        </div>
+    <>
+      <AdminSection title="Create trend" flat>
+        {err ? <div className="admin-alert">{String(err)}</div> : null}
 
-        <button
-          className="btn btn-outline-dark"
-          onClick={load}
-          disabled={loading}
-        >
-          Refresh
-        </button>
-      </div>
-
-      {err ? <div className="alert alert-danger">{String(err)}</div> : null}
-
-      {/* Create */}
-      <div className="border rounded p-3 mb-3">
-        <div className="fw-semibold mb-2">Add new trend</div>
-
-        <div className="row g-2">
-          <div className="col-12 col-md-4">
+        <div className="admin-form-grid">
+          <AdminFormField label="Name" className="admin-col-4">
             <input
-              className="form-control"
+              className="admin-input"
               value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              placeholder="Name (e.g. Trending Now)"
+              onChange={(event) => setNewName(event.target.value)}
+              placeholder="Trending now"
             />
-          </div>
+          </AdminFormField>
 
-          <div className="col-12 col-md-4">
+          <AdminFormField label="Slug" className="admin-col-4">
             <input
-              className="form-control"
+              className="admin-input"
               value={newSlug}
-              onChange={(e) => setNewSlug(e.target.value)}
-              placeholder="Slug (optional)"
+              onChange={(event) => setNewSlug(event.target.value)}
+              placeholder="trending-now"
             />
-          </div>
+          </AdminFormField>
 
-          <div className="col-6 col-md-2">
+          <AdminFormField label="Sort order" className="admin-col-2">
             <input
               type="number"
-              className="form-control"
+              className="admin-input"
               value={newSortOrder}
-              onChange={(e) => setNewSortOrder(e.target.value)}
-              placeholder="SortOrder"
+              onChange={(event) => setNewSortOrder(event.target.value)}
             />
-          </div>
+          </AdminFormField>
 
-          <div className="col-6 col-md-2">
-            <div className="form-check mt-2">
+          <div className="admin-col-2 admin-form-actions" style={{ justifyContent: "flex-start", alignItems: "flex-end" }}>
+            <label className="admin-inline-check">
               <input
-                className="form-check-input"
                 type="checkbox"
-                id="trendActive"
                 checked={newActive}
-                onChange={(e) => setNewActive(e.target.checked)}
+                onChange={(event) => setNewActive(event.target.checked)}
               />
-              <label className="form-check-label" htmlFor="trendActive">
-                Active
-              </label>
-            </div>
+              <span>Active</span>
+            </label>
           </div>
 
-          {/* IMAGE UPLOAD (Create) */}
-          <div className="col-12 col-md-6">
-            <label className="form-label small text-muted mb-1">
-              Trend image
-            </label>
+          <AdminFormField label="Trend image" className="admin-col-6">
             <input
               type="file"
-              className="form-control"
+              className="admin-input"
               accept="image/*"
-              onChange={async (e) => {
-                const file = e.target.files?.[0];
+              onChange={async (event) => {
+                const file = event.target.files?.[0];
                 if (!file) return;
 
-                // local preview first
-                const localUrl = URL.createObjectURL(file);
-                setNewImagePreview(localUrl);
+                setNewImagePreview(URL.createObjectURL(file));
 
                 try {
                   setUploadingCreateImg(true);
                   setErr("");
                   const url = await uploadTrendImage(file);
                   setNewImageUrl(url);
-                } catch (ex) {
-                  console.error(ex);
+                } catch (error) {
+                  console.error(error);
                   setErr("Image upload failed.");
                   setNewImageUrl("");
                 } finally {
@@ -447,446 +394,297 @@ export default function AdminTrends() {
                 }
               }}
             />
+          </AdminFormField>
 
-            {/* preview */}
-            {absUrl(newImageUrl) && (
-              <div className="mt-2 d-flex align-items-center gap-2">
-                <img
-                  src={newImagePreview || absUrl(newImageUrl)}
-                  alt=""
-                  className="rounded border"
-                  style={{ width: 160, height: 80, objectFit: "cover" }}
-                  onError={(e) => (e.currentTarget.style.display = "none")}
-                />
-                <div
-                  className="small text-muted text-truncate"
-                  style={{ maxWidth: 360 }}
-                >
-                  {absUrl(newImageUrl)
-                    ? `Saved: ${absUrl(newImageUrl)}`
-                    : "Uploading..."}
-                </div>
-              </div>
-            )}
+          <div className="admin-col-6 admin-preview-stack">
+            <CoverPreview src={newImagePreview || absUrl(newImageUrl)} alt={newName || "Trend preview"} />
+            <span className="admin-row-note">
+              {newImageUrl ? `Saved: ${absUrl(newImageUrl)}` : "Upload an image for the trend card."}
+            </span>
           </div>
 
-          {/* Description (Create) */}
-          <div className="col-12">
+          <AdminFormField label="Description" className="admin-col-12">
             <textarea
-              className="form-control"
+              className="admin-textarea"
+              rows={3}
               value={newDesc}
-              onChange={(e) => setNewDesc(e.target.value)}
-              placeholder="Description (optional)"
-              rows={2}
+              onChange={(event) => setNewDesc(event.target.value)}
+              placeholder="Short summary for the trend."
+            />
+          </AdminFormField>
+
+          <div className="admin-col-12 admin-form-actions">
+            <Button onClick={create} disabled={creating || uploadingCreateImg}>
+              {creating ? "Adding..." : "Add trend"}
+            </Button>
+          </div>
+        </div>
+      </AdminSection>
+
+      <AdminSection title="Trend list" flat>
+        <div className="admin-toolbar">
+          <div className="admin-toolbar__group admin-toolbar__group--grow">
+            <TextField
+              className="admin-search-field"
+              value={q}
+              onChange={setQ}
+              placeholder="Search by name, slug, or description..."
             />
           </div>
-
-          <div className="col-12 text-end">
-            <button
-              className="btn btn-dark"
-              onClick={create}
-              disabled={creating || uploadingCreateImg}
-            >
-              {creating ? "Adding..." : "Add Trend"}
-            </button>
-          </div>
+          <span className="admin-page-note">
+            {filteredAndSorted.length} of {items.length}
+          </span>
         </div>
-      </div>
 
-      {/* Search */}
-      <div className="d-flex gap-2 mb-2">
-        <input
-          className="form-control"
-          placeholder="Search trends (name / slug / description)..."
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-        />
-        <div className="text-muted small d-flex align-items-center">
-          {filteredAndSorted.length} / {items.length}
-        </div>
-      </div>
+        <AdminTable
+          columns={[
+            {
+              key: "trend",
+              label: "Trend",
+              onHeaderClick: () => onSort("name"),
+              sortIndicator: sortIndicatorFor(sortBy, sortDir, "name"),
+              render: (trend) => {
+                const id = getId(trend);
+                const isEditing = editingId === id;
 
-      {/* List */}
-      <div className="border rounded overflow-hidden">
-        {loading ? (
-          <div className="p-3 text-muted">Loading...</div>
-        ) : !items.length ? (
-          <div className="p-3 text-muted">No trends yet.</div>
-        ) : (
-          <div className="table-responsive">
-            <table className="table mb-0 align-middle">
-              <thead className="table-light">
-                <tr>
-                  <th
-                    style={{ width: 90, cursor: "pointer" }}
-                    onClick={() => onSort("id")}
+                return isEditing ? (
+                  <div className="admin-simple-stack">
+                    <input
+                      className="admin-input"
+                      value={editName}
+                      onChange={(event) => setEditName(event.target.value)}
+                      placeholder="Trend name"
+                    />
+                    <input
+                      className="admin-input"
+                      value={editSlug}
+                      onChange={(event) => setEditSlug(event.target.value)}
+                      placeholder="Slug"
+                    />
+                    <textarea
+                      className="admin-textarea"
+                      rows={3}
+                      value={editDesc}
+                      onChange={(event) => setEditDesc(event.target.value)}
+                      placeholder="Description"
+                    />
+                    <input
+                      type="file"
+                      className="admin-input"
+                      accept="image/*"
+                      disabled={uploadingEditImg}
+                      onChange={async (event) => {
+                        const file = event.target.files?.[0];
+                        if (!file) return;
+
+                        setEditImagePreview(URL.createObjectURL(file));
+
+                        try {
+                          setUploadingEditImg(true);
+                          setErr("");
+                          const url = await uploadTrendImage(file);
+                          setEditImageUrl(url);
+                        } catch (error) {
+                          console.error(error);
+                          setErr("Image upload failed.");
+                        } finally {
+                          setUploadingEditImg(false);
+                        }
+                      }}
+                    />
+                    <CoverPreview
+                      src={editImagePreview || absUrl(editImageUrl)}
+                      alt={editName || "Trend preview"}
+                    />
+                  </div>
+                ) : (
+                  <div className="admin-simple-stack">
+                    <CoverPreview src={absUrl(getImageUrl(trend))} alt={getName(trend)} />
+                    <p className="admin-row-title">{getName(trend)}</p>
+                    <p className="admin-row-note">{getSlug(trend) || "No slug"}</p>
+                    <p className="admin-row-subtitle admin-clamp-3">
+                      {getDesc(trend) || "No description yet."}
+                    </p>
+                  </div>
+                );
+              },
+            },
+            {
+              key: "active",
+              label: "Visibility",
+              width: 150,
+              onHeaderClick: () => onSort("active"),
+              sortIndicator: sortIndicatorFor(sortBy, sortDir, "active"),
+              render: (trend) => {
+                const id = getId(trend);
+
+                return editingId === id ? (
+                  <label className="admin-inline-check">
+                    <input
+                      type="checkbox"
+                      checked={editActive}
+                      onChange={(event) => setEditActive(event.target.checked)}
+                    />
+                    <span>{editActive ? "Active" : "Inactive"}</span>
+                  </label>
+                ) : (
+                  <span
+                    className={`admin-pill ${
+                      getActive(trend) ? "admin-pill--success" : "admin-pill--neutral"
+                    }`}
                   >
-                    ID <span className="text-muted">{sortIndicator("id")}</span>
-                  </th>
-                  <th
-                    style={{ cursor: "pointer" }}
-                    onClick={() => onSort("name")}
-                  >
-                    Name{" "}
-                    <span className="text-muted">{sortIndicator("name")}</span>
-                  </th>
-                  <th
-                    style={{ width: 120, cursor: "pointer" }}
-                    onClick={() => onSort("active")}
-                  >
-                    Active{" "}
-                    <span className="text-muted">
-                      {sortIndicator("active")}
-                    </span>
-                  </th>
-                  <th
-                    style={{ width: 140, cursor: "pointer" }}
-                    onClick={() => onSort("sortOrder")}
-                  >
-                    SortOrder{" "}
-                    <span className="text-muted">
-                      {sortIndicator("sortOrder")}
-                    </span>
-                  </th>
-                  <th>Description</th>
-                  <th style={{ width: 160 }} className="text-end">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
+                    {getActive(trend) ? "Active" : "Inactive"}
+                  </span>
+                );
+              },
+            },
+            {
+              key: "sortOrder",
+              label: "Order",
+              width: 140,
+              onHeaderClick: () => onSort("sortOrder"),
+              sortIndicator: sortIndicatorFor(sortBy, sortDir, "sortOrder"),
+              render: (trend) => {
+                const id = getId(trend);
 
-              <tbody>
-                {filteredAndSorted.map((t) => {
-                  const id = getId(t);
-                  const name = getName(t);
-                  const active = getActive(t);
-                  const sortOrder = getSortOrder(t);
-                  const desc = getDesc(t);
-                  const imageUrl = getImageUrl(t);
+                return editingId === id ? (
+                  <input
+                    type="number"
+                    className="admin-input"
+                    value={editSortOrder}
+                    onChange={(event) => setEditSortOrder(event.target.value)}
+                  />
+                ) : (
+                  <span className="admin-row-note">{getSortOrder(trend)}</span>
+                );
+              },
+            },
+            {
+              key: "linkedBooks",
+              label: "Linked books",
+              render: (trend) => {
+                const id = getId(trend);
+                const linked = booksMap[id];
+                const booksLoading = booksLoadingMap[id] === true;
 
-                  const isEditing = editingId === id;
+                return (
+                  <div className="admin-simple-stack">
+                    <div className="admin-inline-actions">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => loadLinkedBooks(id)}
+                        disabled={booksLoading}
+                      >
+                        {booksLoading ? "Loading..." : linked ? "Reload books" : "Load books"}
+                      </Button>
+                    </div>
 
-                  const linked = booksMap[id];
-                  const booksLoading = booksLoadingMap[id] === true;
+                    {linked ? (
+                      linked.length ? (
+                        <div className="admin-linked-list">
+                          {linked.map((book) => {
+                            const key = `${id}:${book.id}`;
+                            const busy = unlinkingMap[key] === true;
 
-                  return (
-                    <tr key={id}>
-                      <td className="text-muted">{id}</td>
-
-                      <td>
-                        {isEditing ? (
-                          <div className="d-flex flex-column gap-2">
-                            <input
-                              className="form-control"
-                              value={editName}
-                              onChange={(e) => setEditName(e.target.value)}
-                            />
-                            <input
-                              className="form-control"
-                              value={editSlug}
-                              onChange={(e) => setEditSlug(e.target.value)}
-                              placeholder="Slug"
-                            />
-
-                            {/* IMAGE UPLOAD (Edit) */}
-                            <div>
-                              <input
-                                type="file"
-                                className="form-control"
-                                accept="image/*"
-                                disabled={uploadingEditImg}
-                                onChange={async (e) => {
-                                  const file = e.target.files?.[0];
-                                  if (!file) return;
-
-                                  const localUrl = URL.createObjectURL(file);
-                                  setEditImagePreview(localUrl);
-
-                                  try {
-                                    setUploadingEditImg(true);
-                                    setErr("");
-                                    const url = await uploadTrendImage(file);
-                                    setEditImageUrl(url);
-                                  } catch (ex) {
-                                    console.error(ex);
-                                    setErr("Image upload failed (edit).");
-                                  } finally {
-                                    setUploadingEditImg(false);
-                                  }
-                                }}
-                              />
-
-                              {(editImagePreview || editImageUrl) && (
-                                <div className="mt-2 d-flex align-items-center gap-2">
+                            return (
+                              <div key={book.id} className="admin-linked-item">
+                                {book.coverImageUrl ? (
                                   <img
-                                    src={editImagePreview || editImageUrl}
+                                    className="admin-linked-cover"
+                                    src={absUrl(book.coverImageUrl)}
                                     alt=""
-                                    className="rounded border"
-                                    style={{
-                                      width: 160,
-                                      height: 80,
-                                      objectFit: "cover",
+                                    onError={(event) => {
+                                      event.currentTarget.style.display = "none";
                                     }}
-                                    onError={(e) =>
-                                      (e.currentTarget.style.display = "none")
-                                    }
                                   />
-                                  <div
-                                    className="small text-muted text-truncate"
-                                    style={{ maxWidth: 260 }}
-                                  >
-                                    {editImageUrl
-                                      ? `Saved: ${editImageUrl}`
-                                      : "Uploading..."}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ) : (
-                          <div>
-                            <div className="fw-semibold">{name}</div>
-                            <div className="text-muted small">
-                              {getSlug(t) || "—"}
-                            </div>
-                            {imageUrl ? (
-                              <img
-                                src={absUrl(imageUrl)}
-                                alt=""
-                                className="mt-2 rounded border"
-                                style={{
-                                  width: 160,
-                                  height: 80,
-                                  objectFit: "cover",
-                                }}
-                                onError={(e) =>
-                                  (e.currentTarget.style.display = "none")
-                                }
-                              />
-                            ) : (
-                              <div className="small text-muted mt-1">
-                                No image
+                                ) : null}
+                                <span className="admin-linked-title admin-clamp-2">{book.title}</span>
+                                <Button
+                                  variant="danger"
+                                  size="sm"
+                                  onClick={() => unlinkBook(id, book.id)}
+                                  disabled={busy}
+                                >
+                                  {busy ? "..." : "Unlink"}
+                                </Button>
                               </div>
-                            )}
-                          </div>
-                        )}
-                      </td>
-
-                      <td>
-                        {isEditing ? (
-                          <input
-                            type="checkbox"
-                            className="form-check-input"
-                            checked={editActive}
-                            onChange={(e) => setEditActive(e.target.checked)}
-                          />
-                        ) : (
-                          <span
-                            className={
-                              "badge " +
-                              (active ? "text-bg-success" : "text-bg-secondary")
-                            }
-                          >
-                            {active ? "Yes" : "No"}
-                          </span>
-                        )}
-                      </td>
-
-                      <td>
-                        {isEditing ? (
-                          <input
-                            type="number"
-                            className="form-control"
-                            value={editSortOrder}
-                            onChange={(e) => setEditSortOrder(e.target.value)}
-                          />
-                        ) : (
-                          <span className="text-muted">{sortOrder}</span>
-                        )}
-                      </td>
-
-                      <td>
-                        {isEditing ? (
-                          <textarea
-                            className="form-control"
-                            value={editDesc}
-                            onChange={(e) => setEditDesc(e.target.value)}
-                            rows={2}
-                          />
-                        ) : (
-                          <div
-                            style={{
-                              maxWidth: 520,
-                              overflow: "hidden",
-                              display: "-webkit-box",
-                              WebkitLineClamp: 2,
-                              WebkitBoxOrient: "vertical",
-                              wordBreak: "break-word",
-                            }}
-                            title={desc || ""}
-                          >
-                            {desc || "—"}
-                          </div>
-                        )}
-
-                        {/* Linked books panel */}
-                        <div className="mt-2 border rounded p-2">
-                          <div className="d-flex justify-content-between align-items-center">
-                            <div className="fw-semibold small">
-                              Linked Books
-                            </div>
-                            <button
-                              className="btn btn-sm btn-outline-dark"
-                              type="button"
-                              onClick={() => loadLinkedBooks(id)}
-                              disabled={booksLoading}
-                            >
-                              {booksLoading
-                                ? "Loading..."
-                                : linked
-                                  ? "Reload"
-                                  : "Load"}
-                            </button>
-                          </div>
-
-                          {linked ? (
-                            linked.length ? (
-                              <div className="d-flex flex-wrap gap-2 mt-2">
-                                {linked.map((book) => {
-                                  const key = `${id}:${book.id}`;
-                                  const busy = unlinkingMap[key] === true;
-
-                                  return (
-                                    <div
-                                      key={book.id}
-                                      className="d-flex align-items-center gap-2 border rounded px-2 py-1"
-                                      style={{ maxWidth: 320 }}
-                                    >
-                                      {book.coverImageUrl ? (
-                                        <img
-                                          src={book.coverImageUrl}
-                                          alt=""
-                                          style={{
-                                            width: 34,
-                                            height: 46,
-                                            objectFit: "cover",
-                                            borderRadius: 6,
-                                          }}
-                                          onError={(e) =>
-                                            (e.currentTarget.style.display =
-                                              "none")
-                                          }
-                                        />
-                                      ) : null}
-
-                                      <div
-                                        className="small text-truncate"
-                                        title={book.title}
-                                        style={{ flex: 1 }}
-                                      >
-                                        {book.title}
-                                      </div>
-
-                                      <button
-                                        type="button"
-                                        className="btn btn-sm btn-outline-danger"
-                                        style={{
-                                          padding: "0 6px",
-                                          lineHeight: 1.2,
-                                        }}
-                                        onClick={() => unlinkBook(id, book.id)}
-                                        disabled={busy}
-                                        title="Unlink"
-                                      >
-                                        {busy ? "..." : "×"}
-                                      </button>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            ) : (
-                              <div className="text-muted small mt-2">
-                                No linked books.
-                              </div>
-                            )
-                          ) : (
-                            <div className="text-muted small mt-2">
-                              Click Load to show linked books.
-                            </div>
-                          )}
-
-                          <div className="d-flex gap-2 mt-2">
-                            <input
-                              className="form-control form-control-sm"
-                              placeholder="BookId"
-                              value={linkBookIdMap[id] ?? ""}
-                              onChange={(e) =>
-                                setLinkBookIdMap((m) => ({
-                                  ...m,
-                                  [id]: e.target.value,
-                                }))
-                              }
-                            />
-                            <button
-                              className="btn btn-sm btn-dark"
-                              type="button"
-                              onClick={() => linkBook(id)}
-                              disabled={linkingMap[id] === true}
-                            >
-                              {linkingMap[id] === true ? "Linking..." : "Link"}
-                            </button>
-                          </div>
+                            );
+                          })}
                         </div>
-                      </td>
+                      ) : (
+                        <span className="admin-row-note">No linked books yet.</span>
+                      )
+                    ) : (
+                      <span className="admin-row-note">Load the list to see connected books.</span>
+                    )}
 
-                      <td className="text-end">
-                        {isEditing ? (
-                          <div className="d-flex justify-content-end gap-2">
-                            <button
-                              className="btn btn-dark btn-sm"
-                              onClick={saveEdit}
-                              disabled={saving || uploadingEditImg}
-                            >
-                              {saving ? "Saving..." : "Save"}
-                            </button>
-                            <button
-                              className="btn btn-outline-secondary btn-sm"
-                              onClick={cancelEdit}
-                              disabled={saving}
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="d-flex justify-content-end gap-2">
-                            <button
-                              className="btn btn-outline-dark btn-sm"
-                              onClick={() => startEdit(t)}
-                            >
-                              Edit
-                            </button>
-                            <button
-                              className="btn btn-outline-danger btn-sm"
-                              onClick={() => remove(id)}
-                              disabled={deletingId === id}
-                            >
-                              {deletingId === id ? "Deleting..." : "Delete"}
-                            </button>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                    <div className="admin-linked-actions">
+                      <input
+                        className="admin-input"
+                        placeholder="BookId"
+                        value={linkBookIdMap[id] ?? ""}
+                        onChange={(event) =>
+                          setLinkBookIdMap((prev) => ({
+                            ...prev,
+                            [id]: event.target.value,
+                          }))
+                        }
+                      />
+                      <Button
+                        size="sm"
+                        onClick={() => linkBook(id)}
+                        disabled={linkingMap[id] === true}
+                      >
+                        {linkingMap[id] === true ? "Linking..." : "Link book"}
+                      </Button>
+                    </div>
+                  </div>
+                );
+              },
+            },
+            {
+              key: "actions",
+              label: "Actions",
+              align: "right",
+              width: 230,
+              render: (trend) => {
+                const id = getId(trend);
+                const isEditing = editingId === id;
 
-            <div className="p-2 text-muted small border-top">
-              Tip: click headers (ID / Name / Active / SortOrder) to sort.
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+                return isEditing ? (
+                  <div className="admin-action-row">
+                    <Button variant="outline" size="sm" onClick={cancelEdit} disabled={saving}>
+                      Cancel
+                    </Button>
+                    <Button size="sm" onClick={saveEdit} disabled={saving || uploadingEditImg}>
+                      {saving ? "Saving..." : "Save"}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="admin-action-row">
+                    <Button variant="outline" size="sm" onClick={() => startEdit(trend)}>
+                      Edit
+                    </Button>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => remove(id)}
+                      disabled={deletingId === id}
+                    >
+                      {deletingId === id ? "Deleting..." : "Delete"}
+                    </Button>
+                  </div>
+                );
+              },
+            },
+          ]}
+          rows={filteredAndSorted}
+          rowKey={(trend) => getId(trend)}
+          emptyTitle="No trends yet"
+          emptySubtitle="Create a trend to curate books on the public page."
+        />
+      </AdminSection>
+    </>
   );
 }

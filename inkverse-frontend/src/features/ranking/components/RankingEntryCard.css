@@ -1,0 +1,304 @@
+.iv-ranking-entry {
+  --iv-ranking-cover-min: 116px;
+  --iv-ranking-cover-max: 132px;
+  --iv-ranking-cover-size: clamp(
+    var(--iv-ranking-cover-min),
+    16vw,
+    var(--iv-ranking-cover-max)
+  );
+
+  display: grid;
+  grid-template-columns: 74px var(--iv-ranking-cover-size) minmax(0, 1fr);
+  gap: 18px;
+  align-items: stretch;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  transition: transform 180ms ease;
+}
+
+.iv-ranking-entry:hover {
+  transform: translateY(-2px);
+}
+
+.iv-ranking-entry__rankRail {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.iv-ranking-entry__rankLabel {
+  color: #7d88a5;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.iv-ranking-entry__rankNumber {
+  color: #182341;
+  font-size: 2rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.iv-ranking-entry--gold .iv-ranking-entry__rankNumber {
+  color: #c58a12;
+}
+
+.iv-ranking-entry--silver .iv-ranking-entry__rankNumber {
+  color: #6f7f96;
+}
+
+.iv-ranking-entry--bronze .iv-ranking-entry__rankNumber {
+  color: #b46b36;
+}
+
+.iv-ranking-entry__cover {
+  width: var(--iv-ranking-cover-size);
+  min-width: var(--iv-ranking-cover-min);
+  max-width: var(--iv-ranking-cover-max);
+  aspect-ratio: 3 / 4;
+  border-radius: 22px;
+  overflow: hidden;
+  display: block;
+  text-decoration: none;
+  background: linear-gradient(180deg, rgba(232, 238, 255, 0.82), rgba(219, 228, 255, 0.96));
+  box-shadow: 0 14px 28px rgba(21, 31, 64, 0.1);
+}
+
+.iv-ranking-entry__cover .iv-cover {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.iv-ranking-entry__cover .iv-cover,
+.iv-ranking-entry__cover .iv-cover__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.iv-ranking-entry__body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.iv-ranking-entry__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.iv-ranking-entry__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.iv-ranking-entry__pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.iv-ranking-entry__pill--verse {
+  background: rgba(74, 91, 238, 0.08);
+  color: #4958da;
+}
+
+.iv-ranking-entry__pill--status {
+  background: rgba(21, 32, 68, 0.06);
+  color: #637091;
+}
+
+.iv-ranking-entry__title {
+  color: #111827;
+  text-decoration: none;
+  font-size: 1.2rem;
+  font-weight: 800;
+  line-height: 1.22;
+}
+
+.iv-ranking-entry__title:hover {
+  color: #4756dc;
+}
+
+.iv-ranking-entry__author {
+  color: #6d7894;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.iv-ranking-entry__author span {
+  color: #34415f;
+  font-weight: 700;
+}
+
+.iv-ranking-entry__origin {
+  color: #8894af;
+  font-style: normal;
+}
+
+.iv-ranking-entry__desc {
+  margin: 0;
+  color: #56627f;
+  font-size: 0.94rem;
+  line-height: 1.62;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.iv-ranking-entry__footer {
+  margin-top: auto;
+  display: grid;
+  gap: 12px;
+}
+
+.iv-ranking-entry__metric {
+  display: grid;
+  gap: 4px;
+}
+
+.iv-ranking-entry__metricLabel {
+  color: #7d88a5;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.iv-ranking-entry__metricValue {
+  color: #182341;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.iv-ranking-entry__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: #66748f;
+  font-size: 0.86rem;
+}
+
+.iv-ranking-entry__statHighlight {
+  color: #111827;
+  font-weight: 800;
+}
+
+.iv-ranking-entry__bookmark {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border: 0;
+  border-radius: 14px;
+  background: rgba(237, 242, 255, 0.88);
+  color: #4560e1;
+  font-size: 1rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78);
+  transition: transform 160ms ease, background-color 160ms ease;
+}
+
+.iv-ranking-entry__bookmark:hover {
+  transform: translateY(-1px);
+  background: rgba(221, 230, 255, 0.96);
+}
+
+.iv-ranking-entry__cta {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(74, 91, 238, 0.1), rgba(116, 73, 245, 0.12));
+  color: #4957db;
+  text-decoration: none;
+  font-size: 0.84rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.iv-ranking-entry__cta:hover {
+  color: #3646c9;
+  text-decoration: none;
+}
+
+.iv-ranking-entry.is-featured {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  padding: 0;
+}
+
+.iv-ranking-entry.is-featured .iv-ranking-entry__rankRail {
+  grid-auto-flow: column;
+  justify-content: space-between;
+  align-items: end;
+}
+
+.iv-ranking-entry.is-featured .iv-ranking-entry__rankNumber {
+  font-size: 2.5rem;
+}
+
+.iv-ranking-entry.is-featured .iv-ranking-entry__cover {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+}
+
+.iv-ranking-entry.is-featured .iv-ranking-entry__title {
+  font-size: 1.28rem;
+}
+
+@media (max-width: 900px) {
+  .iv-ranking-entry {
+    grid-template-columns: 62px 110px minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .iv-ranking-entry__rankNumber {
+    font-size: 1.72rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .iv-ranking-entry {
+    grid-template-columns: 1fr;
+  }
+
+  .iv-ranking-entry__rankRail {
+    grid-auto-flow: column;
+    justify-content: space-between;
+    align-items: end;
+  }
+
+  .iv-ranking-entry__cover {
+    width: min(180px, 100%);
+    min-width: 0;
+    max-width: 180px;
+  }
+
+  .iv-ranking-entry__footer {
+    align-items: start;
+  }
+}

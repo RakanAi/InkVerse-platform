@@ -1,113 +1,52 @@
 import { Link } from "react-router-dom";
 import "./BrowseBookCard.css";
-// import { absUrl } from "../../../Utils/absUrl";
 import BookCover from "@/Shared/books/BookCover/BookCover";
 import { getBookCoverSrc } from "@/domain/books/book-cover";
 
 function formatNumber(n) {
-  const x = Number(n || 0);
-  if (x >= 1_000_000)
-    return (x / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
-  if (x >= 1_000) return (x / 1_000).toFixed(1).replace(/\.0$/, "") + "K";
-  return String(x);
+  const value = Number(n || 0);
+
+  if (value >= 1_000_000) {
+    return `${(value / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
+  }
+
+  if (value >= 1_000) {
+    return `${(value / 1_000).toFixed(1).replace(/\.0$/, "")}K`;
+  }
+
+  return String(value);
 }
 
 export default function BrowseBookCard({
   book,
   isBookmarked,
   onToggleBookmark,
-  onPickTag,
-  onPickGenre,
 }) {
-  const bookUrl = `/book/${book.id}`; // ✅ adjust if your route is /book/:id
+  const id = book.id ?? book.Id;
+  const title = book.title ?? book.Title ?? "Untitled";
+  const authorName = book.authorName ?? book.AuthorName ?? "Unknown";
+  const description = book.description ?? book.Description ?? "No description yet.";
+  const status = book.status ?? book.Status ?? "";
+  const verseType = book.verseType ?? book.VerseType ?? "Verse";
+  const originType = book.originType ?? book.OriginType ?? "";
+  const rating = Number(
+    book.averageRating ?? book.rating ?? book.AverageRating ?? book.Rating ?? 0,
+  ).toFixed(2);
+  const reviewsCount = formatNumber(book.reviewsCount ?? book.ReviewsCount ?? 0);
+  const chaptersCount = formatNumber(book.chaptersCount ?? book.ChaptersCount ?? 0);
+  const bookUrl = `/book/${id}`;
 
   return (
-    <div
-      className={`iv-browse-card iv-status-${book.status?.toLowerCase() || "none"} d-flex align-items-stretch gap-2 shadow-sm rounded-4 p-2`}
-    >
-      {" "}
-      {/* ✅ Clicking cover navigates */}
+    <article className={`iv-browse-card iv-status-${status.toLowerCase() || "none"}`}>
       <Link to={bookUrl} className="iv-browse-cover">
-  <BookCover
-    variant="fill"
-    src={getBookCoverSrc(book)}
-    alt={book.title}
-  />
-</Link>
-      <div className="iv-browse-body ">
-        <div className="iv-browse-tags">
-          {(book.tags || []).slice(0, 3).map((name) => (
-            <span
-              key={`t-${name}`}
-              type="button"
-              className="iv-browse-tag"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onPickTag?.(name);
-              }}
-            >
-              #{name}
-            </span>
-          ))}
-          {(book.genres || []).slice(0, 2).map((name) => (
-            <span
-              key={`g-${name}`}
-              type="button"
-              className="iv-browse-genre"
-              onClick={(e) => {
-                e.preventDefault();
-                onPickGenre?.(name);
-              }}
-            >
-              #{name}
-            </span>
-          ))}
-        </div>
+        <BookCover variant="fill" src={getBookCoverSrc(book)} alt={title} />
+      </Link>
 
-        {/* ✅ Clicking title navigates */}
-        <Link
-          to={bookUrl}
-          className="iv-browse-title text-start"
-          title={book.title}
-        >
-          {book.title}
-        </Link>
-        <div className="iv-browse-author text-start">
-          by <span>{book.authorName || "Unknown"}</span>
-        </div>
-
-        <div
-          className="iv-browse-desc text-start"
-          title={book.description || ""}
-        >
-          {book.description || "No description yet."}
-        </div>
-
-        <div className="iv-browse-meta">
-          <div className="iv-browse-leftmeta">
-            <span className="iv-browse-star">★</span>
-            <span className="iv-browse-rating">
-              {Number(
-                book.averageRating ??
-                  book.rating ??
-                  book.AverageRating ??
-                  book.Rating ??
-                  0,
-              ).toFixed(2)}
-            </span>
-
-            <span className="iv-browse-dot">•</span>
-            <span className="iv-browse-icon">💬</span>
-            <span className="iv-browse-chapters">
-              {formatNumber(book.reviewsCount ?? 0)} Reviews
-            </span>
-
-            <span className="iv-browse-dot">•</span>
-            <span className="iv-browse-icon">📚</span>
-            <span className="iv-browse-chapters">
-              {formatNumber(book.chaptersCount ?? 0)} Chapters
-            </span>
+      <div className="iv-browse-body">
+        <div className="iv-browse-head">
+          <div className="iv-browse-head__meta">
+            <span className="iv-browse-kicker">{verseType}</span>
+            {status ? <span className="iv-browse-status">{status}</span> : null}
           </div>
 
           <button
@@ -116,12 +55,38 @@ export default function BrowseBookCard({
             onClick={() => onToggleBookmark?.(book)}
             title={isBookmarked ? "Remove from bookmarks" : "Add to bookmarks"}
           >
-            <i
-              className={`bi ${isBookmarked ? "bi-bookmark-fill" : "bi-bookmark"}`}
-            />
+            <i className={`bi ${isBookmarked ? "bi-bookmark-fill" : "bi-bookmark"}`} />
           </button>
         </div>
+
+        <Link to={bookUrl} className="iv-browse-title" title={title}>
+          {title}
+        </Link>
+
+        <div className="iv-browse-author">
+          by <span>{authorName}</span>
+          {originType ? <em className="iv-browse-origin"> · {originType}</em> : null}
+        </div>
+
+        <p className="iv-browse-desc" title={description}>
+          {description}
+        </p>
+
+        <div className="iv-browse-meta">
+          <div className="iv-browse-leftmeta">
+            <span className="iv-browse-star">★</span>
+            <span className="iv-browse-rating">{rating}</span>
+            <span className="iv-browse-dot">•</span>
+            <span className="iv-browse-metric">{reviewsCount} reviews</span>
+            <span className="iv-browse-dot">•</span>
+            <span className="iv-browse-metric">{chaptersCount} chapters</span>
+          </div>
+
+          <Link to={bookUrl} className="iv-browse-open">
+            Open story
+          </Link>
+        </div>
       </div>
-    </div>
+    </article>
   );
 }

@@ -1,0 +1,302 @@
+.iv-trend-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #f6f8ff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.iv-trend-badge--ghost {
+  background: rgba(17, 24, 39, 0.22);
+  color: rgba(245, 247, 255, 0.82);
+}
+
+.iv-trend-badge--soft {
+  background: rgba(93, 109, 208, 0.1);
+  border-color: rgba(93, 109, 208, 0.14);
+  color: #5360d5;
+}
+
+.iv-trend-fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.36), transparent 34%),
+    radial-gradient(circle at 82% 18%, rgba(59, 130, 246, 0.26), transparent 28%),
+    linear-gradient(145deg, #141b34, #1c2551 55%, #25377d);
+}
+
+.iv-trend-fallback span {
+  display: inline-grid;
+  place-items: center;
+  width: 84px;
+  height: 84px;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+
+.iv-trend-fallback--soft {
+  position: static;
+  min-height: 100%;
+}
+
+.iv-trend-fallback--soft span {
+  width: 72px;
+  height: 72px;
+  border-radius: 24px;
+}
+
+.iv-trend-spotlight {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  align-items: end;
+  min-height: 420px;
+  padding: 28px;
+  border-radius: 34px;
+  background:
+    linear-gradient(180deg, rgba(12, 16, 32, 0.1), rgba(11, 16, 35, 0.1)),
+    #151d38;
+  box-shadow: 0 24px 54px rgba(18, 27, 60, 0.16);
+  text-decoration: none;
+  isolation: isolate;
+}
+
+.iv-trend-spotlight.is-compact {
+  min-height: 201px;
+  padding: 24px;
+}
+
+.iv-trend-spotlight__media,
+.iv-trend-spotlight__shade,
+.iv-trend-spotlight__image {
+  position: absolute;
+  inset: 0;
+}
+
+.iv-trend-spotlight__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.iv-trend-spotlight__shade {
+  background:
+    linear-gradient(180deg, rgba(11, 15, 31, 0.08) 0%, rgba(9, 13, 30, 0.68) 70%, rgba(6, 8, 20, 0.92) 100%),
+    linear-gradient(120deg, rgba(65, 78, 196, 0.18), rgba(126, 59, 255, 0.1));
+}
+
+.iv-trend-spotlight__content {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 16px;
+}
+
+.iv-trend-spotlight__eyebrowRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.iv-trend-spotlight__copy {
+  display: grid;
+  gap: 10px;
+  max-width: 40rem;
+}
+
+.iv-trend-spotlight__title {
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(1.8rem, 3vw, 3.2rem);
+  font-weight: 900;
+  line-height: 0.96;
+  letter-spacing: -0.05em;
+}
+
+.iv-trend-spotlight.is-compact .iv-trend-spotlight__title {
+  font-size: clamp(1.2rem, 1.8vw, 1.7rem);
+  line-height: 1.02;
+}
+
+.iv-trend-spotlight__text {
+  margin: 0;
+  max-width: 36rem;
+  color: rgba(236, 241, 255, 0.84);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.iv-trend-spotlight.is-compact .iv-trend-spotlight__text {
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.iv-trend-spotlight__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.iv-trend-spotlight__hint,
+.iv-trend-spotlight__cta {
+  color: rgba(241, 244, 255, 0.88);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.iv-trend-spotlight__cta {
+  color: #ffffff;
+}
+
+.iv-trend-collectionCard {
+  min-width: 0;
+  min-height: 100%;
+  display: grid;
+  gap: 16px;
+  text-decoration: none;
+}
+
+.iv-trend-collectionCard__media {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(97, 104, 242, 0.18), transparent 34%),
+    linear-gradient(150deg, rgba(236, 241, 255, 0.9), rgba(225, 234, 255, 0.88));
+  box-shadow: 0 18px 38px rgba(22, 33, 69, 0.1);
+}
+
+.iv-trend-collectionCard__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.iv-trend-collectionCard__body {
+  display: grid;
+  gap: 12px;
+}
+
+.iv-trend-collectionCard__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.iv-trend-collectionCard__copy {
+  display: grid;
+  gap: 8px;
+}
+
+.iv-trend-collectionCard__title {
+  margin: 0;
+  color: #101828;
+  font-size: 1.35rem;
+  font-weight: 850;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+}
+
+.iv-trend-collectionCard__text {
+  margin: 0;
+  color: #5a6787;
+  font-size: 0.96rem;
+  line-height: 1.68;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.iv-trend-collectionCard__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.iv-trend-collectionCard__cta {
+  color: #4b59d7;
+  font-size: 0.86rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.iv-trend-spotlight:focus-visible,
+.iv-trend-collectionCard:focus-visible {
+  outline: 3px solid rgba(86, 99, 235, 0.26);
+  outline-offset: 4px;
+}
+
+@media (max-width: 767px) {
+  .iv-trend-badge {
+    min-height: 30px;
+    padding-inline: 10px;
+    font-size: 0.68rem;
+  }
+
+  .iv-trend-fallback span,
+  .iv-trend-fallback--soft span {
+    width: 64px;
+    height: 64px;
+    border-radius: 20px;
+    font-size: 1.6rem;
+  }
+
+  .iv-trend-spotlight,
+  .iv-trend-spotlight.is-compact {
+    min-height: 320px;
+    padding: 20px;
+    border-radius: 28px;
+  }
+
+  .iv-trend-spotlight__content {
+    gap: 14px;
+  }
+
+  .iv-trend-spotlight__text {
+    font-size: 0.94rem;
+    line-height: 1.65;
+  }
+
+  .iv-trend-spotlight__meta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .iv-trend-collectionCard {
+    gap: 14px;
+  }
+
+  .iv-trend-collectionCard__media {
+    border-radius: 24px;
+  }
+
+  .iv-trend-collectionCard__title {
+    font-size: 1.2rem;
+  }
+
+  .iv-trend-collectionCard__text {
+    font-size: 0.92rem;
+  }
+}

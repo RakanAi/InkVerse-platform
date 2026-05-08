@@ -35,6 +35,10 @@
   margin-bottom: 14px;
 }
 
+.iv-page-header > :first-child {
+  min-width: 0;
+}
+
 .iv-title {
   margin: 0;
   font-size: 1.4rem;
@@ -52,6 +56,7 @@
   display: flex;
   gap: 10px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .iv-page-header--default .iv-title {
@@ -138,6 +143,45 @@
   background: rgba(109, 40, 217, 0.06);
 }
 
+@media (max-width: 900px) {
+  .iv-page {
+    padding: 14px;
+  }
+
+  .iv-surface {
+    padding: 16px;
+  }
+
+  .iv-page-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .iv-title {
+    font-size: 1.28rem;
+  }
+
+  .iv-subtitle {
+    font-size: 0.92rem;
+    line-height: 1.55;
+  }
+
+  .iv-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .iv-actions > * {
+    max-width: 100%;
+  }
+
+  .iv-state {
+    padding: 20px 16px;
+  }
+}
+
 /* ===== Form Fields ===== */
 
 /* .iv-field {
@@ -197,38 +241,45 @@
 
 .iv-dd-btn {
   width: 100%;
-  height: 40px;
-  padding: 0 12px;
-  border-radius: 14px;
-  border: 1px solid var(--iv-border);
-  background: #fff;
+  min-height: 42px;
+  padding: 0 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(109, 122, 178, 0.18);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 249, 255, 0.98));
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
   font-weight: 700;
-  color: var(--iv-text);
+  color: #1d2846;
+  transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease,
+    background-color 120ms ease;
 }
 
 .iv-dd-btn:hover {
-  border-color: rgba(40, 72, 217, 0.45);
+  border-color: rgba(73, 86, 219, 0.28);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 1), rgba(242, 246, 255, 1));
 }
 
-.iv-dd-btn:focus {
+.iv-dd-btn:focus-visible {
   outline: none;
-  border-color: rgba(40, 72, 217, 0.45);
-  box-shadow: 0 0 0 3px rgba(40, 72, 217, 0.45);
+  border-color: rgba(73, 86, 219, 0.38);
+  box-shadow: 0 0 0 4px rgba(88, 103, 240, 0.14);
 }
 
 .iv-dd-text {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .iv-dd-arrow {
-  color: var(--iv-muted);
-  font-size: 0.85rem;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  color: #7d88a5;
+  transition: transform 160ms ease, color 160ms ease;
 }
 
 .iv-dd-menu {
@@ -265,12 +316,7 @@
 /* rotate arrow when open */
 .iv-dd.is-open .iv-dd-arrow {
   transform: rotate(180deg);
-}
-
-.iv-dd-arrow {
-  color: var(--iv-muted);
-  font-size: 0.85rem;
-  transition: transform 160ms ease;
+  color: #5968df;
 }
 
 .iv-dd-item {
@@ -292,12 +338,10 @@
 .iv-dd-item.is-active {
   background: rgba(40, 126, 217, 0.14);
 }
-.iv-dd-btn {
-  transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
-}
 
 .iv-dd.is-open .iv-dd-btn {
-  box-shadow: 0 0 0 3px rgba(13, 0, 255, 0.159);
+  border-color: rgba(73, 86, 219, 0.28);
+  box-shadow: 0 0 0 4px rgba(88, 103, 240, 0.12);
 }
 
 .iv-dd-btn:active {
@@ -308,14 +352,27 @@
 .iv-btn {
   border: 0;
   border-radius: 12px;
-  padding: 10px 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  white-space: nowrap;
+  line-height: 1;
   font-weight: 700;
   cursor: pointer;
   transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease, border-color 120ms ease;
 }
 
-.iv-btn-sm { padding: 8px 12px; font-weight: 700; }
-.iv-btn-md { padding: 10px 14px; }
+.iv-btn-sm {
+  min-height: 42px;
+  padding: 0 14px;
+  font-weight: 700;
+}
+
+.iv-btn-md {
+  min-height: 46px;
+  padding: 0 16px;
+}
 
 .iv-btn-primary {
   background: var(--iv-primary);
@@ -390,96 +447,66 @@
 .iv-chip-exclude { background: rgba(220, 38, 38, 0.10); border-color: rgba(220, 38, 38, 0.25); color: rgb(185, 28, 28); }
 
 /* ===== Segmented Control ===== */
-/* ===== Segmented Control (modern) ===== */
 .iv-seg {
   display: flex;
   width: 100%;
-  flex-wrap: wrap;           /* wrapping enabled */
-  gap: 10px;                 /* spacing between buttons */
-  padding: 8px;
-  border-radius: 18px;
-  border: 1px solid rgba(109, 40, 217, 0.18);
-  justify-content: center;
-
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 20px;
+  border: 1px solid rgba(112, 128, 188, 0.22);
+  background: linear-gradient(180deg, rgba(246, 249, 255, 0.92), rgba(239, 244, 255, 0.96));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92);
 }
 
-/* Buttons */
-.iv-seg-btn {
-  flex: 1 1 140px;           /* nice wrapping size */
-  max-width: 220px;          /* prevents huge buttons on desktop */
-  min-height: 42px;          /* consistent height */
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  padding: 10px 16px;
-  border-radius: 14px;
-
-  background: transparent;
-  border: 1px solid transparent;
-
-  font-weight: 700;
-  text-align: center;
-  white-space: nowrap;
-
-  transition: all 0.18s ease;
+.iv-seg--wrap {
+  flex-wrap: wrap;
 }
 
-/* Active state */
-.iv-seg-btn.is-active {
-  background: rgba(109, 40, 217, 0.08);
-  border-color: rgba(109, 40, 217, 0.25);
-  box-shadow: 0 4px 14px rgba(109, 40, 217, 0.08);
-  color: #6d28d9;
-}
-
-/* Hover */
-.iv-seg-btn:hover:not(.is-active) {
-  background: rgba(109, 40, 217, 0.05);
-}
-
-
-
-/* each button */
 .iv-seg-btn {
   position: relative;
-    flex: 1; 
-  width: 100px;
-  border: 0;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid transparent;
+  border-radius: 14px;
   background: transparent;
-  color: rgba(17, 24, 39, 0.78);
+  color: #344160;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
   font-weight: 800;
-  padding: 10px 18px;
-  border-radius: 12px;
+  text-align: center;
+  white-space: nowrap;
   cursor: pointer;
   transition: transform 180ms ease, background 180ms ease, color 180ms ease,
-    box-shadow 180ms ease;
+    border-color 180ms ease, box-shadow 180ms ease;
 }
 
-/* divider between items (not on last) */
-.iv-seg-btn:not(:last-child)::after {
-  content: "";
-  position: absolute;
-  top: 10px;
-  bottom: 10px;
-  right: -3px;
-  width: 1px;
-  background: rgba(109, 40, 217, 0.18);
+.iv-seg--wrap .iv-seg-btn {
+  flex-basis: 132px;
 }
 
-/* hover (non active) */
-.iv-seg-btn:hover {
-  background: rgba(255, 255, 255, 0.28);
-  transform: translateY(-1px) scale(1.01);
+.iv-seg-btn:hover:not(.is-active) {
+  background: rgba(115, 132, 221, 0.08);
+  color: #1f2b47;
 }
 
-/* active state */
+.iv-seg-btn:focus-visible {
+  outline: none;
+  border-color: rgba(89, 103, 229, 0.3);
+  box-shadow: 0 0 0 4px rgba(88, 103, 240, 0.12);
+}
+
 .iv-seg-btn.is-active {
-  background: #fff;
-  color: var(--iv-primary);
-  box-shadow: 0 8px 20px rgba(17, 24, 39, 0.14);
-  z-index: 1; /* sit above dividers */
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 255, 0.98));
+  border-color: rgba(100, 116, 220, 0.16);
+  color: #5d35df;
+  box-shadow: 0 10px 24px rgba(47, 59, 117, 0.12);
+  z-index: 1;
 }
 
 

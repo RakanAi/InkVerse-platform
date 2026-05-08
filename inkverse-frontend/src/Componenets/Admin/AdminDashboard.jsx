@@ -1,30 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import api from "../../Api/api";
-import Surface from "../../Shared/ui/Surface";
-import Button from "../../Shared/ui/Button";
-import PageHeader from "../../Shared/ui/PageHeader";
 import LoadingState from "../../Shared/ui/LoadingState";
 import ErrorState from "../../Shared/ui/ErrorState";
 import EmptyState from "../../Shared/ui/EmptyState";
-
-const QUICK_ACTIONS = [
-  {
-    title: "Create Or Edit Books",
-    subtitle: "Manage metadata, covers, and publishing state.",
-    to: "/admin/books",
-  },
-  {
-    title: "Curate Trends",
-    subtitle: "Promote books and update spotlight trends.",
-    to: "/admin/trends",
-  },
-  {
-    title: "Manage Users",
-    subtitle: "Moderate accounts and apply restrictions.",
-    to: "/admin/users",
-  },
-];
+import LinkButton from "../../Shared/ui/LinkButton";
+import api from "../../Api/api";
+import AdminSection from "../../features/admin/components/AdminSection";
+import AdminMetricCard from "../../features/admin/components/AdminMetricCard";
+import AdminTable from "../../features/admin/components/AdminTable";
 
 export default function AdminDashboard() {
   const [data, setData] = useState(null);
@@ -37,8 +19,8 @@ export default function AdminDashboard() {
       setErr("");
       const res = await api.get("/admin/dashboard/stats");
       setData(res.data);
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
       setErr("Failed to load dashboard.");
     } finally {
       setLoading(false);
@@ -49,14 +31,37 @@ export default function AdminDashboard() {
     load();
   }, []);
 
-  const stats = useMemo(() => {
+  const volumeMetrics = useMemo(() => {
     if (!data) return [];
+
     return [
-      { label: "Books", value: data.books },
-      { label: "Chapters", value: data.chapters },
-      { label: "Genres", value: data.genres },
-      { label: "Tags", value: data.tags },
-      { label: "Trends", value: data.trends },
+      { label: "Catalog titles", value: data.books, meta: "Books currently stored in the platform." },
+      { label: "Chapter entries", value: data.chapters, meta: "Drafted or published chapters across all books." },
+      { label: "Browse genres", value: data.genres, meta: "Genre lanes readers can filter by." },
+      { label: "Discovery tags", value: data.tags, meta: "Reader-facing tags used across the shelf." },
+      { label: "Trend rows", value: data.trends, meta: "Curated spotlight collections available now." },
+    ];
+  }, [data]);
+
+  const attentionMetrics = useMemo(() => {
+    if (!data) return [];
+
+    return [
+      {
+        label: "Chapterless books",
+        value: data.booksWithNoChapters,
+        meta: "Titles that still need their first chapter entries.",
+      },
+      {
+        label: "Missing genre links",
+        value: data.booksWithNoGenres,
+        meta: "Titles not assigned to any browse genre yet.",
+      },
+      {
+        label: "Missing tag links",
+        value: data.booksWithNoTags,
+        meta: "Titles still absent from tag-led discovery.",
+      },
     ];
   }, [data]);
 
@@ -65,155 +70,72 @@ export default function AdminDashboard() {
   if (!data) return <EmptyState title="No dashboard data" subtitle="Try again in a moment." />;
 
   return (
-    <div className="admin-dashboard-page">
-      <PageHeader
-        title="Operations Snapshot"
-        subtitle="Overview of catalog health and high-priority tasks."
-      />
-
-      <section className="admin-section mb-4">
-        <div className="admin-section-head">
-          <h3 className="admin-section-title">Quick Actions</h3>
-        </div>
-
-        <div className="admin-actions-grid">
-          {QUICK_ACTIONS.map((action) => (
-            <Surface key={action.title} className="admin-action-card">
-              <h4 className="admin-action-title">{action.title}</h4>
-              <p className="admin-action-subtitle mb-0">{action.subtitle}</p>
-              <div className="mt-3">
-                <Link to={action.to} className="text-decoration-none">
-                  <Button variant="primary">Open</Button>
-                </Link>
-              </div>
-            </Surface>
+    <>
+      <AdminSection title="Overview">
+        <div className="admin-metric-grid">
+          {volumeMetrics.map((metric, index) => (
+            <AdminMetricCard
+              key={metric.label}
+              label={metric.label}
+              value={metric.value}
+              meta={metric.meta}
+              tone={index === 0 ? "brand" : "default"}
+            />
           ))}
         </div>
-      </section>
+      </AdminSection>
 
-      <section className="admin-section mb-4">
-        <div className="admin-section-head">
-          <h3 className="admin-section-title">System Volume</h3>
-        </div>
-
-        <div className="admin-stats-grid">
-          {stats.map((s) => (
-            <Surface key={s.label} className="admin-stat-card">
-              <p className="admin-stat-label mb-1">{s.label}</p>
-              <p className="admin-stat-value mb-0">{s.value}</p>
-            </Surface>
+      <AdminSection title="Needs attention">
+        <div className="admin-alert-grid">
+          {attentionMetrics.map((metric) => (
+            <AdminMetricCard
+              key={metric.label}
+              label={metric.label}
+              value={metric.value}
+              meta={metric.meta}
+              tone={Number(metric.value) > 0 ? "warn" : "ok"}
+            />
           ))}
         </div>
-      </section>
+      </AdminSection>
 
-      <section className="admin-section mb-4">
-        <div className="admin-section-head">
-          <h3 className="admin-section-title">Attention Needed</h3>
-        </div>
-
-        <div className="admin-attention-grid">
-          <AttentionCard label="Books Missing Chapters" value={data.booksWithNoChapters} />
-          <AttentionCard label="Books Missing Genres" value={data.booksWithNoGenres} />
-          <AttentionCard label="Books Missing Tags" value={data.booksWithNoTags} />
-        </div>
-      </section>
-
-      <section className="admin-section">
-        <div className="admin-latest-grid">
-          <Surface className="admin-table-card">
-            <div className="admin-section-head mb-3">
-              <h3 className="admin-section-title">Latest Books</h3>
-            </div>
-
-            {!data.latestBooks?.length ? (
-              <EmptyState title="No books yet" subtitle="New books will appear here." />
-            ) : (
-              <div className="table-responsive">
-                <table className="table table-sm align-middle mb-0 admin-table-modern">
-                  <thead>
-                    <tr>
-                      <th>Title</th>
-                      <th>Status</th>
-                      <th className="text-end">Words</th>
-                      <th className="text-end">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.latestBooks.map((b) => (
-                      <tr key={b.id}>
-                        <td className="fw-semibold">{b.title}</td>
-                        <td className="text-muted">{b.status}</td>
-                        <td className="text-end">{b.wordCount ?? 0}</td>
-                        <td className="text-end">
-                          <Link to={`/admin/books/${b.id}`} className="text-decoration-none">
-                            <Button variant="outline" size="sm">
-                              Edit
-                            </Button>
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </Surface>
-
-          <Surface className="admin-table-card">
-            <div className="admin-section-head mb-3">
-              <h3 className="admin-section-title">Latest Chapters</h3>
-            </div>
-
-            {!data.latestChapters?.length ? (
-              <EmptyState title="No chapters yet" subtitle="New chapters will appear here." />
-            ) : (
-              <div className="table-responsive">
-                <table className="table table-sm align-middle mb-0 admin-table-modern">
-                  <thead>
-                    <tr>
-                      <th>Book</th>
-                      <th className="text-center">#</th>
-                      <th>Title</th>
-                      <th className="text-end">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.latestChapters.map((c) => (
-                      <tr key={c.id}>
-                        <td className="text-muted">{c.bookTitle}</td>
-                        <td className="text-center fw-semibold">{c.chapterNumber}</td>
-                        <td className="fw-semibold">{c.title}</td>
-                        <td className="text-end">
-                          <Link
-                            to={`/admin/books/${c.bookId}/chapters/${c.id}`}
-                            className="text-decoration-none"
-                          >
-                            <Button variant="outline" size="sm">
-                              Edit
-                            </Button>
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </Surface>
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function AttentionCard({ label, value }) {
-  const count = Number(value ?? 0);
-  const tone = count > 0 ? "warn" : "ok";
-
-  return (
-    <Surface className={`admin-attention-card ${tone}`}>
-      <p className="admin-attention-label mb-1">{label}</p>
-      <p className="admin-attention-value mb-0">{count}</p>
-    </Surface>
+      <AdminSection title="Latest books">
+        <AdminTable
+          compact
+          columns={[
+            {
+              key: "title",
+              label: "Book",
+              render: (book) => (
+                <div className="admin-simple-stack admin-simple-stack--sm">
+                  <p className="admin-row-title">{book.title}</p>
+                  <p className="admin-row-note">{book.status}</p>
+                </div>
+              ),
+            },
+            {
+              key: "wordCount",
+              label: "Words",
+              align: "right",
+              render: (book) => book.wordCount ?? 0,
+            },
+            {
+              key: "actions",
+              label: "Action",
+              align: "right",
+              render: (book) => (
+                <LinkButton to={`/admin/books/${book.id}`} variant="outline" size="sm">
+                  Edit
+                </LinkButton>
+              ),
+            },
+          ]}
+          rows={data.latestBooks ?? []}
+          rowKey="id"
+          emptyTitle="No books yet"
+          emptySubtitle="New titles will appear here."
+        />
+      </AdminSection>
+    </>
   );
 }

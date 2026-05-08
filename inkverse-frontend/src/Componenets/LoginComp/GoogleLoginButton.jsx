@@ -1,8 +1,15 @@
 import { useEffect, useRef } from "react";
 import api from "../../Api/api";
 
-export default function GoogleLoginButton({ onSuccess }) {
+export default function GoogleLoginButton({
+  onSuccess,
+  width = 280,
+  text = "continue_with",
+  theme = "outline",
+  locale = "en",
+}) {
   const divRef = useRef(null);
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
   useEffect(() => {
     if (!window.google || !divRef.current) return;
@@ -10,7 +17,7 @@ export default function GoogleLoginButton({ onSuccess }) {
     // ✅ init only once per page load
     if (!window.__inkverse_gsi_inited) {
       window.google.accounts.id.initialize({
-        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+        client_id: clientId,
         callback: async (response) => {
           try {
             const res = await api.post("/auth/google", {
@@ -42,13 +49,14 @@ export default function GoogleLoginButton({ onSuccess }) {
     // ✅ safe to re-render button each time
     divRef.current.innerHTML = "";
     window.google.accounts.id.renderButton(divRef.current, {
-      theme: "outline",
+      theme,
       size: "large",
-      text: "signin_with",
+      text,
       shape: "pill",
-      width: 260,
+      width,
+      locale,
     });
-  }, [onSuccess]);
+  }, [clientId, locale, onSuccess, text, theme, width]);
 
   return <div ref={divRef} />;
 }

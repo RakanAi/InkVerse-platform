@@ -1,47 +1,48 @@
 import { Link } from "react-router-dom";
-import BookCover from "@/Shared/Books/BookCover/BookCover";
-import { getBookCoverSrc } from "@/domain/books/book-cover";
+import DropdownSelect from "@/Shared/ui/DropdownSelect";
+import { LIBRARY_STATUS_OPTIONS } from "@/features/Library/library.presets";
+import "./LibraryBookCard.css";
 
 export default function LibraryBookCard({ item, onChangeStatus, onRemove }) {
+  const bookId = item.bookId;
+
   return (
-    <div className="lib-card">
-      <Link to={`/book/${item.bookId}`} className="lib-cover">
-        {item.coverImageUrl ? (
-          <BookCover variant="tile" src={getBookCoverSrc(item)} alt={item.title} />
-        ) : (
-          <div className="lib-noCover">No cover</div>
-        )}
+    <article className="iv-libraryCard">
+      <div className="iv-libraryCard__media">
+        <Link to={`/book/${bookId}`} className="iv-libraryCard__coverLink">
+          <img src={item.coverImageUrl} alt={item.title} className="iv-libraryCard__coverImg" />
+        </Link>
 
-        <div className="lib-overlay">
-          <select
-            className="lib-select"
-            value={item.status}
-            onChange={(e) => onChangeStatus(item.bookId, e.target.value)}
-            onClick={(e) => e.preventDefault()}
-          >
-            <option value="Reading">Reading</option>
-            <option value="Completed">Completed</option>
-            <option value="Dropped">Dropped</option>
-            <option value="Planned">Planned</option>
-          </select>
-
-          <button
-            className="lib-remove"
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              onRemove(item.bookId);
-            }}
-            title="Remove"
-          >
-            ✕
-          </button>
-        </div>
-      </Link>
-
-      <div className="lib-meta">
-        <div className="lib-title" title={item.title}>{item.title}</div>
+        <button
+          className="iv-libraryCard__remove"
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            onRemove(bookId);
+          }}
+          aria-label={`Remove ${item.title} from library`}
+        >
+          <i className="bi bi-x-lg" />
+        </button>
       </div>
-    </div>
+
+      <div className="iv-libraryCard__body">
+        <h3 className="iv-libraryCard__title">
+          <Link to={`/book/${bookId}`}>{item.title}</Link>
+        </h3>
+
+        <div className="iv-libraryCard__actions">
+          <DropdownSelect
+            value={item.status}
+            options={LIBRARY_STATUS_OPTIONS}
+            onChange={(value) => onChangeStatus(bookId, value)}
+            className="iv-libraryCard__select"
+          />
+          <Link to={`/book/${bookId}`} className="iv-libraryCard__open">
+            Open book
+          </Link>
+        </div>
+      </div>
+    </article>
   );
 }

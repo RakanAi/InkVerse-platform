@@ -1,19 +1,44 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import api from "../../Api/api";
 import { absUrl } from "../../Utils/absUrl";
+import Button from "../../Shared/ui/Button";
+import LinkButton from "../../Shared/ui/LinkButton";
+import LoadingState from "../../Shared/ui/LoadingState";
+import ErrorState from "../../Shared/ui/ErrorState";
+import TextField from "../../Shared/ui/TextField";
+import AdminSection from "../../features/admin/components/AdminSection";
+import AdminTable from "../../features/admin/components/AdminTable";
+
+function formatList(values) {
+  if (!Array.isArray(values) || !values.length) return "—";
+  const visible = values.slice(0, 2).join(", ");
+  const hiddenCount = values.length - 2;
+  return hiddenCount > 0 ? `${visible} +${hiddenCount}` : visible;
+}
+
+function CoverThumb({ src, alt }) {
+  const [failed, setFailed] = useState(false);
+  const resolved = src ? absUrl(src) : "";
+
+  if (!resolved || failed) {
+    return <div className="admin-cover-thumb__placeholder">No cover</div>;
+  }
+
+  return <img src={resolved} alt={alt} onError={() => setFailed(true)} />;
+}
 
 export default function AdminBooksPage() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
-
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("CreatedAt");
   const [isAscending, setIsAscending] = useState(false);
-
   const [pageNumber, setPageNumber] = useState(1);
+
   const pageSize = 12;
+  const pageCountLabel = `${items.length} ${items.length === 1 ? "title" : "titles"} on this page`;
+  const sortDirectionLabel = isAscending ? "Ascending" : "Descending";
 
   const query = useMemo(
     () => ({
@@ -23,7 +48,7 @@ export default function AdminBooksPage() {
       PageNumber: pageNumber,
       PageSize: pageSize,
     }),
-    [search, sortBy, isAscending, pageNumber]
+    [search, sortBy, isAscending, pageNumber],
   );
 
   const load = async () => {
@@ -32,8 +57,8 @@ export default function AdminBooksPage() {
       setErr("");
       const res = await api.get("/books", { params: query });
       setItems(Array.isArray(res.data) ? res.data : []);
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
       setItems([]);
       setErr("Failed to load books.");
     } finally {
@@ -46,15 +71,6 @@ export default function AdminBooksPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, sortBy, isAscending, pageNumber]);
 
-  const toggleSort = (field) => {
-    if (sortBy === field) setIsAscending((v) => !v);
-    else {
-      setSortBy(field);
-      setIsAscending(true);
-    }
-    setPageNumber(1);
-  };
-
   const remove = async (id) => {
     if (!window.confirm("Delete this book?")) return;
 
@@ -62,206 +78,197 @@ export default function AdminBooksPage() {
       await api.delete(`/books/${id}`);
 
       if (items.length === 1 && pageNumber > 1) {
-        setPageNumber((p) => p - 1);
+        setPageNumber((value) => value - 1);
       } else {
         await load();
       }
-    } catch (e) {
-      console.error(e);
-      alert("Delete failed (are you Admin?)");
+    } catch (error) {
+      console.error(error);
+      window.alert("Delete failed.");
     }
   };
 
-  const vtLabel = (b) => b.verseType ?? b.VerseType ?? "-";
-  const otLabel = (b) => b.originType ?? b.OriginType ?? "-";
-  const statusLabel = (b) => b.status ?? b.Status ?? "-";
-  const cover = (b) => b.coverImageUrl ?? b.CoverImageUrl ?? "";
+  if (loading) return <LoadingState text="Loading books..." />;
+  if (err) return <ErrorState title="Cannot load books" subtitle={err} onRetry={load} />;
 
   return (
-    <div className="border rounded p-3">
-      <div className="d-flex justify-content-between align-items-center gap-2 flex-wrap">
-        <h4 className="mb-0">Admin: Books</h4>
-        <Link className="btn btn-primary" to="/admin/books/new">
-          + New Book
-        </Link>
-      </div>
+    <AdminSection flat>
+      <div className="admin-books-toolbar">
+        <div className="admin-books-toolbar__primary">
+          <TextField
+            className="admin-search-field admin-books-toolbar__search"
+            value={search}
+            onChange={(value) => {
+              setSearch(value);
+              setPageNumber(1);
+            }}
+            placeholder="Search title or description..."
+          />
+          <LinkButton to="/admin/books/new" className="admin-books-toolbar__create">
+            New book
+          </LinkButton>
+        </div>
 
-      <div className="d-flex gap-2 mt-3 flex-wrap">
-        <input
-          className="form-control"
-          style={{ maxWidth: 320 }}
-          placeholder="Search title/description..."
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPageNumber(1);
-          }}
-        />
-
-        <select
-          className="form-select"
-          style={{ maxWidth: 220 }}
-          value={sortBy}
-          onChange={(e) => {
-            setSortBy(e.target.value);
-            setPageNumber(1);
-          }}
-        >
-          <option value="Title">Title</option>
-          <option value="CreatedAt">CreatedAt</option>
-          <option value="AverageRating">AverageRating</option>
-          <option value="UpdatedAt">UpdatedAt</option>
-          <option value="TotalViews">TotalViews</option>
-        </select>
-
-        <button
-          className="btn btn-outline-secondary"
-          type="button"
-          onClick={() => setIsAscending((v) => !v)}
-        >
-          {isAscending ? "Asc" : "Desc"}
-        </button>
-      </div>
-
-      {loading ? <p className="text-muted mt-3">Loading...</p> : null}
-      {err ? <p className="text-danger mt-3">{err}</p> : null}
-
-      {!loading && !err && (
-        <>
-          <div className="table-responsive mt-3">
-            <table className="table table-sm align-middle">
-              <thead>
-                <tr>
-                  <th style={{ width: 64 }}>Cover</th>
-                  <th>Status</th>
-                  <th>Verse</th>
-                  <th>Origin</th>
-                  <th role="button" onClick={() => toggleSort("Title")}>
-                    Title
-                  </th>
-                  <th>WordCount</th>
-                  <th>Genres</th>
-                  <th>Tags</th>
-                  <th className="text-end">Actions</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {items.map((b) => (
-                  <tr key={b.id ?? b.ID}>
-                    <td>
-                      {cover(b) ? (
-                        <img
-                          src={absUrl(cover(b))}
-                          alt={b.title ?? "cover"}
-                          style={{
-                            width: 46,
-                            height: 62,
-                            objectFit: "cover",
-                            borderRadius: 6,
-                            border: "1px solid rgba(0,0,0,.12)",
-                          }}
-                          onError={(e) => {
-                            e.currentTarget.style.display = "none";
-                          }}
-                        />
-                      ) : (
-                        <div
-                          className="text-muted"
-                          style={{
-                            width: 46,
-                            height: 62,
-                            borderRadius: 6,
-                            border: "1px dashed rgba(0,0,0,.2)",
-                            display: "grid",
-                            placeItems: "center",
-                            fontSize: 12,
-                          }}
-                        >
-                          —
-                        </div>
-                      )}
-                    </td>
-
-                    <td>{statusLabel(b)}</td>
-                    <td>{vtLabel(b)}</td>
-                    <td>{otLabel(b)}</td>
-
-                    <td
-                      style={{ maxWidth: 260 }}
-                      className="text-truncate"
-                      title={b.title}
-                    >
-                      {b.title}
-                    </td>
-
-                    <td className="text-muted">{b.wordCount ?? b.WordCount ?? 0}</td>
-
-                    <td style={{ maxWidth: 220 }} className="text-truncate">
-                      {(b.genres ?? b.Genres ?? []).join(", ")}
-                    </td>
-
-                    <td style={{ maxWidth: 220 }} className="text-truncate">
-                      {(b.tags ?? b.Tags ?? []).join(", ")}
-                    </td>
-
-                    <td className="text-end">
-                      <Link
-                        className="btn btn-sm btn-outline-secondary me-2"
-                        to={`/admin/books/${b.id ?? b.ID}/chapters`}
-                      >
-                        Chapters
-                      </Link>
-
-                      <Link
-                        className="btn btn-sm btn-outline-primary me-2"
-                        to={`/admin/books/${b.id ?? b.ID}`}
-                      >
-                        Edit
-                      </Link>
-
-                      <button
-                        className="btn btn-sm btn-outline-danger"
-                        onClick={() => remove(b.id ?? b.ID)}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-
-                {!items.length && (
-                  <tr>
-                    <td colSpan={9} className="text-muted">
-                      No books found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+        <div className="admin-books-toolbar__secondary">
+          <div className="admin-books-toolbar__filters">
+            <span className="admin-books-toolbar__eyebrow">Sort by</span>
+            <select
+              className="admin-select admin-books-toolbar__select"
+              value={sortBy}
+              onChange={(event) => {
+                setSortBy(event.target.value);
+                setPageNumber(1);
+              }}
+            >
+              <option value="Title">Title</option>
+              <option value="CreatedAt">Created at</option>
+              <option value="UpdatedAt">Updated at</option>
+              <option value="AverageRating">Average rating</option>
+              <option value="TotalViews">Total views</option>
+            </select>
+            <Button
+              variant="outline"
+              className="admin-books-toolbar__direction"
+              onClick={() => {
+                setIsAscending((value) => !value);
+                setPageNumber(1);
+              }}
+            >
+              {sortDirectionLabel}
+            </Button>
           </div>
 
-          <div className="d-flex justify-content-between align-items-center mt-2">
-            <button
-              className="btn btn-outline-secondary"
+          <div className="admin-books-toolbar__summary">
+            <span className="admin-books-toolbar__summary-pill">{pageCountLabel}</span>
+          </div>
+        </div>
+      </div>
+
+      <AdminTable
+        className="admin-books-table-shell"
+        tableClassName="admin-books-table"
+        columns={[
+          {
+            key: "book",
+            label: "Book",
+            width: "42%",
+            render: (book) => {
+              const title = book.title ?? "Untitled";
+              const description = book.description ?? "";
+
+              return (
+                <div className="admin-book-cell">
+                  <div className="admin-cover-thumb">
+                    <CoverThumb
+                      src={book.coverImageUrl ?? book.CoverImageUrl ?? ""}
+                      alt={title}
+                    />
+                  </div>
+
+                  <div className="admin-simple-stack admin-simple-stack--sm">
+                    <p className="admin-row-title">{title}</p>
+                    <p className="admin-row-subtitle admin-clamp-3">
+                      {description || "No description yet."}
+                    </p>
+                  </div>
+                </div>
+              );
+            },
+          },
+          {
+            key: "details",
+            label: "Details",
+            width: "28%",
+            render: (book) => (
+              <div className="admin-book-details">
+                <div className="admin-book-details__head">
+                  <span className="admin-pill admin-pill--neutral">
+                    {book.status ?? book.Status ?? "Unknown"}
+                  </span>
+                  <span className="admin-book-details__meta">
+                    {book.verseType ?? book.VerseType ?? "—"} ·{" "}
+                    {book.originType ?? book.OriginType ?? "—"}
+                  </span>
+                </div>
+                <div className="admin-book-details__stack">
+                  <p className="admin-book-details__line">
+                    <span>Genres</span>
+                    <strong>{formatList(book.genres ?? book.Genres ?? [])}</strong>
+                  </p>
+                  <p className="admin-book-details__line">
+                    <span>Tags</span>
+                    <strong>{formatList(book.tags ?? book.Tags ?? [])}</strong>
+                  </p>
+                </div>
+              </div>
+            ),
+          },
+          {
+            key: "wordCount",
+            label: "Words",
+            align: "right",
+            width: "10%",
+            render: (book) => (
+              <div className="admin-book-metric">
+                <strong>{(book.wordCount ?? book.WordCount ?? 0).toLocaleString()}</strong>
+                <span>words</span>
+              </div>
+            ),
+          },
+          {
+            key: "actions",
+            label: "Actions",
+            align: "right",
+            width: "20%",
+            render: (book) => {
+              const id = book.id ?? book.ID;
+
+              return (
+                <div className="admin-book-actions">
+                  <LinkButton
+                    to={`/admin/books/${id}/chapters`}
+                    variant="outline"
+                    size="sm"
+                    className="admin-book-actions__primary"
+                  >
+                    Chapters
+                  </LinkButton>
+                  <LinkButton to={`/admin/books/${id}`} variant="outline" size="sm">
+                    Edit
+                  </LinkButton>
+                  <Button variant="danger" size="sm" onClick={() => remove(id)}>
+                    Delete
+                  </Button>
+                </div>
+              );
+            },
+          },
+        ]}
+        rows={items}
+        rowKey={(book) => book.id ?? book.ID}
+        rowClassName="admin-book-row"
+        emptyTitle="No books found"
+        emptySubtitle="Try another search or create a new title."
+        footer={
+          <div className="admin-pagination">
+            <Button
+              variant="outline"
               disabled={pageNumber <= 1}
-              onClick={() => setPageNumber((p) => p - 1)}
+              onClick={() => setPageNumber((value) => value - 1)}
             >
-              Prev
-            </button>
-
-            <div className="text-muted small">Page {pageNumber}</div>
-
-            <button
-              className="btn btn-outline-secondary"
+              Previous
+            </Button>
+            <span className="admin-page-note">Page {pageNumber}</span>
+            <Button
+              variant="outline"
               disabled={items.length < pageSize}
-              onClick={() => setPageNumber((p) => p + 1)}
+              onClick={() => setPageNumber((value) => value + 1)}
             >
               Next
-            </button>
+            </Button>
           </div>
-        </>
-      )}
-    </div>
+        }
+      />
+    </AdminSection>
   );
 }

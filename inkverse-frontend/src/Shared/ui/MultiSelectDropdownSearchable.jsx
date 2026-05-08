@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import DropdownChevron from "./DropdownChevron";
 
 export default function MultiSelectDropdownSearchable({
   label,
@@ -44,13 +45,15 @@ export default function MultiSelectDropdownSearchable({
       <button
         type="button"
         className="iv-dd-btn"
+        aria-expanded={open}
+        aria-haspopup="listbox"
         onClick={() => setOpen((x) => !x)}
       >
         <span className="iv-dd-text">
           {label}
           {values.length > 0 ? ` (${values.length})` : ""}
         </span>
-        <span className="iv-dd-arrow">v</span>
+        <DropdownChevron />
       </button>
 
       <div className={`iv-dd-menu ${open ? "is-open" : ""}`}>

@@ -1,75 +1,29 @@
 import Segmented from "@/Shared/ui/Segmented";
+import { LIBRARY_FILTERS } from "@/features/Library/library.presets";
 
-const FILTERS = [
-  {
-    value: "All",
+export default function LibraryFilter({ value, onChange, counts }) {
+  const options = LIBRARY_FILTERS.map((filter) => ({
+    value: filter.value,
     label: (
-      <span className="iv-lib-seg-item">
-        <i className="bi bi-collection" />
-        <span> All</span>
+      <span className="iv-libraryFilter__item">
+        <span className="iv-libraryFilter__iconWrap" aria-hidden="true">
+          <i className={`bi ${filter.icon}`} />
+        </span>
+        <span className="iv-libraryFilter__text">
+          <span className="iv-libraryFilter__label">{filter.label}</span>
+          <span className="iv-libraryFilter__count">{counts?.[filter.value] ?? 0}</span>
+        </span>
       </span>
     ),
-  },
-  {
-    value: "Reading",
-    label: (
-      <span className="iv-lib-seg-item">
-        <i className="bi bi-book" />
-        <span> Reading</span>
-      </span>
-    ),
-  },
-  {
-    value: "Completed",
-    label: (
-      <span className="iv-lib-seg-item">
-        <i className="bi bi-check2-circle" />
-        <span> Finished</span>
-      </span>
-    ),
-  },
-  {
-    value: "Planned",
-    label: (
-      <span className="iv-lib-seg-item">
-        <i className="bi bi-bookmark" />
-        <span> Planning</span>
-      </span>
-    ),
-  },
-  {
-    value: "Dropped",
-    label: (
-      <span className="iv-lib-seg-item">
-        <i className="bi bi-x-circle" />
-        <span> Dropped</span>
-      </span>
-    ),
-  },
-  {
-    value: "History",
-    label: (
-      <span className="iv-lib-seg-item">
-        <i className="bi bi-clock-history" />
-        <span> History</span>
-      </span>
-    ),
-  },
-];
+  }));
 
-export default function LibraryFilter({ value, onChange }) {
   return (
     <Segmented
       value={value}
-      options={FILTERS}
+      options={options}
       onChange={onChange}
-      size="sm"
-      renderOption={(option) => (
-        <span className="iv-lib-seg-item">
-          <i className={`bi ${option.icon}`} />
-          <span>{option.label}</span>
-        </span>
-      )}
+      className="iv-libraryFilter"
+      wrap
     />
   );
 }

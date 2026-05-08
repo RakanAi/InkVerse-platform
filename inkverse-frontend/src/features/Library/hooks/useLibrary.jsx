@@ -1,6 +1,6 @@
-// features/library/hooks/useLibrary.js
 import { useCallback, useEffect, useRef, useState } from "react";
 import api from "@/Api/api";
+import { normalizeLibraryItem } from "@/features/Library/utils/library.normalize";
 
 export function useLibrary() {
   const [items, setItems] = useState([]);
@@ -15,7 +15,10 @@ export function useLibrary() {
 
     try {
       const res = await api.get("/me/library");
-      setItems(Array.isArray(res.data) ? res.data : []);
+      const nextItems = Array.isArray(res.data)
+        ? res.data.map(normalizeLibraryItem)
+        : [];
+      setItems(nextItems);
     } catch (e) {
       console.error("Load library failed:", e);
       setError("Failed to load library.");
@@ -31,37 +34,53 @@ export function useLibrary() {
     load();
   }, [load]);
 
-  const changeStatus = useCallback(async (bookId, status) => {
-    const previous = items;
+  const changeStatus = useCallback(
+    async (bookId, status) => {
+      const previous = items;
 
-    setItems((curr) =>
-      curr.map((x) =>
-        (x.bookId ?? x.BookId) === bookId
-          ? { ...x, status }
-          : x
-      )
-    );
+      setItems((curr) =>
+        curr.map((item) =>
+          item.bookId === bookId
+            ? normalizeLibraryItem({ ...item, status, Status: status })
+            : item,
+        ),
+      );
 
-    try {
-      await api.put(`/books/${bookId}/library/status`, { status });
-    } catch (setItems) {
-      setItems(previous); // rollback
-    }
-  }, [items]);
+      try {
+        await api.put(`/books/${bookId}/library/status`, { status });
+      } catch (e) {
+        console.error("Update library status failed:", e);
+        setItems(previous);
+      }
+    },
+    [items],
+  );
 
-  const remove = useCallback(async (bookId) => {
-    const previous = items;
+  const remove = useCallback(
+    async (bookId) => {
+      const previous = items;
 
-    setItems((curr) =>
-      curr.filter((x) => (x.bookId ?? x.BookId) !== bookId)
-    );
+      setItems((curr) =>
+        curr.map((item) =>
+          item.bookId === bookId
+            ? normalizeLibraryItem({
+                ...item,
+                isInLibrary: false,
+                IsInLibrary: false,
+              })
+            : item,
+        ),
+      );
 
-    try {
-      await api.delete(`/books/${bookId}/library`);
-    } catch {
-      setItems(previous); // rollback
-    }
-  }, [items]);
+      try {
+        await api.delete(`/books/${bookId}/library`);
+      } catch (e) {
+        console.error("Remove from library failed:", e);
+        setItems(previous);
+      }
+    },
+    [items],
+  );
 
-  return { items, loading, error, changeStatus, remove };
+  return { items, loading, error, changeStatus, remove, reload: load };
 }
