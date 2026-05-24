@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import ReviewCard from "./ReviewCard";
 
 const pick = (obj, ...keys) => {
@@ -15,7 +16,9 @@ const toMs = (v) => {
 };
 
 export default function Reviews({ reviews = [], loading = false, onRefresh }) {
-  const [sortMode, setSortMode] = useState("newest"); // "newest" | "oldest"
+  const { t } = useTranslation();
+  const [sortMode, setSortMode] = useState("newest");
+  const isNewest = sortMode === "newest";
 
   const sorted = useMemo(() => {
     const list = Array.isArray(reviews) ? [...reviews] : [];
@@ -27,34 +30,67 @@ export default function Reviews({ reviews = [], loading = false, onRefresh }) {
     return list;
   }, [reviews, sortMode]);
 
-  if (loading) return <div className="text-muted">Loading reviews...</div>;
+  if (loading) return <div className="iv-book-status">{t("bookPage.reviews.loading")}</div>;
 
   return (
-    <div className="row mx-0 my-4">
-      <div className="d-flex align-items-center">
-        <div className="fw-bold fs-5 text-start d-flex align-items-center">
-          <p className="borderStart my-0"></p>Reviews
-          
+    <section className="iv-book-section iv-book-section--plain iv-book-section--reviews">
+      <div className="iv-book-section__head iv-book-section__head--reviews">
+        <div className="iv-book-section__title-wrap">
+          <span className="borderStart" />
+          <div>
+            <h3 className="iv-book-section__title">{t("bookPage.reviews.title")}</h3>
+            <p className="iv-book-section__subtitle mb-0">
+              {t("bookPage.reviews.subtitle")}
+            </p>
           </div>
+        </div>
 
-        <button
-          type="button"
-          className="btn btn-sm btn-outline-secondary text-start"
-          onClick={() => setSortMode((m) => (m === "newest" ? "oldest" : "newest"))}
-          title="Toggle sort order"
-        >
-          {sortMode === "newest" ? "Newest" : "Oldest"}
-        </button>
+        <div className="iv-book-reviews__actions">
+          <span className="iv-book-reviews__count">
+            {t("bookPage.reviews.count", { count: sorted.length })}
+          </span>
+
+          <label className="iv-book-sort-field">
+            <span>{t("bookPage.reviews.sortLabel")}</span>
+            <button
+              type="button"
+              className="iv-book-sort-toggle"
+              onClick={() => setSortMode(isNewest ? "oldest" : "newest")}
+              aria-pressed={!isNewest}
+              aria-label={t("bookPage.reviews.sortAria", {
+                mode: isNewest
+                  ? t("bookPage.reviews.newestFirst")
+                  : t("bookPage.reviews.oldestFirst"),
+              })}
+            >
+              <span>
+                {isNewest
+                  ? t("bookPage.reviews.newestFirst")
+                  : t("bookPage.reviews.oldestFirst")}
+              </span>
+              <i
+                className={`bi ${isNewest ? "bi-arrow-down" : "bi-arrow-up"}`}
+                aria-hidden="true"
+              />
+            </button>
+          </label>
+        </div>
       </div>
-      <div className="p-3 d-flex flex-column gap-3">
+
+      <div className="iv-book-reviews__list">
         {sorted.length === 0 ? (
-          <div className="text-muted">No reviews yet. Be the first!</div>
+          <div className="iv-book-empty">{t("bookPage.reviews.empty")}</div>
         ) : (
-          sorted.map((r) => (
-            <ReviewCard key={r.id ?? r.Id} review={r} onRefresh={onRefresh} />
+          sorted.map((r, index) => (
+            <ReviewCard
+              key={r.id ?? r.Id}
+              review={r}
+              onRefresh={onRefresh}
+              isLast={index === sorted.length - 1}
+            />
           ))
         )}
       </div>
-    </div>
+    </section>
   );
 }

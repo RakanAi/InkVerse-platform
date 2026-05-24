@@ -46,6 +46,7 @@ namespace InkVerse.Api.Services.ServicesRepo
                 {
                     UserName = user.UserName ?? "",
                     Email = user.Email ?? "",
+                    AvatarUrl = user.AvatarUrl,
                     Token = _tokenService.CreateToken(user, roles),
                     Roles = roles
                 }
@@ -100,6 +101,7 @@ namespace InkVerse.Api.Services.ServicesRepo
                 {
                     UserName = user.UserName ?? "",
                     Email = user.Email ?? "",
+                    AvatarUrl = user.AvatarUrl,
                     Token = _tokenService.CreateToken(user, roles),
                     Roles = roles
                 }
@@ -146,6 +148,7 @@ namespace InkVerse.Api.Services.ServicesRepo
                 {
                     UserName = user.UserName ?? "",
                     Email = user.Email ?? "",
+                    AvatarUrl = user.AvatarUrl,
                     Token = _tokenService.CreateToken(user, roles),
                     Roles = roles
                 }

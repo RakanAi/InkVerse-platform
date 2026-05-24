@@ -1,11 +1,15 @@
+import { useTranslation } from "react-i18next";
+
 export default function AuthChecklist({ sections, completed, total, percent }) {
+  const { t } = useTranslation();
+
   return (
     <div className="iv-auth-checklist">
       <div className="iv-auth-progressHead">
         <div>
-          <p className="iv-auth-progressLabel">Setup progress</p>
+          <p className="iv-auth-progressLabel">{t("auth.register.checklist.progressLabel")}</p>
           <p className="iv-auth-progressCopy">
-            {completed} of {total} checks complete
+            {t("auth.register.checklist.progressCopy", { completed, total })}
           </p>
         </div>
         <strong className="iv-auth-progressValue">{percent}%</strong>

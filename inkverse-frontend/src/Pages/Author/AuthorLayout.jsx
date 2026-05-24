@@ -1,78 +1,319 @@
-import { NavLink, Outlet } from "react-router-dom";
-import { FiGrid, FiFolder, FiDollarSign, FiFileText } from "react-icons/fi";
+import { Link, NavLink, Outlet } from "react-router-dom";
 import { useContext, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  FiChevronRight,
+  FiGlobe,
+  FiHelpCircle,
+  FiHome,
+  FiLogOut,
+  FiMoon,
+  FiSettings,
+  FiSun,
+  FiUser,
+} from "react-icons/fi";
 import logo from "../../assets/IncVerseLogo.png";
+import authorVisual from "../../assets/pics/AlbedoBase_XL_A_highly_detailed_and_ethereal_fantasy_female_ch_1.jpg";
 import AuthContext from "../../Context/AuthProvider";
+import { useTheme } from "../../Context/ThemeProvider";
 import api from "../../Api/api";
+import Button from "../../Shared/ui/Button";
+import UserAvatar from "../../Shared/user/UserAvatar";
+import { getAuthorStudioRoutes } from "../../features/author/author.routes";
+import { useSiteVisualAssetView } from "../../features/site-visuals/useSiteVisualAsset";
+import { getLanguageOptions, normalizeLanguageCode, setAppLanguage } from "../../i18n";
 import "./Author.css";
+import "./AuthorStudio.css";
 
-const menuItems = [
-  { to: "/author", end: true, label: "Dashboard", icon: FiGrid },
-  { to: "/author/workspace", end: false, label: "Workspace", icon: FiFolder },
-  { to: "/author/income", end: false, label: "Income", icon: FiDollarSign },
-  { to: "/author/contract", end: false, label: "Contract", icon: FiFileText },
-];
+function NavItem({ to, end, label, description, icon }) {
+  const RouteIcon = icon;
 
-function NavItem({ to, end, label, icon: Icon }) {
   return (
     <NavLink
       to={to}
       end={end}
-      className={({ isActive }) =>
-        `author-nav-link ${isActive ? "active" : ""}`
-      }
+      className={({ isActive }) => `author-studio-nav-link ${isActive ? "active" : ""}`}
     >
-      <Icon size={20} strokeWidth={2} />
-      <span>{label}</span>
+      <span className="author-studio-nav-link__icon">
+        <RouteIcon size={18} strokeWidth={2} />
+      </span>
+      <span className="author-studio-nav-link__copy">
+        <strong>{label}</strong>
+        <small>{description}</small>
+      </span>
     </NavLink>
   );
 }
 
-function AuthorOnboarding({ isLoggedIn, onOpenLogin, onBecomeAuthor }) {
+function getSidebarUserLabel(user, fallback = "Profile") {
   return (
-    <section className="author-onboarding">
-      <div className="author-onboarding-card">
-        <span className="author-onboarding-eyebrow">InkVerse Creator Program</span>
-        <h1>Become an Author on InkVerse</h1>
-        <p>
-          Build your audience by publishing stories, chapters, and series directly to your
-          readers. Your author dashboard helps you manage content and track performance.
-        </p>
+    user?.displayName ||
+    user?.DisplayName ||
+    user?.userName ||
+    user?.UserName ||
+    user?.email ||
+    user?.Email ||
+    fallback
+  );
+}
 
-        <div className="author-onboarding-grid">
-          <article className="author-onboarding-box">
-            <h3>What you can do</h3>
-            <ul>
-              <li>Create and publish books</li>
-              <li>Manage chapters and updates</li>
-              <li>Build your public author profile</li>
-            </ul>
-          </article>
+function getSidebarAvatar(user) {
+  return user?.avatarUrl || user?.AvatarUrl || user?.profileImageUrl || user?.ProfileImageUrl || "";
+}
 
-          <article className="author-onboarding-box">
-            <h3>How you can earn</h3>
-            <ul>
-              <li>Grow a recurring reader base</li>
-              <li>Participate in platform monetization programs</li>
-              <li>Unlock future income tools as they launch</li>
-            </ul>
-          </article>
-        </div>
+function SidebarFooter({ user, onSignOut }) {
+  const { t, i18n } = useTranslation();
+  const { isDark, toggleTheme } = useTheme();
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const label = getSidebarUserLabel(user, t("author.studio.common.profile"));
+  const avatar = getSidebarAvatar(user);
+  const languageOptions = useMemo(() => getLanguageOptions(t), [t]);
+  const currentLanguage = normalizeLanguageCode(i18n.resolvedLanguage || i18n.language);
+  const currentLanguageLabel =
+    languageOptions.find((option) => option.value === currentLanguage)?.shortLabel ??
+    currentLanguage.toUpperCase();
 
+  const closeProfileMenuOnBlur = (event) => {
+    if (!event.currentTarget.contains(event.relatedTarget)) {
+      setIsProfileMenuOpen(false);
+    }
+  };
+
+  return (
+    <div className="author-studio-sidebar__bottom">
+      <div
+        className={`author-studio-profile-menu-wrap ${isProfileMenuOpen ? "is-open" : ""}`}
+        onMouseEnter={() => setIsProfileMenuOpen(true)}
+        onMouseLeave={() => setIsProfileMenuOpen(false)}
+        onFocus={() => setIsProfileMenuOpen(true)}
+        onBlur={closeProfileMenuOnBlur}
+      >
         <button
           type="button"
-          className="author-onboarding-btn"
-          onClick={isLoggedIn ? onBecomeAuthor : onOpenLogin}
+          className="author-studio-sidebar-action author-studio-profile-trigger"
+          aria-haspopup="menu"
+          aria-expanded={isProfileMenuOpen}
+          onClick={() => setIsProfileMenuOpen((open) => !open)}
         >
-          Become Author
+          <span className="author-studio-sidebar-action__icon author-studio-sidebar-action__avatar">
+            <UserAvatar
+              className="author-studio-sidebar-action__avatarImage"
+              name={label}
+              src={avatar}
+              alt={label}
+            />
+          </span>
+          <span className="author-studio-sidebar-action__label">{label}</span>
+          <FiChevronRight className="author-studio-sidebar-action__chevron" size={18} />
         </button>
+
+        <div className="author-studio-profile-menu" role="menu">
+          <div className="author-studio-profile-menu__name">{label}</div>
+
+          <label className="author-studio-profile-menu__item author-studio-profile-menu__item--language">
+            <FiGlobe size={16} />
+            <span>{t("author.studio.common.language")}</span>
+            <strong>{currentLanguageLabel}</strong>
+            <select
+              aria-label={t("author.studio.common.language")}
+              value={currentLanguage}
+              onChange={(event) => setAppLanguage(event.target.value)}
+            >
+              {languageOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <button type="button" className="author-studio-profile-menu__item" onClick={toggleTheme}>
+            {isDark ? <FiSun size={16} /> : <FiMoon size={16} />}
+            <span>
+              {isDark
+                ? t("author.studio.common.lightTheme")
+                : t("author.studio.common.darkTheme")}
+            </span>
+          </button>
+
+          <Link to="/profilePage" className="author-studio-profile-menu__item" role="menuitem">
+            <FiSettings size={16} />
+            <span>{t("author.studio.common.setting")}</span>
+          </Link>
+
+          <button
+            type="button"
+            className="author-studio-profile-menu__item"
+            onClick={() => {
+              setIsProfileMenuOpen(false);
+              onSignOut();
+            }}
+          >
+            <FiLogOut size={16} />
+            <span>{t("author.studio.common.signOut")}</span>
+          </button>
+        </div>
+      </div>
+
+      <button type="button" className="author-studio-sidebar-action" disabled>
+        <span className="author-studio-sidebar-action__icon">
+          <FiHelpCircle size={18} />
+        </span>
+        <span className="author-studio-sidebar-action__label">{t("author.studio.common.assistance")}</span>
+        <FiChevronRight className="author-studio-sidebar-action__chevron" size={18} />
+      </button>
+
+      <Link to="/" className="author-studio-sidebar-action author-studio-sidebar-action--home">
+        <span className="author-studio-sidebar-action__icon">
+          <FiHome size={18} />
+        </span>
+        <span className="author-studio-sidebar-action__label">{t("author.studio.common.backHome")}</span>
+      </Link>
+    </div>
+  );
+}
+
+function AuthorOnboarding({ isLoggedIn, onOpenLogin, onBecomeAuthor }) {
+  const { t } = useTranslation();
+  const onboardingVisual = useSiteVisualAssetView("author.onboarding", authorVisual);
+
+  return (
+    <section className="author-studio-onboarding">
+      <div className="author-studio-onboarding__hero">
+        <div className="author-studio-onboarding__copy">
+          <span className="author-studio-eyebrow">{t("author.studio.onboarding.eyebrow")}</span>
+          <h1>{t("author.studio.onboarding.title")}</h1>
+          <p>{t("author.studio.onboarding.text")}</p>
+          <div className="author-studio-onboarding__actions">
+            <Button
+              type="button"
+              variant="primary"
+              size="md"
+              onClick={isLoggedIn ? onBecomeAuthor : onOpenLogin}
+            >
+              {isLoggedIn
+                ? t("author.studio.onboarding.becomeAuthor")
+                : t("author.studio.onboarding.signInBecomeAuthor")}
+            </Button>
+            {!isLoggedIn ? (
+              <Button type="button" variant="outline" size="md" onClick={onOpenLogin}>
+                {t("author.studio.onboarding.previewFlow")}
+              </Button>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="author-studio-onboarding__visual">
+          <div className="author-studio-onboarding__floating author-studio-onboarding__floating--workspace">
+            <span className="author-studio-onboarding__floating-label">{t("author.studio.onboarding.workspaceLabel")}</span>
+            <strong>{t("author.studio.onboarding.workspaceText")}</strong>
+          </div>
+
+          <div className="author-studio-onboarding__floating author-studio-onboarding__floating--performance">
+            <span className="author-studio-onboarding__floating-label">{t("author.studio.onboarding.readerPulseLabel")}</span>
+            <strong>{t("author.studio.onboarding.readerPulseText")}</strong>
+          </div>
+
+          <div className="author-studio-onboarding__art-shell">
+            <div className="author-studio-onboarding__art-ring author-studio-onboarding__art-ring--one" />
+            <div className="author-studio-onboarding__art-ring author-studio-onboarding__art-ring--two" />
+            <div className="author-studio-onboarding__art-card">
+              <img
+                src={onboardingVisual.src}
+                alt={t("author.studio.onboarding.visualAlt")}
+                className="author-studio-onboarding__art-image"
+                style={onboardingVisual.style}
+              />
+            </div>
+          </div>
+
+          <div className="author-studio-onboarding__floating author-studio-onboarding__floating--publishing">
+            <span className="author-studio-onboarding__floating-label">{t("author.studio.onboarding.publishingLabel")}</span>
+            <strong>{t("author.studio.onboarding.publishingText")}</strong>
+          </div>
+
+          <div className="author-studio-onboarding__floating author-studio-onboarding__floating--identity">
+            <span className="author-studio-onboarding__floating-label">{t("author.studio.onboarding.identityLabel")}</span>
+            <strong>{t("author.studio.onboarding.identityText")}</strong>
+          </div>
+        </div>
       </div>
     </section>
   );
 }
 
+function AuthorTermsModal({
+  submitting,
+  termsAccepted,
+  error,
+  onClose,
+  onToggleAccepted,
+  onSubmit,
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <div className="author-studio-modal-backdrop" onClick={onClose}>
+      <div className="author-studio-modal" onClick={(event) => event.stopPropagation()}>
+        <div className="author-studio-modal__header">
+          <span className="author-studio-eyebrow">{t("author.studio.terms.eyebrow")}</span>
+          <h2>{t("author.studio.terms.title")}</h2>
+          <p>{t("author.studio.terms.text")}</p>
+          <div className="author-studio-modal__chips">
+            <span>{t("author.studio.terms.chips.step")}</span>
+            <span>{t("author.studio.terms.chips.setup")}</span>
+            <span>{t("author.studio.terms.chips.instant")}</span>
+          </div>
+        </div>
+
+        <div className="author-studio-modal__list">
+          <article>
+            <strong>{t("author.studio.terms.ownershipTitle")}</strong>
+            <span>{t("author.studio.terms.ownershipText")}</span>
+          </article>
+          <article>
+            <strong>{t("author.studio.terms.standardsTitle")}</strong>
+            <span>{t("author.studio.terms.standardsText")}</span>
+          </article>
+          <article>
+            <strong>{t("author.studio.terms.monetizationTitle")}</strong>
+            <span>{t("author.studio.terms.monetizationText")}</span>
+          </article>
+        </div>
+
+        <label className="author-studio-modal__check">
+          <input
+            type="checkbox"
+            checked={termsAccepted}
+            onChange={(event) => onToggleAccepted(event.target.checked)}
+          />
+          <span>{t("author.studio.terms.agree")}</span>
+        </label>
+
+        {error ? <div className="author-studio-modal__error">{error}</div> : null}
+
+        <div className="author-studio-modal__actions">
+          <Button type="button" variant="outline" size="md" onClick={onClose}>
+            {t("author.studio.common.cancel")}
+          </Button>
+          <Button
+            type="button"
+            variant="primary"
+            size="md"
+            disabled={!termsAccepted || submitting}
+            onClick={onSubmit}
+          >
+            {submitting ? t("author.studio.terms.submitting") : t("author.studio.terms.submit")}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AuthorLayout() {
   const { auth, setAuth, openLogin } = useContext(AuthContext);
+  const { t } = useTranslation();
   const [isTermsOpen, setIsTermsOpen] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -87,6 +328,7 @@ export default function AuthorLayout() {
   const isAuthor = Array.isArray(roles)
     ? roles.includes("Author") || roles.includes("Admin")
     : roles === "Author" || roles === "Admin";
+  const authorStudioRoutes = useMemo(() => getAuthorStudioRoutes(t), [t]);
 
   const openTerms = () => {
     setError("");
@@ -122,8 +364,11 @@ export default function AuthorLayout() {
 
       setIsTermsOpen(false);
       setTermsAccepted(false);
-    } catch (e) {
-      setError(e?.response?.data?.message || "Could not upgrade your account right now.");
+    } catch (requestError) {
+      setError(
+        requestError?.response?.data?.message ||
+          t("author.studio.terms.upgradeError"),
+      );
     } finally {
       setSubmitting(false);
     }
@@ -138,74 +383,53 @@ export default function AuthorLayout() {
           onBecomeAuthor={openTerms}
         />
 
-        {isTermsOpen && (
-          <div className="author-terms-backdrop" onClick={closeTerms}>
-            <div className="author-terms-modal" onClick={(e) => e.stopPropagation()}>
-              <h2>Author Terms and Contract</h2>
-              <p>
-                This is a temporary contract placeholder. You will replace this with the
-                final legal terms later.
-              </p>
-
-              <ul>
-                <li>You confirm content ownership and publishing rights.</li>
-                <li>You agree to platform quality and community standards.</li>
-                <li>You accept monetization and payout policy updates when released.</li>
-              </ul>
-
-              <label className="author-terms-check">
-                <input
-                  type="checkbox"
-                  checked={termsAccepted}
-                  onChange={(e) => setTermsAccepted(e.target.checked)}
-                />
-                <span>I agree to the author terms and contract.</span>
-              </label>
-
-              {error && <div className="author-terms-error">{error}</div>}
-
-              <div className="author-terms-actions">
-                <button type="button" className="btn btn-light" onClick={closeTerms}>
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  disabled={!termsAccepted || submitting}
-                  onClick={handleBecomeAuthor}
-                >
-                  {submitting ? "Please wait..." : "Continue"}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        {isTermsOpen ? (
+          <AuthorTermsModal
+            submitting={submitting}
+            termsAccepted={termsAccepted}
+            error={error}
+            onClose={closeTerms}
+            onToggleAccepted={setTermsAccepted}
+            onSubmit={handleBecomeAuthor}
+          />
+        ) : null}
       </>
     );
   }
 
   return (
-    <div className="author-layout">
-      <div className="author-content-wrap">
-        <aside className="author-sidebar-wrapper author-sidebar">
-          <div className="author-sidebar-brand">
-            <img src={logo} alt="InkVerse" className="author-logo" />
-            <span className="author-brand-text">InkVerse</span>
+    <div className="author-studio-shell">
+      <div className="author-studio-shell__grid">
+        <aside className="author-studio-shell__sidebar">
+          <div className="author-studio-sidebar">
+            <div className="author-studio-sidebar__brand">
+              <img src={logo} alt="InkVerse" className="author-studio-sidebar__logo" />
+              <div>
+                <span className="author-studio-eyebrow">{t("author.studio.common.authorStudio")}</span>
+                <strong>{t("common.appName")}</strong>
+                <small>{t("author.studio.common.sidebarTagline")}</small>
+              </div>
+            </div>
+
+            <nav className="author-studio-nav" aria-label={t("author.studio.common.authorStudio")}>
+              {authorStudioRoutes.map((item) => (
+                <NavItem key={item.to} {...item} />
+              ))}
+            </nav>
+
+            <SidebarFooter user={auth?.user} onSignOut={() => setAuth(null)} />
           </div>
-          <nav className="author-nav">
-            {menuItems.map((item) => (
-              <NavItem key={item.to} {...item} />
-            ))}
-          </nav>
         </aside>
 
-        <main className="author-main">
-          <Outlet />
+        <main className="author-studio-shell__main">
+          <div className="author-studio-shell__frame">
+            <Outlet />
+          </div>
         </main>
       </div>
 
-      <nav className="author-bottom-nav">
-        {menuItems.map((item) => (
+      <nav className="author-studio-mobile-nav" aria-label={t("author.studio.common.authorStudio")}>
+        {authorStudioRoutes.map((item) => (
           <NavItem key={item.to} {...item} />
         ))}
       </nav>

@@ -18,7 +18,8 @@ namespace InkVerse.Api.Middleware
 
             var isAiEndpoint =
                 path == "/api/reviews/for-ai" ||
-                (path != null && path.StartsWith("/api/reviews/") && path.EndsWith("/analysis"));
+                (path != null && path.StartsWith("/api/reviews/") && path.EndsWith("/analysis")) ||
+                (path != null && path.StartsWith("/api/clawbot/"));
 
             if (!isAiEndpoint)
             {

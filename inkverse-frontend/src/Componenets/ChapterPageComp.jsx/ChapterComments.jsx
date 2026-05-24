@@ -1,9 +1,23 @@
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import api from "../../Api/api";
 import AuthContext from "../../Context/AuthProvider";
-import "./ChapterComment.css"
+import UserAvatar from "../../Shared/user/UserAvatar";
+import { canOpenPublicProfile, getPublicProfilePath } from "../../domain/users/public-profile";
+import ReportMenuButton from "../../features/reports/ReportMenuButton";
+import "./ChapterComment.css";
 
-export default function ChapterComments({ chapterId }) {
+export default function ChapterComments({
+  chapterId,
+  surface = "standalone",
+  theme = "mist",
+  paragraphId = null,
+  paragraphText = "",
+  onClearParagraphContext,
+  onCommentsChanged,
+}) {
+  const { t } = useTranslation();
   const { auth } = useContext(AuthContext);
   const myUserId = auth?.user?.id;
 
@@ -14,34 +28,63 @@ export default function ChapterComments({ chapterId }) {
   const [error, setError] = useState("");
   const [editingId, setEditingId] = useState(null);
 
-  // Normalize common casing differences
-  const getCid = (c) => c?.id ?? c?.Id ?? c?.ID;
-  const getUserId = (c) => c?.userId ?? c?.UserId ?? c?.userID ?? c?.UserID;
-  const getUserName = (c) => c?.userName ?? c?.UserName ?? c?.username ?? c?.Username;
-  const getLikes = (c) => c?.likes ?? c?.Likes ?? 0;
-  const getDislikes = (c) => c?.dislikes ?? c?.Dislikes ?? 0;
-  const getMyReaction = (c) => c?.myReaction ?? c?.MyReaction ?? 0;
-  const getContent = (c) => c?.content ?? c?.Content ?? "";
+  const getCid = (comment) => comment?.id ?? comment?.Id ?? comment?.ID;
+  const getUserId = (comment) =>
+    comment?.userId ?? comment?.UserId ?? comment?.userID ?? comment?.UserID;
+  const getUserName = (comment) =>
+    comment?.userName ?? comment?.UserName ?? comment?.username ?? comment?.Username;
+  const getUserAvatarUrl = (comment) =>
+    comment?.userAvatarUrl ??
+    comment?.UserAvatarUrl ??
+    comment?.avatarUrl ??
+    comment?.AvatarUrl ??
+    "";
+  const getLikes = (comment) => comment?.likes ?? comment?.Likes ?? 0;
+  const getDislikes = (comment) => comment?.dislikes ?? comment?.Dislikes ?? 0;
+  const getMyReaction = (comment) =>
+    comment?.myReaction ?? comment?.MyReaction ?? 0;
+  const getContent = (comment) => comment?.content ?? comment?.Content ?? "";
+  const getParagraphId = (comment) =>
+    comment?.paragraphId ?? comment?.ParagraphId ?? null;
 
   const loadComments = useCallback(async () => {
     if (!chapterId) return;
+
     try {
       setLoading(true);
       setError("");
-      const res = await api.get(`/chapters/${chapterId}/comments`);
-      setComments(Array.isArray(res.data) ? res.data : []);
-    } catch (e) {
-      console.error("Load comments failed:", e);
-      setError("Failed to load comments.");
+      const response = await api.get(`/chapters/${chapterId}/comments`, {
+        params: paragraphId ? { paragraphId } : undefined,
+      });
+      const nextComments = Array.isArray(response.data) ? response.data : [];
+      setComments(nextComments);
+      onCommentsChanged?.(nextComments);
+    } catch (err) {
+      console.error("Load comments failed:", err);
+      setError(t("reader.comments.errors.load"));
       setComments([]);
+      onCommentsChanged?.([]);
     } finally {
       setLoading(false);
     }
-  }, [chapterId]);
+  }, [chapterId, onCommentsChanged, paragraphId, t]);
 
   useEffect(() => {
     loadComments();
   }, [loadComments]);
+
+  useEffect(() => {
+    setReplyTo(null);
+    setError("");
+  }, [chapterId, paragraphId]);
+
+  const visibleComments = useMemo(() => {
+    if (!paragraphId) return comments;
+
+    return comments.filter(
+      (comment) => String(getParagraphId(comment) ?? "") === String(paragraphId),
+    );
+  }, [comments, paragraphId]);
 
   const post = async () => {
     const content = text.trim();
@@ -51,18 +94,19 @@ export default function ChapterComments({ chapterId }) {
       setError("");
       await api.post(`/chapters/${chapterId}/comments`, {
         content,
-        parentCommentId: replyTo ?? null,
+        paragraphId: replyTo?.paragraphId ?? paragraphId ?? null,
+        parentCommentId: replyTo?.id ?? null,
       });
       setText("");
       setReplyTo(null);
       await loadComments();
-    } catch (e) {
-      console.error("Post comment failed:", e);
-      if (e?.response?.status === 401 || e?.response?.status === 403) {
-        setError("Please sign in to comment.");
+    } catch (err) {
+      console.error("Post comment failed:", err);
+      if (err?.response?.status === 401 || err?.response?.status === 403) {
+        setError(t("reader.comments.errors.signInComment"));
         return;
       }
-      setError("Failed to post comment.");
+      setError(t("reader.comments.errors.post"));
     }
   };
 
@@ -71,13 +115,13 @@ export default function ChapterComments({ chapterId }) {
       setError("");
       await api.post(`/comments/${commentId}/reaction`, { value });
       await loadComments();
-    } catch (e) {
-      console.error("React failed:", e);
-      if (e?.response?.status === 401 || e?.response?.status === 403) {
-        setError("Please sign in to react.");
+    } catch (err) {
+      console.error("React failed:", err);
+      if (err?.response?.status === 401 || err?.response?.status === 403) {
+        setError(t("reader.comments.errors.signInReact"));
         return;
       }
-      setError("Failed to react.");
+      setError(t("reader.comments.errors.react"));
     }
   };
 
@@ -86,13 +130,13 @@ export default function ChapterComments({ chapterId }) {
       setError("");
       await api.delete(`/comments/${commentId}`);
       await loadComments();
-    } catch (e) {
-      console.error("Delete failed:", e);
-      if (e?.response?.status === 401 || e?.response?.status === 403) {
-        setError("Please sign in.");
+    } catch (err) {
+      console.error("Delete failed:", err);
+      if (err?.response?.status === 401 || err?.response?.status === 403) {
+        setError(t("reader.comments.errors.signIn"));
         return;
       }
-      setError("Failed to delete comment.");
+      setError(t("reader.comments.errors.delete"));
     }
   };
 
@@ -105,212 +149,318 @@ export default function ChapterComments({ chapterId }) {
       await api.put(`/comments/${commentId}`, { content: trimmed });
       setEditingId(null);
       await loadComments();
-    } catch (e) {
-      console.error("Edit failed:", e);
-      if (e?.response?.status === 401 || e?.response?.status === 403) {
-        setError("Please sign in.");
+    } catch (err) {
+      console.error("Edit failed:", err);
+      if (err?.response?.status === 401 || err?.response?.status === 403) {
+        setError(t("reader.comments.errors.signIn"));
         return;
       }
-      setError("Failed to edit comment.");
+      setError(t("reader.comments.errors.edit"));
     }
   };
 
-  // Local recursive component is OK in React
-  const CommentItem = ({ c, depth = 0 }) => {
-    const cid = String(getCid(c) ?? "");
+  const CommentItem = ({ comment, depth = 0 }) => {
+    const commentId = String(getCid(comment) ?? "");
     const isOwner =
-      myUserId && String(getUserId(c) ?? "") === String(myUserId);
-    const isEditing = String(editingId ?? "") === cid;
-
-    const [localEditText, setLocalEditText] = useState(getContent(c));
+      myUserId && String(getUserId(comment) ?? "") === String(myUserId);
+    const isEditing = String(editingId ?? "") === commentId;
+    const [localEditText, setLocalEditText] = useState(getContent(comment));
 
     useEffect(() => {
-      if (!isEditing) setLocalEditText(getContent(c));
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isEditing, c]);
+      if (!isEditing) setLocalEditText(getContent(comment));
+    }, [comment, isEditing]);
 
-    const createdAt = c?.createdAt ?? c?.CreatedAt;
-    const updatedAt = c?.updatedAt ?? c?.UpdatedAt;
+    const createdAt = comment?.createdAt ?? comment?.CreatedAt;
+    const updatedAt = comment?.updatedAt ?? comment?.UpdatedAt;
 
     const wasEdited = useMemo(() => {
       if (!updatedAt || !createdAt) return false;
       return Math.abs(new Date(updatedAt) - new Date(createdAt)) > 60_000;
-    }, [updatedAt, createdAt]);
+    }, [createdAt, updatedAt]);
 
     return (
-      <div className="iv-comment" style={{ marginLeft: depth * 14 }}>
-  <div className="iv-comment-card">
-<div className="iv-comment-top">
-            <div className="iv-comment-who">
-  <div className="iv-comment-author">{getUserName(c) || "Unknown"}</div>
-  <div className="iv-comment-time">
-    {createdAt ? new Date(createdAt).toLocaleString() : ""}
-    {wasEdited && <span className="iv-comment-edited"> • edited</span>}
-  </div>
-</div>
-
-            <div className="d-flex justify-content-end gap-2">
-              <button
-                className={
-                  "btn btn-sm rounded border-0 " +
-                  (getMyReaction(c) === 1
-                    ? "btn-success"
-                    : "btn-outline-success")
-                }
-                type="button"
-                onClick={() => reactTo(cid, 1)}
+      <div className="iv-comment" style={{ marginLeft: depth * 18 }}>
+        <div className="iv-comment-card">
+          <div className="iv-comment-top">
+            {canOpenPublicProfile(getUserName(comment) || "") ? (
+              <Link
+                to={getPublicProfilePath(getUserName(comment) || "")}
+                className="iv-comment-who iv-comment-whoLink"
+                title={`View ${getUserName(comment) || t("reader.comments.unknownReader")}`}
               >
-                <i className="bi bi-hand-thumbs-up me-1" />
-                {getLikes(c)}
+                <UserAvatar
+                  className="iv-comment-avatar"
+                  src={getUserAvatarUrl(comment)}
+                  name={getUserName(comment) || t("reader.comments.unknownReader")}
+                />
+                <div className="iv-comment-who__copy">
+                  <div className="iv-comment-author">
+                    {getUserName(comment) || t("reader.comments.unknownReader")}
+                  </div>
+                  <div className="iv-comment-time">
+                    {createdAt ? new Date(createdAt).toLocaleString() : ""}
+                    {wasEdited ? (
+                      <span className="iv-comment-edited"> • {t("reader.comments.edited")}</span>
+                    ) : null}
+                  </div>
+                </div>
+              </Link>
+            ) : (
+              <div className="iv-comment-who">
+                <UserAvatar
+                  className="iv-comment-avatar"
+                  src={getUserAvatarUrl(comment)}
+                  name={getUserName(comment) || t("reader.comments.unknownReader")}
+                />
+                <div className="iv-comment-who__copy">
+                  <div className="iv-comment-author">
+                    {getUserName(comment) || t("reader.comments.unknownReader")}
+                  </div>
+                  <div className="iv-comment-time">
+                    {createdAt ? new Date(createdAt).toLocaleString() : ""}
+                    {wasEdited ? (
+                      <span className="iv-comment-edited"> • {t("reader.comments.edited")}</span>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="iv-comment-reactions">
+              <button
+                className={`iv-react-btn ${
+                  getMyReaction(comment) === 1 ? "is-active-up" : ""
+                }`}
+                type="button"
+                onClick={() => reactTo(commentId, 1)}
+              >
+                <i className="bi bi-hand-thumbs-up" />
+                <span>{getLikes(comment)}</span>
               </button>
 
               <button
-                className={
-                  "btn btn-sm rounded border-0 " +
-                  (getMyReaction(c) === -1
-                    ? "btn-danger"
-                    : "btn-outline-danger")
-                }
+                className={`iv-react-btn ${
+                  getMyReaction(comment) === -1 ? "is-active-down" : ""
+                }`}
                 type="button"
-                onClick={() => reactTo(cid, -1)}
+                onClick={() => reactTo(commentId, -1)}
               >
-                <i className="bi bi-hand-thumbs-down me-1" />
-                {getDislikes(c)}
+                <i className="bi bi-hand-thumbs-down" />
+                <span>{getDislikes(comment)}</span>
               </button>
+
+              <ReportMenuButton
+                targetType="chapter_comment"
+                targetId={commentId}
+                targetLabel={t("reader.comments.comment", { defaultValue: "Comment" })}
+                buttonClassName="iv-react-btn iv-react-btn--more"
+              />
             </div>
           </div>
 
-          {/* Content / Editor */}
           {isEditing ? (
-            <div className="mt-2">
+            <div className="iv-comment-editor">
               <textarea
-                className="form-control form-control-sm"
-                rows={3}
+                className="iv-comment-field iv-comment-field--edit"
+                rows={4}
                 value={localEditText}
-                onChange={(e) => setLocalEditText(e.target.value)}
+                onChange={(event) => setLocalEditText(event.target.value)}
                 autoFocus
               />
-              <div className="d-flex justify-content-end gap-2 mt-2">
+
+              <div className="iv-comment-editor__actions">
                 <button
-                  className="btn btn-sm btn-outline-secondary"
+                  className="iv-comment-secondary"
                   type="button"
                   onClick={() => setEditingId(null)}
                 >
-                  Cancel
+                  {t("common.actions.cancel")}
                 </button>
                 <button
-                  className="btn btn-sm btn-primary"
+                  className="iv-comment-primary"
                   type="button"
-                  onClick={() => updateComment(cid, localEditText)}
+                  onClick={() => updateComment(commentId, localEditText)}
                   disabled={!localEditText.trim()}
                 >
-                  Save
+                  {t("common.actions.saveChanges")}
                 </button>
               </div>
             </div>
           ) : (
-<div className="iv-comment-text">{getContent(c)}</div>
+            <div className="iv-comment-text">{getContent(comment)}</div>
           )}
 
-          {/* Actions */}
-<div className="iv-comment-actions">
+          <div className="iv-comment-actions">
             {!isEditing ? (
-              <button className="iv-comment-reply" type="button" onClick={() => setReplyTo(cid)}>
-  Reply
-</button>
+              <button
+                className="iv-comment-reply"
+                type="button"
+                onClick={() =>
+                  setReplyTo({
+                    id: commentId,
+                    paragraphId: getParagraphId(comment) ?? paragraphId ?? null,
+                    userName: getUserName(comment) || t("reader.comments.reader"),
+                  })
+                }
+              >
+                {t("reader.comments.reply")}
+              </button>
             ) : (
               <span />
             )}
 
-            {isOwner && !isEditing && (
-              <div className="d-flex gap-2">
+            {isOwner && !isEditing ? (
+              <div className="iv-comment-owner-actions">
                 <button
-                  className="btn btn-sm btn-outline-primary border-0"
+                  className="iv-icon-btn"
                   type="button"
-                  title="Edit"
-                  onClick={() => setEditingId(cid)}
+                  title={t("reader.comments.editComment")}
+                  onClick={() => setEditingId(commentId)}
                 >
                   <i className="bi bi-pencil-square" />
                 </button>
 
                 <button
-                  className="btn btn-sm btn-outline-secondary border-0"
+                  className="iv-icon-btn"
                   type="button"
-                  title="Delete"
+                  title={t("reader.comments.deleteComment")}
                   onClick={() => {
-                    if (window.confirm("Delete this comment?"))
-                      deleteComment(cid);
+                    if (window.confirm(t("reader.comments.confirmDelete"))) {
+                      deleteComment(commentId);
+                    }
                   }}
                 >
                   <i className="bi bi-trash" />
                 </button>
               </div>
-            )}
+            ) : null}
           </div>
         </div>
 
-        {Array.isArray(c?.replies) &&
-          c.replies.map((r) => (
-            <CommentItem key={String(getCid(r))} c={r} depth={depth + 1} />
-          ))}
+        {Array.isArray(comment?.replies)
+          ? comment.replies.map((reply) => (
+              <CommentItem
+                key={String(getCid(reply))}
+                comment={reply}
+                depth={depth + 1}
+              />
+            ))
+          : null}
       </div>
     );
   };
 
   return (
-    <div>
-      {/* Write box */}
-      <div className="border-0 rounded p-2 mb-2">
-        {replyTo && (
-          <div className="small text-muted mb-1">
-            Replying to #{replyTo}{" "}
+    <div
+      className={`iv-comments-shell ${
+        surface === "drawer" ? "iv-comments-shell--drawer" : ""
+      } iv-comments-shell--${theme} ${
+        surface === "drawer" ? "iv-comments-shell--in-reader-drawer" : ""
+      }`}
+    >
+      <div className="iv-comments-head">
+        <div>
+          <span className="iv-comments-kicker">{t("reader.comments.kicker")}</span>
+          <h2>{paragraphId ? t("reader.comments.passageTitle") : t("reader.comments.title")}</h2>
+          <p>
+            {paragraphId
+              ? t("reader.comments.passageSubtitle")
+              : t("reader.comments.subtitle")}
+          </p>
+        </div>
+
+        <div className="iv-comments-head__actions">
+          {paragraphId && onClearParagraphContext ? (
             <button
-              className="btn btn-sm btn-link p-0"
+              className="iv-comment-secondary"
+              type="button"
+              onClick={onClearParagraphContext}
+            >
+              {t("reader.comments.showAll")}
+            </button>
+          ) : null}
+
+          <button
+            className="iv-comment-secondary"
+            type="button"
+            onClick={loadComments}
+          >
+            {t("reader.comments.refresh")}
+          </button>
+        </div>
+      </div>
+
+      {paragraphId ? (
+        <div className="iv-comment-context">
+          <span className="iv-comment-context__label">{t("reader.comments.selectedParagraph")}</span>
+          <p>{paragraphText || t("reader.comments.highlightedFallback")}</p>
+        </div>
+      ) : null}
+
+      <div className="iv-comment-composer">
+        {replyTo ? (
+          <div className="iv-comment-replying">
+            <span>
+              {t("reader.comments.replyingTo", {
+                user: replyTo.userName ? replyTo.userName : `#${replyTo.id}`,
+              })}
+            </span>
+            <button
+              className="iv-comment-replying__clear"
               type="button"
               onClick={() => setReplyTo(null)}
             >
-              Cancel
+              {t("common.actions.cancel")}
             </button>
           </div>
-        )}
+        ) : null}
 
         <textarea
-          className="form-control form-control-sm border-0"
-          rows={3}
+          className="iv-comment-field"
+          rows={4}
           value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Write a comment..."
+          onChange={(event) => setText(event.target.value)}
+          placeholder={
+            paragraphId
+              ? t("reader.comments.placeholders.paragraph")
+              : t("reader.comments.placeholders.chapter")
+          }
         />
 
-        <div className="d-flex justify-content-between align-items-center mt-2">
-          <button
-            className="btn btn-sm btn-outline-secondary"
-            onClick={loadComments}
-            type="button"
-          >
-            Refresh
-          </button>
+        <div className="iv-comment-composebar">
+          <span className="iv-comment-composehint">
+            {auth?.user?.userName
+              ? t("reader.comments.commentingAs", { user: auth.user.userName })
+              : t("reader.comments.signInPrompt")}
+          </span>
 
           <button
-            className="btn btn-sm btn-primary"
+            className="iv-comment-primary"
             type="button"
             onClick={post}
             disabled={!text.trim()}
           >
-            Post
+            {t("reader.comments.post")}
           </button>
         </div>
 
-        {error && <div className="text-danger small mt-2">{error}</div>}
+        {error ? <div className="iv-comment-error">{error}</div> : null}
       </div>
 
-      {/* List */}
       {loading ? (
-        <p className="text-muted">Loading comments...</p>
-      ) : comments.length ? (
-        comments.map((c) => <CommentItem key={String(getCid(c))} c={c} />)
+        <div className="iv-comments-state">{t("reader.comments.loading")}</div>
+      ) : visibleComments.length ? (
+        <div className="iv-comments-list">
+          {visibleComments.map((comment) => (
+            <CommentItem key={String(getCid(comment))} comment={comment} />
+          ))}
+        </div>
       ) : (
-        <p className="text-muted">No comments yet. Be the first!</p>
+        <div className="iv-comments-state">
+          {paragraphId
+            ? t("reader.comments.emptyParagraph")
+            : t("reader.comments.emptyChapter")}
+        </div>
       )}
     </div>
   );

@@ -11,11 +11,13 @@ export const NEWBOOKS_QUERY = {
   pageNumber: 1,
 };
 
-export const NEWBOOKS_LABELS = {
-  title: "New on InkVerse",
-  subtitle: "Fresh shelves, new obsessions, and the latest worlds added to the platform.",
-  cta: "Browse all",
-  loading: "Loading new books…",
-  empty: "No books yet.",
-  error: "Failed to load new books.",
-};
+export function getNewBooksLabels(t) {
+  return {
+    title: t("home.newBooks.title"),
+    subtitle: t("home.newBooks.subtitle"),
+    cta: t("home.newBooks.cta"),
+    loading: t("home.newBooks.loading"),
+    empty: t("home.newBooks.empty"),
+    error: t("home.newBooks.error"),
+  };
+}

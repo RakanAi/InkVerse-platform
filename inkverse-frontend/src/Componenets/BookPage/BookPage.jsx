@@ -6,7 +6,6 @@ import Toc from "./BookPageComp/TableOfContent";
 import RatingBox from "./BookPageComp/RatingSec";
 import Reviews from "./BookPageComp/ReviewsSec";
 import ReviewModal from "./BookPageComp/ReviewModal";
-import BookMetaBox from "./BookPageComp/BookMetaBox";
 
 import { useEffect, useMemo, useState, useCallback, useContext } from "react";
 import { useParams } from "react-router-dom";
@@ -145,19 +144,19 @@ export default function BookPage() {
   }, [reviews]);
 
   return (
-    <div className="container bg-white pb-4">
+    <div className="iv-book-page">
       <Bgpic />
+      <div className="iv-book-shell">
 
       {loadingBook ? (
-        <p className="text-white">Loading book...</p>
+        <p className="iv-book-status iv-book-status--light">Loading book...</p>
       ) : bookError ? (
-        <p className="text-danger">{bookError}</p>
+        <p className="iv-book-status iv-book-status--error">{bookError}</p>
       ) : !book ? (
-        <p className="text-white">No book returned.</p>
+        <p className="iv-book-status iv-book-status--light">No book returned.</p>
       ) : (
         <>
-          <BookData book={book} averageRating={avgFromReviews} />
-          <br />
+          <BookData book={book} averageRating={avgFromReviews} reviewCount={totalReviews} />
           <SynopsisBox description={book.description} />
           <Toc />
 
@@ -200,6 +199,7 @@ export default function BookPage() {
 
         </>
       )}
+      </div>
     </div>
   );
 }

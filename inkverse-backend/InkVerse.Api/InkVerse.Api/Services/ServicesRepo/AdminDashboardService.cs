@@ -8,10 +8,16 @@ namespace InkVerse.Api.Services.ServicesRepo
     public class AdminDashboardService : IAdminDashboardService
     {
         private readonly InkVerseDB _db;
+        private readonly IBookContractService _bookContracts;
+        private readonly IContentReportService _reports;
+        private readonly IModerationService _moderation;
 
-        public AdminDashboardService(InkVerseDB db)
+        public AdminDashboardService(InkVerseDB db, IBookContractService bookContracts, IContentReportService reports, IModerationService moderation)
         {
             _db = db;
+            _bookContracts = bookContracts;
+            _reports = reports;
+            _moderation = moderation;
         }
 
         public async Task<AdminDashboardDto> GetStatsAsync()
@@ -27,6 +33,10 @@ namespace InkVerse.Api.Services.ServicesRepo
 
             var booksWithNoGenres = await _db.Books.CountAsync(b => !b.Genres.Any());
             var booksWithNoTags = await _db.Books.CountAsync(b => !b.Tags.Any());
+            var contractCandidates = await _bookContracts.CountContractCandidatesAsync();
+            var openReports = await _reports.CountOpenReportsAsync();
+            var openModerationCases = await _moderation.CountAdminQueueAsync();
+            var clawbotAutoHandledToday = await _moderation.CountAutoHandledTodayAsync();
 
             // ✅ Latest 5 books
             var latestBooks = await _db.Books
@@ -70,6 +80,10 @@ namespace InkVerse.Api.Services.ServicesRepo
                 BooksWithNoChapters = booksWithNoChapters,
                 BooksWithNoGenres = booksWithNoGenres,
                 BooksWithNoTags = booksWithNoTags,
+                ContractCandidates = contractCandidates,
+                OpenReports = openReports,
+                OpenModerationCases = openModerationCases,
+                ClawbotAutoHandledToday = clawbotAutoHandledToday,
 
                 LatestBooks = latestBooks,
                 LatestChapters = latestChapters

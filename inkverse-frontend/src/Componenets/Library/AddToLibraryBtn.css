@@ -1,0 +1,37 @@
+.iv-library-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #eef3ff;
+  border: 1px solid rgba(221, 231, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 12px 24px rgba(8, 13, 36, 0.14);
+  backdrop-filter: blur(14px);
+}
+
+.iv-library-btn:hover:not(:disabled) {
+  color: #fff;
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(229, 236, 255, 0.24);
+}
+
+.iv-library-btn.is-active {
+  color: #f6f8ff;
+  border-color: rgba(204, 218, 255, 0.2);
+  background:
+    linear-gradient(135deg, rgba(142, 163, 255, 0.16), rgba(122, 76, 255, 0.12)),
+    rgba(255, 255, 255, 0.08);
+}
+
+.iv-library-btn .bi {
+  font-size: 0.98rem;
+}
+
+.iv-library-btn:disabled {
+  opacity: 0.66;
+  cursor: not-allowed;
+}

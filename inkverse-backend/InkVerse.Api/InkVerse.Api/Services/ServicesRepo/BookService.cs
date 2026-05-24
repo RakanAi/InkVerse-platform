@@ -3,6 +3,8 @@ using System.Linq;
 using InkVerse.Api.Data;
 using InkVerse.Api.DTOs.Book;
 using InkVerse.Api.Entities.Enums;
+using InkVerse.Api.Entities.Monetization;
+using InkVerse.Api.Entities.Notifications;
 using InkVerse.Api.Helpers;
 using InkVerse.Api.Services.InterFace;
 
@@ -11,10 +13,12 @@ namespace InkVerse.Api.Services.ServicesRepo
     public class BookService : IBookServices
     {
         private readonly InkVerseDB _inkVerseDB;
+        private readonly INotificationService _notifications;
 
-        public BookService(InkVerseDB inkVerseDB)
+        public BookService(InkVerseDB inkVerseDB, INotificationService notifications)
         {
             _inkVerseDB = inkVerseDB;
+            _notifications = notifications;
         }
 
         public async Task<List<BookReadDto>> GetAllBooksAsync(QueryObject query)
@@ -74,6 +78,8 @@ namespace InkVerse.Api.Services.ServicesRepo
                     WordCount = b.WordCount,
                     TotalViews = b.TotalViews,
                     AverageRating = b.AverageRating,
+                    ReviewsCount = _inkVerseDB.Reviews.Count(r => r.BookId == b.ID && !r.IsDeleted),
+                    ChaptersCount = _inkVerseDB.Chapters.Count(c => c.BookId == b.ID && !c.IsDeleted),
 
                     AuthorId = b.AuthorId,
                     AuthorName = b.AuthorName ?? b.Author.UserName,
@@ -83,6 +89,8 @@ namespace InkVerse.Api.Services.ServicesRepo
 
                     VerseType = b.VerseType.ToString(),
                     OriginType = b.OriginType.ToString(),
+                    IsContracted = _inkVerseDB.BookContracts.Any(item =>
+                        item.BookId == b.ID && item.Status == BookContractStatuses.Approved),
                 })
                 .ToListAsync();
 
@@ -105,10 +113,13 @@ namespace InkVerse.Api.Services.ServicesRepo
                     CoverImageUrl = b.CoverImageUrl,
                     IsFanfic = b.IsFanfic,
                     Status = b.Status.ToString(),
+                    AuthorId = b.AuthorId,
                     AuthorName = b.Author.UserName,
                     WordCount = b.WordCount,
                     TotalViews = b.TotalViews,
                     AverageRating = b.AverageRating,
+                    ReviewsCount = _inkVerseDB.Reviews.Count(r => r.BookId == b.ID && !r.IsDeleted),
+                    ChaptersCount = _inkVerseDB.Chapters.Count(c => c.BookId == b.ID && !c.IsDeleted),
                     VerseType = b.VerseType.ToString(),
                     OriginType = b.OriginType.ToString(),
                     Genres = b.Genres.Select(g => g.Name).ToList(),
@@ -116,6 +127,8 @@ namespace InkVerse.Api.Services.ServicesRepo
                     GenreIds = b.Genres.Select(g => g.ID).ToList(),
                     TagIds = b.Tags.Select(t => t.ID).ToList(),
                     SourceUrl = b.SourceUrl,
+                    IsContracted = _inkVerseDB.BookContracts.Any(item =>
+                        item.BookId == b.ID && item.Status == BookContractStatuses.Approved),
 
 
                 }).FirstOrDefaultAsync();
@@ -173,6 +186,24 @@ namespace InkVerse.Api.Services.ServicesRepo
             _inkVerseDB.Books.Add(book);
             await _inkVerseDB.SaveChangesAsync();
 
+            var followers = await _inkVerseDB.UserAuthorFollows
+                .AsNoTracking()
+                .Where(item => item.AuthorId == authorId && item.IsActive)
+                .Select(item => item.FollowerId)
+                .ToListAsync();
+
+            await _notifications.NotifyManyAsync(followers, new NotificationCreateRequest(
+                RecipientId: "",
+                ActorId: authorId,
+                Category: NotificationCategories.AuthorUpdates,
+                Type: NotificationTypes.NewAuthorBook,
+                Title: "New book from an author you follow",
+                Body: $"{book.Title} is now on InkVerse.",
+                LinkUrl: $"/book/{book.ID}",
+                TargetType: "book",
+                TargetId: book.ID.ToString(),
+                DedupeKey: $"author-book:{book.ID}"));
+
             return new BookReadDto
             {
                 Id = book.ID,
@@ -183,9 +214,14 @@ namespace InkVerse.Api.Services.ServicesRepo
                 WordCount = book.WordCount,
                 TotalViews = book.TotalViews,
                 AverageRating = book.AverageRating,
+                ReviewsCount = 0,
+                ChaptersCount = 0,
                 IsFanfic = book.IsFanfic,
+                AuthorId = book.AuthorId,
+                AuthorName = book.AuthorName,
                 VerseType = book.VerseType.ToString(),
                 OriginType = book.OriginType.ToString(),
+                IsContracted = false,
                 Genres = genres.Select(g => g.Name).ToList(),
                 Tags = tags.Select(t => t.Name).ToList(),
                 SourceUrl = book.SourceUrl,
@@ -266,9 +302,16 @@ namespace InkVerse.Api.Services.ServicesRepo
                 WordCount = book.WordCount,
                 TotalViews = book.TotalViews,
                 AverageRating = book.AverageRating,
+                AuthorId = book.AuthorId,
                 AuthorName = book.Author?.UserName,
                 VerseType = book.VerseType.ToString(),
                 OriginType = book.OriginType.ToString(),
+                IsContracted = _inkVerseDB.BookContracts.Any(item =>
+                    item.BookId == book.ID && item.Status == BookContractStatuses.Approved),
+                ContractStatus = _inkVerseDB.BookContracts
+                    .Where(item => item.BookId == book.ID)
+                    .Select(item => item.Status)
+                    .FirstOrDefault(),
                 Genres = book.Genres.Select(g => g.Name).ToList(),
                 Tags = book.Tags.Select(t => t.Name).ToList(),
                 GenreIds = book.Genres.Select(g => g.ID).ToList(),
@@ -308,6 +351,8 @@ namespace InkVerse.Api.Services.ServicesRepo
                     WordCount = b.WordCount,
                     TotalViews = b.TotalViews,
                     AverageRating = b.AverageRating,
+                    ReviewsCount = _inkVerseDB.Reviews.Count(r => r.BookId == b.ID && !r.IsDeleted),
+                    ChaptersCount = _inkVerseDB.Chapters.Count(c => c.BookId == b.ID && !c.IsDeleted),
                     IsFanfic = b.IsFanfic,
                     VerseType = b.VerseType.ToString(),
                     OriginType = b.OriginType.ToString(),
@@ -318,6 +363,12 @@ namespace InkVerse.Api.Services.ServicesRepo
                     CreatedAt = b.CreatedAt,
                     UpdatedAt = b.UpdatedAt,
                     SourceUrl = b.SourceUrl,
+                    IsContracted = _inkVerseDB.BookContracts.Any(item =>
+                        item.BookId == b.ID && item.Status == BookContractStatuses.Approved),
+                    ContractStatus = _inkVerseDB.BookContracts
+                        .Where(item => item.BookId == b.ID)
+                        .Select(item => item.Status)
+                        .FirstOrDefault(),
                 }).ToListAsync();
         }
 
@@ -339,7 +390,9 @@ namespace InkVerse.Api.Services.ServicesRepo
                     VerseType = b.VerseType.ToString(),
                     OriginType = b.OriginType.ToString(),
                     Genres = b.Genres.Select(g => g.Name).ToList(),
-                    Tags = b.Tags.Select(t => t.Name).ToList()
+                    Tags = b.Tags.Select(t => t.Name).ToList(),
+                    IsContracted = _inkVerseDB.BookContracts.Any(item =>
+                        item.BookId == b.ID && item.Status == BookContractStatuses.Approved),
                 }).ToListAsync();
         }
 
@@ -368,7 +421,7 @@ namespace InkVerse.Api.Services.ServicesRepo
             return await _inkVerseDB.Books
                 .Include(b => b.Author)
                 .Where(b => !b.IsDeleted && b.VerseType == verseType)
-                .OrderByDescending(b => b.TotalViews)       // v1 “top” rule
+                .OrderByDescending(b => b.TotalViews)       // v1 top rule
                 .ThenByDescending(b => b.AverageRating)
                 .Take(take)
                 .Select(b => new BookReadDto
@@ -387,7 +440,9 @@ namespace InkVerse.Api.Services.ServicesRepo
                     VerseType = b.VerseType.ToString(),
                     OriginType = b.OriginType.ToString(),
                     Genres = b.Genres.Select(g => g.Name).ToList(),
-                    Tags = b.Tags.Select(t => t.Name).ToList()
+                    Tags = b.Tags.Select(t => t.Name).ToList(),
+                    IsContracted = _inkVerseDB.BookContracts.Any(item =>
+                        item.BookId == b.ID && item.Status == BookContractStatuses.Approved),
                 })
                 .ToListAsync();
         }
@@ -433,7 +488,7 @@ namespace InkVerse.Api.Services.ServicesRepo
             if (query.ExcludeTagIds != null && query.ExcludeTagIds .Length > 0)
                 q = q.Where(b => !b.Tags.Any(t => query.ExcludeTagIds.Contains(t.ID)));
             if (query.MinReviewCount.HasValue && query.MinReviewCount.Value > 0)
-                q = q.Where(b => _inkVerseDB.Reviews.Count(r => r.BookId == b.ID) >= query.MinReviewCount.Value);
+                q = q.Where(b => _inkVerseDB.Reviews.Count(r => r.BookId == b.ID && !r.IsDeleted) >= query.MinReviewCount.Value);
 
             if (query.TrendId.HasValue)
             {
@@ -485,8 +540,8 @@ namespace InkVerse.Api.Services.ServicesRepo
                     : q.OrderByDescending(b => b.AverageRating),
 
                 "reviewcount" => asc
-                    ? q.OrderBy(b => _inkVerseDB.Reviews.Count(r => r.BookId == b.ID))
-                    : q.OrderByDescending(b => _inkVerseDB.Reviews.Count(r => r.BookId == b.ID)),
+                    ? q.OrderBy(b => _inkVerseDB.Reviews.Count(r => r.BookId == b.ID && !r.IsDeleted))
+                    : q.OrderByDescending(b => _inkVerseDB.Reviews.Count(r => r.BookId == b.ID && !r.IsDeleted)),
 
                 "chaptercount" => asc
                     ? q.OrderBy(b => _inkVerseDB.Chapters.Count(c => c.BookId == b.ID))
@@ -524,8 +579,8 @@ namespace InkVerse.Api.Services.ServicesRepo
                     CreatedAt = b.CreatedAt,
                     UpdatedAt = b.UpdatedAt,
 
-                    ReviewsCount = _inkVerseDB.Reviews.Count(r => r.BookId == b.ID),
-                    ChaptersCount = _inkVerseDB.Chapters.Count(c => c.BookId == b.ID),
+                    ReviewsCount = _inkVerseDB.Reviews.Count(r => r.BookId == b.ID && !r.IsDeleted),
+                    ChaptersCount = _inkVerseDB.Chapters.Count(c => c.BookId == b.ID && !c.IsDeleted),
 
                     IsFanfic = b.IsFanfic,
                     VerseType = b.VerseType.ToString(),
@@ -537,6 +592,8 @@ namespace InkVerse.Api.Services.ServicesRepo
                     TagIds = b.Tags.Select(t => t.ID).ToList(),
 
                     SourceUrl = b.SourceUrl,
+                    IsContracted = _inkVerseDB.BookContracts.Any(item =>
+                        item.BookId == b.ID && item.Status == BookContractStatuses.Approved),
 
                 })
                 .ToListAsync();

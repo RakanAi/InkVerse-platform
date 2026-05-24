@@ -1,0 +1,286 @@
+.iv-report-menu-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.iv-report-menu-button {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(104, 121, 184, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  color: inherit;
+  font: inherit;
+}
+
+.iv-report-menu-button:hover,
+.iv-report-menu-button:focus-visible {
+  background: rgba(91, 107, 255, 0.1);
+  border-color: rgba(91, 107, 255, 0.28);
+  outline: none;
+}
+
+.iv-report-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 40;
+  min-width: 148px;
+  padding: 6px;
+  border: 1px solid rgba(104, 121, 184, 0.16);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 18px 38px rgba(24, 36, 78, 0.16);
+}
+
+.iv-report-menu--floating {
+  position: fixed;
+  top: auto;
+  right: auto;
+  z-index: 2600;
+}
+
+html[dir="rtl"] .iv-report-menu {
+  right: auto;
+  left: 0;
+}
+
+html[dir="rtl"] .iv-report-menu--floating {
+  left: auto;
+}
+
+.iv-report-menu button {
+  width: 100%;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #1f2b52;
+  font: inherit;
+  font-weight: 800;
+  text-align: left;
+}
+
+html[dir="rtl"] .iv-report-menu button {
+  text-align: right;
+}
+
+.iv-report-menu button:hover,
+.iv-report-menu button:focus-visible {
+  background: rgba(91, 107, 255, 0.1);
+  outline: none;
+}
+
+.iv-report-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(9, 12, 24, 0.58);
+  backdrop-filter: blur(8px);
+}
+
+.iv-report-dialog {
+  position: relative;
+  width: min(520px, 100%);
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+  border-radius: 24px;
+  border: 1px solid rgba(118, 136, 204, 0.18);
+  background: #fff;
+  color: #17213f;
+  box-shadow: 0 34px 80px rgba(3, 7, 18, 0.28);
+}
+
+.iv-report-dialog__close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(91, 107, 255, 0.08);
+  color: inherit;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+html[dir="rtl"] .iv-report-dialog__close {
+  right: auto;
+  left: 14px;
+}
+
+.iv-report-dialog__head {
+  display: grid;
+  gap: 6px;
+  padding-right: 38px;
+}
+
+html[dir="rtl"] .iv-report-dialog__head {
+  padding-right: 0;
+  padding-left: 38px;
+}
+
+.iv-report-dialog__head span {
+  color: #6d5dfc;
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.iv-report-dialog__head h2 {
+  margin: 0;
+  font-size: 1.55rem;
+  line-height: 1;
+}
+
+.iv-report-dialog__head p,
+.iv-report-dialog__signin p,
+.iv-report-dialog__success p {
+  margin: 0;
+  color: #647096;
+  line-height: 1.6;
+}
+
+.iv-report-field {
+  display: grid;
+  gap: 8px;
+}
+
+.iv-report-field span {
+  color: #51608a;
+  font-size: 0.82rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.iv-report-field select,
+.iv-report-field textarea {
+  width: 100%;
+  border: 1px solid rgba(104, 121, 184, 0.2);
+  border-radius: 14px;
+  background: #fff;
+  color: #17213f;
+  font: inherit;
+}
+
+.iv-report-field select {
+  min-height: 44px;
+  padding: 0 12px;
+}
+
+.iv-report-field textarea {
+  resize: vertical;
+  padding: 12px;
+  line-height: 1.55;
+}
+
+.iv-report-dialog__actions,
+.iv-report-dialog__signin,
+.iv-report-dialog__success {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.iv-report-dialog__signin,
+.iv-report-dialog__success {
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(91, 107, 255, 0.08);
+}
+
+.iv-report-dialog__ghost,
+.iv-report-dialog__submit,
+.iv-report-dialog__signin button,
+.iv-report-dialog__success button {
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 13px;
+  font: inherit;
+  font-weight: 900;
+}
+
+.iv-report-dialog__ghost {
+  border: 1px solid rgba(104, 121, 184, 0.2);
+  background: #fff;
+  color: #26345f;
+}
+
+.iv-report-dialog__submit,
+.iv-report-dialog__signin button,
+.iv-report-dialog__success button {
+  border: 0;
+  background: linear-gradient(135deg, #5863f0 0%, #7b4dff 100%);
+  color: #fff;
+}
+
+.iv-report-dialog__submit:disabled {
+  opacity: 0.58;
+}
+
+.iv-report-dialog__error {
+  padding: 10px 12px;
+  border: 1px solid rgba(220, 38, 38, 0.18);
+  border-radius: 12px;
+  background: rgba(254, 226, 226, 0.76);
+  color: #991b1b;
+  font-weight: 800;
+}
+
+html[data-theme="dark"] .iv-report-menu {
+  border-color: rgba(148, 163, 184, 0.18);
+  background: #111b34;
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.28);
+}
+
+html[data-theme="dark"] .iv-report-menu button,
+html[data-theme="dark"] .iv-report-dialog {
+  color: #eef3ff;
+}
+
+html[data-theme="dark"] .iv-report-menu button:hover,
+html[data-theme="dark"] .iv-report-menu button:focus-visible,
+html[data-theme="dark"] .iv-report-menu-button:hover,
+html[data-theme="dark"] .iv-report-menu-button:focus-visible {
+  background: rgba(109, 121, 255, 0.16);
+}
+
+html[data-theme="dark"] .iv-report-menu-button,
+html[data-theme="dark"] .iv-report-dialog,
+html[data-theme="dark"] .iv-report-field select,
+html[data-theme="dark"] .iv-report-field textarea,
+html[data-theme="dark"] .iv-report-dialog__ghost {
+  border-color: rgba(148, 163, 184, 0.18);
+  background: #111b34;
+  color: #eef3ff;
+}
+
+html[data-theme="dark"] .iv-report-dialog__head p,
+html[data-theme="dark"] .iv-report-dialog__signin p,
+html[data-theme="dark"] .iv-report-dialog__success p,
+html[data-theme="dark"] .iv-report-field span {
+  color: #a7b6dc;
+}
+
+html[data-theme="dark"] .iv-report-dialog__signin,
+html[data-theme="dark"] .iv-report-dialog__success {
+  background: rgba(109, 121, 255, 0.14);
+}

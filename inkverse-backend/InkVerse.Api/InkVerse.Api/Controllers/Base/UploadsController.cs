@@ -1,6 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using InkVerse.Api.DTOs.Uploads;
+using InkVerse.Api.Services.InterFace;
+using InkVerse.Api.Services.Storage;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using InkVerse.Api.DTOs.Uploads;
+using System.Security.Claims;
 
 namespace InkVerse.Api.Controllers
 {
@@ -8,11 +11,11 @@ namespace InkVerse.Api.Controllers
     [Route("api/uploads")]
     public class UploadsController : ControllerBase
     {
-        private readonly IWebHostEnvironment _env;
+        private readonly IFileStorageService _fileStorage;
 
-        public UploadsController(IWebHostEnvironment env)
+        public UploadsController(IFileStorageService fileStorage)
         {
-            _env = env;
+            _fileStorage = fileStorage;
         }
 
         private static readonly HashSet<string> AllowedExt = new(StringComparer.OrdinalIgnoreCase)
@@ -23,7 +26,18 @@ namespace InkVerse.Api.Controllers
         // Adjust limits per your needs
         private const long MaxBytes = 5 * 1024 * 1024; // 5 MB
 
-        private async Task<string> SaveImage(IFormFile file, string folder)
+        private async Task<string> SaveImage(
+            IFormFile file,
+            string folder,
+            CancellationToken cancellationToken = default)
+        {
+            ValidateImage(file);
+
+            var stored = await _fileStorage.SaveAsync(file, folder, cancellationToken);
+            return stored.Url;
+        }
+
+        private void ValidateImage(IFormFile file)
         {
             if (file == null || file.Length == 0)
                 throw new InvalidOperationException("No file uploaded.");
@@ -34,23 +48,56 @@ namespace InkVerse.Api.Controllers
             var ext = Path.GetExtension(file.FileName);
             if (string.IsNullOrWhiteSpace(ext) || !AllowedExt.Contains(ext))
                 throw new InvalidOperationException("Only .jpg, .jpeg, .png, .webp are allowed.");
+        }
 
-            // Ensure wwwroot exists
-            var webRoot = _env.WebRootPath;
-            if (string.IsNullOrWhiteSpace(webRoot))
-                webRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+        private static string BuildBookCoverFolder(UploadImageDto dto)
+        {
+            var rawName = dto.EntityName;
+            if (string.IsNullOrWhiteSpace(rawName))
+            {
+                rawName = Path.GetFileNameWithoutExtension(dto.File.FileName)
+                    .Replace("-cover", "", StringComparison.OrdinalIgnoreCase);
+            }
 
-            var uploadsRoot = Path.Combine(webRoot, "uploads", folder);
-            Directory.CreateDirectory(uploadsRoot);
+            var bookSegment = StoragePath.BuildFolderSegment(rawName ?? "", "book");
+            if (!string.IsNullOrWhiteSpace(dto.EntityId))
+            {
+                var idSegment = StoragePath.BuildFolderSegment(dto.EntityId, "book");
+                bookSegment = $"book-{idSegment}-{bookSegment}";
+            }
 
-            var fileName = $"{Guid.NewGuid():N}{ext.ToLowerInvariant()}";
-            var fullPath = Path.Combine(uploadsRoot, fileName);
+            return $"books/{bookSegment}/cover";
+        }
 
-            await using var stream = System.IO.File.Create(fullPath);
-            await file.CopyToAsync(stream);
+        private static string BuildNamedAssetFolder(
+            UploadImageDto dto,
+            string rootFolder,
+            string defaultEntity,
+            string defaultPurpose)
+        {
+            var entitySegment = StoragePath.BuildFolderSegment(
+                dto.EntityName ?? Path.GetFileNameWithoutExtension(dto.File.FileName),
+                defaultEntity);
 
-            // URL that frontend will use + you store in DB
-            return $"/uploads/{folder}/{fileName}";
+            var purposeSegment = StoragePath.BuildFolderSegment(dto.Purpose ?? defaultPurpose, defaultPurpose);
+
+            return $"{rootFolder}/{entitySegment}/{purposeSegment}";
+        }
+
+        private string BuildUserAssetFolder(UploadImageDto dto, string defaultPurpose)
+        {
+            var rawName = dto.EntityName;
+            if (string.IsNullOrWhiteSpace(rawName))
+            {
+                rawName = User.FindFirstValue(ClaimTypes.Name)
+                    ?? User.FindFirstValue(ClaimTypes.NameIdentifier)
+                    ?? "user";
+            }
+
+            var userSegment = StoragePath.BuildFolderSegment(rawName, "user");
+            var purposeSegment = StoragePath.BuildFolderSegment(dto.Purpose ?? defaultPurpose, defaultPurpose);
+
+            return $"users/{userSegment}/{purposeSegment}";
         }
 
         // =========================
@@ -59,11 +106,58 @@ namespace InkVerse.Api.Controllers
         [HttpPost("trends")]
         [Authorize(Roles = "Admin")]
         [Consumes("multipart/form-data")]
-        public async Task<IActionResult> UploadTrendImage([FromForm] UploadImageDto dto)
+        public async Task<IActionResult> UploadTrendImage(
+            [FromForm] UploadImageDto dto,
+            CancellationToken cancellationToken)
         {
             try
             {
-                var url = await SaveImage(dto.File, "trends");
+                var url = await SaveImage(
+                    dto.File,
+                    BuildNamedAssetFolder(dto, "trends", "trend", "image"),
+                    cancellationToken);
+                return Ok(new { url });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("characters")]
+        [Authorize(Roles = "Admin")]
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> UploadCharacterImage(
+            [FromForm] UploadImageDto dto,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                var url = await SaveImage(
+                    dto.File,
+                    BuildNamedAssetFolder(dto, "characters", "character", "portrait"),
+                    cancellationToken);
+                return Ok(new { url });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("site-visuals")]
+        [Authorize(Roles = "Admin")]
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> UploadSiteVisualImage(
+            [FromForm] UploadImageDto dto,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                var url = await SaveImage(
+                    dto.File,
+                    BuildNamedAssetFolder(dto, "site-visuals", "site-visual", "image"),
+                    cancellationToken);
                 return Ok(new { url });
             }
             catch (Exception ex)
@@ -78,11 +172,13 @@ namespace InkVerse.Api.Controllers
         [HttpPost("books/admin")]
         [Authorize(Roles = "Admin")]
         [Consumes("multipart/form-data")]
-        public async Task<IActionResult> UploadBookCover_Admin([FromForm] UploadImageDto dto)
+        public async Task<IActionResult> UploadBookCover_Admin(
+            [FromForm] UploadImageDto dto,
+            CancellationToken cancellationToken)
         {
             try
             {
-                var url = await SaveImage(dto.File, "books");
+                var url = await SaveImage(dto.File, BuildBookCoverFolder(dto), cancellationToken);
                 return Ok(new { url = Abs(url) });
             }
             catch (Exception ex)
@@ -98,11 +194,13 @@ namespace InkVerse.Api.Controllers
         [Authorize] // later: [Authorize(Roles="Author")]
         [Consumes("multipart/form-data")]
         [RequestSizeLimit(MaxBytes)]
-        public async Task<IActionResult> UploadBookCover_User([FromForm] UploadImageDto dto)
+        public async Task<IActionResult> UploadBookCover_User(
+            [FromForm] UploadImageDto dto,
+            CancellationToken cancellationToken)
         {
             try
             {
-                var url = await SaveImage(dto.File, "books/user"); // or "books" if you prefer
+                var url = await SaveImage(dto.File, BuildBookCoverFolder(dto), cancellationToken);
                 return Ok(new { url });
             }
             catch (Exception ex)
@@ -117,11 +215,13 @@ namespace InkVerse.Api.Controllers
         [HttpPost("users/avatar")]
         [Authorize]
         [Consumes("multipart/form-data")]
-        public async Task<IActionResult> UploadUserAvatar([FromForm] UploadImageDto dto)
+        public async Task<IActionResult> UploadUserAvatar(
+            [FromForm] UploadImageDto dto,
+            CancellationToken cancellationToken)
         {
             try
             {
-                var url = await SaveImage(dto.File, "users/avatars");
+                var url = await SaveImage(dto.File, BuildUserAssetFolder(dto, "avatar"), cancellationToken);
                 return Ok(new { url });
             }
             catch (Exception ex)
@@ -135,11 +235,13 @@ namespace InkVerse.Api.Controllers
         [Authorize]
         [Consumes("multipart/form-data")]
         [RequestSizeLimit(MaxBytes)]
-        public async Task<IActionResult> UploadUserBanner([FromForm] UploadImageDto dto)
+        public async Task<IActionResult> UploadUserBanner(
+            [FromForm] UploadImageDto dto,
+            CancellationToken cancellationToken)
         {
             try
             {
-                var url = await SaveImage(dto.File, "users/banners");
+                var url = await SaveImage(dto.File, BuildUserAssetFolder(dto, "banner"), cancellationToken);
                 return Ok(new { url });
             }
             catch (Exception ex)

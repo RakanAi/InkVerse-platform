@@ -38,6 +38,7 @@ export const AuthProvider = ({ children }) => {
             id: res.data?.id ?? prev?.user?.id,
             userName: res.data?.userName ?? prev?.user?.userName,
             email: res.data?.email ?? prev?.user?.email,
+            avatarUrl: res.data?.avatarUrl ?? prev?.user?.avatarUrl,
             roles: res.data?.roles ?? prev?.user?.roles ?? [],
           },
         }));

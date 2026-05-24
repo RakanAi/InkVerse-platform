@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import "./BookMetaBox.css";
 import { useNavigate } from "react-router-dom";
 import { BiLinkExternal } from "react-icons/bi";
@@ -14,6 +15,7 @@ const pick = (obj, ...keys) => {
 const toArray = (v) => (Array.isArray(v) ? v : []);
 
 export default function BookMetaBox({ book }) {
+  const { t } = useTranslation();
   const nav = useNavigate();
 
   const status = pick(book, "status", "Status") ?? "-";
@@ -66,97 +68,80 @@ export default function BookMetaBox({ book }) {
   };
 
   return (
-    <div className="iv-meta  border-3 mt-3 bg-0">
-      <div className="card-body ">
-        <div className="iv-meta-top text-center">
-          <div className="iv-meta-row border ">
-            <div className="iv-meta-k">Status</div>
-            <div className="iv-meta-v">{status}</div>
-          </div>
-
-          <div className="iv-meta-row border">
-            <div className="iv-meta-k">Verse</div>
-            <div className="iv-meta-v">{verseType}</div>
-          </div>
-
-          <div className="iv-meta-row border">
-            <div className="iv-meta-k">Origin</div>
-            <div className="iv-meta-v d-flex align-items-center gap-2">
-              <span className="m-auto">{originType}</span>
-              {showSource ? (
-                <button
-                  type="button"
-                  className="btn btn-sm btn-link text-warning py-0 px-2"
-                  onClick={openSource}
-                  title="Open source"
-                  aria-label="Open source"
-                  style={{ lineHeight: 1.2 }}
-                >
-                  <BiLinkExternal size={18} />
-                </button>
-              ) : null}
-            </div>
-          </div>
+    <div className="iv-meta mt-4">
+      <div className="iv-meta-top">
+        <div className="iv-meta-row">
+          <div className="iv-meta-k">{t("bookPage.meta.status")}</div>
+          <div className="iv-meta-v">{status}</div>
         </div>
 
-        <hr className="my-3" />
+        <div className="iv-meta-row">
+          <div className="iv-meta-k">{t("bookPage.meta.verse")}</div>
+          <div className="iv-meta-v">{verseType}</div>
+        </div>
 
-        <div className="row g-3 genn">
-          <div className="col-12">
-            <div className="iv-meta-k mb-2 text-start">
-              <div className="d-flex align-items-center">
-                <p className="borderStart mb-0"></p> Genres
-              </div>
-            </div>
-
-            {genres.length ? (
-              <div className="d-flex flex-wrap tagg gap-2">
-                {genres.map((g) => (
-                  <button
-                    key={g}
-                    type="button"
-                    className="btn btn-outline-muted btn-sm rounded border"
-                    onClick={() => goBrowse({ genre: g })}
-                    title={`Browse genre: ${g}`}
-                    style={{maxHeight:"35px"}}
-                  >
-                    {g}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="text-muted small">No genres</div>
-            )}
+        <div className="iv-meta-row">
+          <div className="iv-meta-k">{t("bookPage.meta.origin")}</div>
+          <div className="iv-meta-v iv-meta-v--origin">
+            <span>{originType}</span>
+            {showSource ? (
+              <button
+                type="button"
+                className="iv-meta-source"
+                onClick={openSource}
+                title={t("bookPage.meta.openSource")}
+                aria-label={t("bookPage.meta.openSource")}
+              >
+                <BiLinkExternal size={16} />
+              </button>
+            ) : null}
           </div>
+        </div>
+      </div>
 
-          <div className="col-12 ">
-            <div className="iv-meta-k mb-2 text-start">
-              <div className="d-flex align-items-center">
-                <p className="borderStart mb-0"></p> Tags
-              </div>
+      <div className="iv-meta-groups">
+        <div className="iv-meta-group">
+          <div className="iv-meta-k mb-2 text-start">{t("bookPage.meta.genres")}</div>
+
+          {genres.length ? (
+            <div className="iv-meta-links">
+              {genres.map((g) => (
+                <button
+                  key={g}
+                  type="button"
+                  className="iv-meta-link"
+                  onClick={() => goBrowse({ genre: g })}
+                  title={t("bookPage.meta.browseGenre", { genre: g })}
+                >
+                  #{g}
+                </button>
+              ))}
             </div>
+          ) : (
+            <div className="iv-meta-empty">{t("bookPage.meta.noGenres")}</div>
+          )}
+        </div>
 
-            {tags.length ? (
-              <div className="d-flex flex-wrap gap-2 tagg">
-                {tags.map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    className="btn btn-outline-primary btn-sm rounded border"
-                    style={{ minWidth: "60px" , maxHeight:"35px"}}
-                    onClick={() => goBrowse({ tag: t })}
-                    title={`Browse tag: ${t}`}
-                    
-                    
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="text-muted small">No tags</div>
-            )}
-          </div>
+        <div className="iv-meta-group">
+          <div className="iv-meta-k mb-2 text-start">{t("bookPage.meta.tags")}</div>
+
+          {tags.length ? (
+            <div className="iv-meta-links">
+              {tags.map((tag) => (
+                <button
+                  key={tag}
+                  type="button"
+                  className="iv-meta-link"
+                  onClick={() => goBrowse({ tag })}
+                  title={t("bookPage.meta.browseTag", { tag })}
+                >
+                  #{tag}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="iv-meta-empty">{t("bookPage.meta.noTags")}</div>
+          )}
         </div>
       </div>
     </div>

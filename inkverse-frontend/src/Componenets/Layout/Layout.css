@@ -8,6 +8,10 @@
   padding-top: 112px;
 }
 
+.layout-container--no-nav {
+  padding-top: 0;
+}
+
 .main-content {
   width: 100%;
   flex: 1;
@@ -17,10 +21,18 @@
   .layout-container {
     padding-top: 72px;
   }
+
+  .layout-container--no-nav {
+    padding-top: 0;
+  }
 }
 
 @media (max-width: 480px) {
   .layout-container {
     padding-top: 68px;
+  }
+
+  .layout-container--no-nav {
+    padding-top: 0;
   }
 }

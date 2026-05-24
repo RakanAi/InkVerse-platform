@@ -141,6 +141,43 @@
   color: #8190b4;
 }
 
+html[data-theme="dark"] .iv-browse-head-badge,
+html[data-theme="dark"] .iv-browse-resultsMeta__pill {
+  border-color: rgba(127, 145, 214, 0.14);
+  background: rgba(24, 35, 64, 0.88);
+  color: #c0cff6;
+}
+
+html[data-theme="dark"] .iv-browse-alert {
+  border-color: rgba(245, 158, 11, 0.26);
+  background: rgba(97, 63, 8, 0.34);
+  color: #ffd696;
+}
+
+html[data-theme="dark"] .iv-browse-pager__button,
+html[data-theme="dark"] .iv-browse-pager__page,
+html[data-theme="dark"] .iv-browse-pager__ellipsis {
+  border-color: rgba(127, 145, 214, 0.14);
+  background: rgba(20, 31, 60, 0.92);
+  color: #d0d9f6;
+}
+
+html[data-theme="dark"] .iv-browse-pager__button:hover:not(:disabled),
+html[data-theme="dark"] .iv-browse-pager__page:hover:not(.is-active) {
+  border-color: rgba(130, 148, 255, 0.28);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.24);
+}
+
+html[data-theme="dark"] .iv-browse-pager__page.is-active {
+  border-color: rgba(126, 144, 255, 0.24);
+  background: linear-gradient(135deg, rgba(86, 106, 255, 0.22), rgba(129, 88, 255, 0.22));
+  color: #edf2ff;
+}
+
+html[data-theme="dark"] .iv-browse-pager__ellipsis {
+  color: #94a5d4;
+}
+
 @media (min-width: 960px) {
   .iv-browse-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

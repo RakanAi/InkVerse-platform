@@ -18,7 +18,7 @@ namespace InkVerse.Api.Services.ServicesRepo
         {
             return await _db.Reviews
                 .AsNoTracking()
-                .Where(r => r.UserId == userId)
+                .Where(r => r.UserId == userId && !r.IsDeleted)
                 .Include(r => r.Book)
                 .OrderByDescending(r => r.CreatedAt)
                 .Select(r => new MyReviewDto

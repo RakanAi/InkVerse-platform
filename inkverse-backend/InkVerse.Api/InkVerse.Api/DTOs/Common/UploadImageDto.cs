@@ -7,5 +7,9 @@ namespace InkVerse.Api.DTOs.Uploads
     {
         [Required]
         public IFormFile File { get; set; } = default!;
+
+        public string? EntityId { get; set; }
+        public string? EntityName { get; set; }
+        public string? Purpose { get; set; }
     }
 }

@@ -5,9 +5,12 @@
         public int Id { get; set; }
 
         public int ReviewId { get; set; }
+        public int? ParentReplyId { get; set; }
+        public string? ParentUserName { get; set; }
 
         public string UserId { get; set; } = string.Empty;
         public string UserName { get; set; } = "Unknown";
+        public string? UserAvatarUrl { get; set; }
 
         public string Content { get; set; } = string.Empty;
 

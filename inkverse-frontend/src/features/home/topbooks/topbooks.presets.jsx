@@ -1,13 +1,18 @@
 export const TOPBOOKS_TAKE = 5;
 
-export const TOPBOOKS_VERSE_TYPES = [
-  { key: "Original", title: "Original" },
-  { key: "AU", title: "AU" },
-  { key: "Fanfic", title: "Fan-Fiction" },
-];
+export function getTopBooksVerseTypes(t) {
+  return [
+    { key: "Original", title: t("home.topBooks.verseTypes.Original") },
+    { key: "AU", title: t("home.topBooks.verseTypes.AU") },
+    { key: "Fanfic", title: t("home.topBooks.verseTypes.Fanfic") },
+  ];
+}
 
-export const TOPBOOKS_LABELS = {
-  title: "Top Books",
-  subtitle: "The most-read stories across Original, AU, and Fan-Fiction.",
-  cta: "Explore more →",
-};
+export function getTopBooksLabels(t) {
+  return {
+    title: t("home.topBooks.title"),
+    subtitle: t("home.topBooks.subtitle"),
+    cta: t("home.topBooks.cta"),
+    browseShelf: t("home.topBooks.browseShelf"),
+  };
+}

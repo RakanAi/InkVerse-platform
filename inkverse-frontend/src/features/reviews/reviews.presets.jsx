@@ -11,14 +11,17 @@ export const RECENT_REVIEWS_SWIPER = {
     pauseOnMouseEnter: true,
   },
   breakpoints: {
-    340: { slidesPerView: 1 },
-    768: { slidesPerView: 2 },
+    0: { slidesPerView: 1 },
+    992: { slidesPerView: 2 },
   },
 };
 
-export const RECENT_REVIEWS_LABELS = {
-  title: "Recent Reviews",
-  subtitle: "What readers are saying right now.",
-  loading: "Loading recent reviews…",
-  empty: "No reviews yet.",
-};
+export function getRecentReviewsLabels(t) {
+  return {
+    title: t("home.recentReviews.title"),
+    subtitle: t("home.recentReviews.subtitle"),
+    loading: t("home.recentReviews.loading"),
+    empty: t("home.recentReviews.empty"),
+    error: t("home.recentReviews.error"),
+  };
+}

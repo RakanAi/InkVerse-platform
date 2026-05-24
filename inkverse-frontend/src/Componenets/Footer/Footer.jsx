@@ -1,22 +1,24 @@
 import "./Footer.css";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import inkVerseIcon from "../../assets/te.png";
 
 const EXPLORE_LINKS = [
-  { to: "/", icon: "bi-house-door", label: "Home" },
-  { to: "/browser", icon: "bi-search", label: "Browse" },
-  { to: "/ranking", icon: "bi-trophy", label: "Rankings" },
-  { to: "/trend", icon: "bi-stars", label: "Trends" },
+  { to: "/", icon: "bi-house-door", labelKey: "footer.links.home" },
+  { to: "/browser", icon: "bi-search", labelKey: "footer.links.browse" },
+  { to: "/ranking", icon: "bi-trophy", labelKey: "footer.links.rankings" },
+  { to: "/trend", icon: "bi-stars", labelKey: "footer.links.trends" },
 ];
 
 const SUPPORT_LINKS = [
-  { to: "/about", icon: "bi-info-circle", label: "About" },
-  { to: "/contact", icon: "bi-envelope", label: "Contact" },
-  { to: "/privacy", icon: "bi-shield-check", label: "Privacy" },
-  { to: "/dmca", icon: "bi-file-earmark-text", label: "DMCA" },
+  { to: "/about", icon: "bi-info-circle", labelKey: "footer.links.about" },
+  { to: "/contact", icon: "bi-envelope", labelKey: "footer.links.contact" },
+  { to: "/privacy", icon: "bi-shield-check", labelKey: "footer.links.privacy" },
+  { to: "/dmca", icon: "bi-file-earmark-text", labelKey: "footer.links.dmca" },
 ];
 
 export default function Footer() {
+  const { t } = useTranslation();
   const year = new Date().getFullYear();
 
   return (
@@ -34,35 +36,34 @@ export default function Footer() {
                   />
                 </span>
                 <div className="iv-footer-brandCopy">
-                  <span className="iv-footer-kicker">Read. Write. Wander.</span>
-                  <span className="iv-footer-name">InkVerse</span>
+                  <span className="iv-footer-kicker">{t("common.brandKicker")}</span>
+                  <span className="iv-footer-name">{t("common.appName")}</span>
                 </div>
               </div>
 
               <p className="iv-footer-summary">
-                A reading multiverse for original stories, wild fanfiction, and
-                the people who love getting lost in both.
+                {t("footer.summary")}
               </p>
 
               <div className="iv-footer-socials">
                 <a
                   className="iv-footer-social"
                   href="mailto:InkVerseOdeh@gmail.com"
-                  aria-label="Email InkVerse"
+                  aria-label={t("footer.social.email")}
                 >
                   <i className="bi bi-envelope" />
                 </a>
                 <Link
                   className="iv-footer-social"
                   to="/contact"
-                  aria-label="Contact page"
+                  aria-label={t("footer.social.contact")}
                 >
                   <i className="bi bi-chat-dots" />
                 </Link>
                 <Link
                   className="iv-footer-social"
                   to="/about"
-                  aria-label="About InkVerse"
+                  aria-label={t("footer.social.about")}
                 >
                   <i className="bi bi-info-circle" />
                 </Link>
@@ -71,13 +72,13 @@ export default function Footer() {
 
             <div className="iv-footer-linksBlock">
               <div className="iv-footer-linkGroup">
-                <h3 className="iv-footer-title">Explore</h3>
+                <h3 className="iv-footer-title">{t("footer.groups.explore")}</h3>
                 <ul className="iv-footer-list">
                   {EXPLORE_LINKS.map((item) => (
                     <li key={item.to}>
                       <Link className="iv-footer-link" to={item.to}>
                         <i className={`bi ${item.icon}`} />
-                        <span>{item.label}</span>
+                        <span>{t(item.labelKey)}</span>
                       </Link>
                     </li>
                   ))}
@@ -85,13 +86,13 @@ export default function Footer() {
               </div>
 
               <div className="iv-footer-linkGroup">
-                <h3 className="iv-footer-title">Support</h3>
+                <h3 className="iv-footer-title">{t("footer.groups.support")}</h3>
                 <ul className="iv-footer-list">
                   {SUPPORT_LINKS.map((item) => (
                     <li key={item.to}>
                       <Link className="iv-footer-link" to={item.to}>
                         <i className={`bi ${item.icon}`} />
-                        <span>{item.label}</span>
+                        <span>{t(item.labelKey)}</span>
                       </Link>
                     </li>
                   ))}
@@ -100,35 +101,34 @@ export default function Footer() {
             </div>
 
             <div className="iv-footer-updateCard">
-              <p className="iv-footer-cardKicker">Now Live</p>
-              <h3 className="iv-footer-cardTitle">InkVerse demo is open.</h3>
+              <p className="iv-footer-cardKicker">{t("footer.card.kicker")}</p>
+              <h3 className="iv-footer-cardTitle">{t("footer.card.title")}</h3>
               <p className="iv-footer-cardText">
-                Browse live books, test ranking and moderation flows, and keep
-                an eye out for the upcoming author experience.
+                {t("footer.card.text")}
               </p>
 
               <div className="iv-footer-actions">
                 <Link className="iv-footer-pill iv-footer-pill--primary" to="/browser">
-                  Start browsing
+                  {t("footer.card.browse")}
                 </Link>
                 <a
                   className="iv-footer-pill iv-footer-pill--ghost"
                   href="mailto:InkVerseOdeh@gmail.com"
                 >
-                  Email us
+                  {t("footer.card.email")}
                 </a>
               </div>
 
               <div className="iv-footer-note">
-                <span className="iv-footer-badge">v1.0 Demo</span>
-                <span>Author tools, profiles, and more are on the roadmap.</span>
+                <span className="iv-footer-badge">{t("footer.card.badge")}</span>
+                <span>{t("footer.card.note")}</span>
               </div>
             </div>
           </div>
 
           <div className="iv-footer-bottom">
-            <p className="iv-footer-meta">© {year} InkVerse. All rights reserved.</p>
-            <p className="iv-footer-meta">Built for readers who stay one chapter too long.</p>
+            <p className="iv-footer-meta">{t("footer.bottom.rights", { year })}</p>
+            <p className="iv-footer-meta">{t("footer.bottom.tagline")}</p>
           </div>
         </div>
       </div>

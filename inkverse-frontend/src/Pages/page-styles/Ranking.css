@@ -124,6 +124,31 @@
   padding-top: 6px;
 }
 
+html[data-theme="dark"] .iv-ranking-sectionKicker,
+html[data-theme="dark"] .iv-ranking-controlLabel {
+  color: #8b9bcc;
+}
+
+html[data-theme="dark"] .iv-ranking-chip {
+  border-color: rgba(127, 145, 214, 0.14);
+  background: rgba(24, 35, 64, 0.88);
+  color: #c0cff6;
+}
+
+html[data-theme="dark"] .iv-ranking-chip--accent {
+  border-color: rgba(137, 118, 255, 0.22);
+  background: rgba(97, 76, 218, 0.18);
+  color: #d4c9ff;
+}
+
+html[data-theme="dark"] .iv-ranking-sectionTitle {
+  color: #eef3ff;
+}
+
+html[data-theme="dark"] .iv-ranking-sectionText {
+  color: #a5b2d5;
+}
+
 @media (max-width: 1080px) {
   .iv-ranking-spotlight {
     grid-template-columns: 1fr;

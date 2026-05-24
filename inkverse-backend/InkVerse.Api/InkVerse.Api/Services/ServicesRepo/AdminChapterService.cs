@@ -8,10 +8,12 @@ namespace InkVerse.Api.Services.ServicesRepo
     public class AdminChapterService : IAdminChapterService
     {
         private readonly InkVerseDB _db;
+        private readonly IBookBibleService _bookBible;
 
-        public AdminChapterService(InkVerseDB db)
+        public AdminChapterService(InkVerseDB db, IBookBibleService bookBible)
         {
             _db = db;
+            _bookBible = bookBible;
         }
 
         public async Task<List<ChapterReadDto>> GetChaptersByBookAsync(int bookId)
@@ -91,6 +93,7 @@ namespace InkVerse.Api.Services.ServicesRepo
             _db.Chapters.Add(chapter);
             await _db.SaveChangesAsync();
             await RecalcBookWordCountAsync(bookId);
+            await _bookBible.MarkNeedsScanAsync(bookId);
 
             return new ChapterReadDto
             {
@@ -137,6 +140,7 @@ namespace InkVerse.Api.Services.ServicesRepo
 
             await _db.SaveChangesAsync();
             await RecalcBookWordCountAsync(bookId);
+            await _bookBible.MarkNeedsScanAsync(bookId);
 
             return new ChapterReadDto
             {

@@ -142,6 +142,326 @@
   gap: 20px;
 }
 
+.iv-trends-hero {
+  min-width: 0;
+}
+
+.iv-trends-hero__swiper {
+  overflow: visible;
+  padding-bottom: 30px;
+}
+
+.iv-trends-hero__swiper .swiper-button-prev,
+.iv-trends-hero__swiper .swiper-button-next {
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(95, 112, 193, 0.14);
+  box-shadow: 0 16px 30px rgba(23, 34, 67, 0.14);
+  color: #4958e0;
+}
+
+.iv-trends-hero__swiper .swiper-button-prev::after,
+.iv-trends-hero__swiper .swiper-button-next::after {
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.iv-trends-hero__swiper .swiper-pagination {
+  bottom: 0 !important;
+}
+
+.iv-trends-hero__swiper .swiper-pagination-bullet {
+  width: 9px;
+  height: 9px;
+  margin-inline: 5px !important;
+  background: rgba(95, 112, 193, 0.24);
+  opacity: 1;
+}
+
+.iv-trends-hero__swiper .swiper-pagination-bullet-active {
+  background: #5563e8;
+}
+
+.iv-trend-heroCard {
+  position: relative;
+  min-height: 430px;
+  display: grid;
+  align-items: end;
+  padding: 30px;
+  overflow: hidden;
+  border-radius: 32px;
+  text-decoration: none;
+  background:
+    linear-gradient(180deg, rgba(9, 13, 30, 0.18), rgba(6, 8, 20, 0.82)),
+    linear-gradient(145deg, #141b34, #1c2551 55%, #25377d);
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 24px 54px rgba(18, 27, 60, 0.16);
+  isolation: isolate;
+}
+
+.iv-trend-heroCard::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top right, rgba(121, 95, 255, 0.18), transparent 30%),
+    linear-gradient(180deg, rgba(8, 12, 28, 0.04), rgba(7, 10, 22, 0.72));
+  pointer-events: none;
+}
+
+.iv-trend-heroCard__fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.36), transparent 34%),
+    radial-gradient(circle at 82% 18%, rgba(59, 130, 246, 0.26), transparent 28%),
+    linear-gradient(145deg, #141b34, #1c2551 55%, #25377d);
+}
+
+.iv-trend-heroCard__fallback span {
+  display: inline-grid;
+  place-items: center;
+  width: 84px;
+  height: 84px;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+
+.iv-trend-heroCard__content {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 16px;
+  max-width: 44rem;
+}
+
+.iv-trend-heroCard__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.iv-trend-heroCard__badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #f6f8ff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.iv-trend-heroCard__badge--ghost {
+  background: rgba(17, 24, 39, 0.24);
+  color: rgba(245, 247, 255, 0.82);
+}
+
+.iv-trend-heroCard__copy {
+  display: grid;
+  gap: 10px;
+}
+
+.iv-trend-heroCard__title {
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(2rem, 3.2vw, 3.6rem);
+  font-weight: 900;
+  line-height: 0.94;
+  letter-spacing: -0.05em;
+}
+
+.iv-trend-heroCard__text {
+  margin: 0;
+  max-width: 38rem;
+  color: rgba(237, 241, 255, 0.86);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.iv-trend-heroCard__cta {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.iv-trend-revealCard {
+  position: relative;
+  min-height: 360px;
+  display: grid;
+  align-items: end;
+  overflow: hidden;
+  border-radius: 28px;
+  padding: 22px;
+  text-decoration: none;
+  background:
+    linear-gradient(180deg, rgba(7, 10, 24, 0.22), rgba(7, 10, 24, 0.6)),
+    linear-gradient(145deg, #141b34, #1c2551 55%, #25377d);
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 18px 38px rgba(22, 33, 69, 0.12);
+  isolation: isolate;
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease;
+}
+
+.iv-trend-revealCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 24px 48px rgba(18, 27, 60, 0.18);
+}
+
+.iv-trend-revealCard::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(8, 12, 28, 0.06), rgba(7, 10, 22, 0.82)),
+    radial-gradient(circle at top right, rgba(121, 95, 255, 0.18), transparent 32%);
+  transition: opacity 220ms ease;
+}
+
+.iv-trend-revealCard__fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.36), transparent 34%),
+    radial-gradient(circle at 82% 18%, rgba(59, 130, 246, 0.26), transparent 28%),
+    linear-gradient(145deg, #141b34, #1c2551 55%, #25377d);
+}
+
+.iv-trend-revealCard__fallback span {
+  display: inline-grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  font-size: 1.7rem;
+  font-weight: 900;
+}
+
+.iv-trend-revealCard__front,
+.iv-trend-revealCard__overlay {
+  position: relative;
+  z-index: 1;
+}
+
+.iv-trend-revealCard__front {
+  display: grid;
+  gap: 10px;
+  transition:
+    transform 280ms ease,
+    opacity 220ms ease;
+}
+
+.iv-trend-revealCard__slug,
+.iv-trend-revealCard__eyebrow {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 11px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #e9eeff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.iv-trend-revealCard__title,
+.iv-trend-revealCard__overlayTitle {
+  margin: 0;
+  color: #ffffff;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+
+.iv-trend-revealCard__title {
+  font-size: clamp(1.5rem, 2vw, 2rem);
+  line-height: 0.98;
+}
+
+.iv-trend-revealCard__overlay {
+  position: absolute;
+  inset: auto 22px 22px 22px;
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+  border-radius: 22px;
+  background: rgba(9, 14, 30, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px);
+  transform: translateY(calc(100% + 16px));
+  transition: transform 280ms ease;
+}
+
+.iv-trend-revealCard:hover .iv-trend-revealCard__overlay,
+.iv-trend-revealCard:focus-visible .iv-trend-revealCard__overlay {
+  transform: translateY(0);
+}
+
+.iv-trend-revealCard:hover .iv-trend-revealCard__front,
+.iv-trend-revealCard:focus-visible .iv-trend-revealCard__front {
+  transform: translateY(16px);
+  opacity: 0;
+}
+
+.iv-trend-revealCard__overlayTitle {
+  font-size: 1.45rem;
+  line-height: 1.02;
+}
+
+.iv-trend-revealCard__text {
+  margin: 0;
+  color: rgba(239, 243, 255, 0.86);
+  font-size: 0.92rem;
+  line-height: 1.66;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
+
+.iv-trend-revealCard__cta {
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
 .iv-trends-pager {
   padding-top: 4px;
 }
@@ -177,6 +497,71 @@
 .iv-trends-page .page-item:not(.active):not(.disabled) .page-link:hover {
   border-color: rgba(73, 86, 230, 0.24);
   background: rgba(245, 247, 255, 0.96);
+}
+
+html[data-theme="dark"] .iv-trends-kicker,
+html[data-theme="dark"] .iv-trends-stat__label,
+html[data-theme="dark"] .iv-trends-sort__label {
+  color: #8f9fd0;
+}
+
+html[data-theme="dark"] .iv-trends-title,
+html[data-theme="dark"] .iv-trends-library__title {
+  color: #eef3ff;
+}
+
+html[data-theme="dark"] .iv-trends-text,
+html[data-theme="dark"] .iv-trends-library__text {
+  color: #a8b6dc;
+}
+
+html[data-theme="dark"] .iv-trends-stat__value {
+  color: #f3f6ff;
+}
+
+html[data-theme="dark"] .iv-trends-hero__swiper .swiper-button-prev,
+html[data-theme="dark"] .iv-trends-hero__swiper .swiper-button-next {
+  background:
+    linear-gradient(180deg, rgba(21, 31, 59, 0.96), rgba(16, 24, 47, 0.94)),
+    rgba(18, 27, 53, 0.94);
+  border-color: rgba(134, 146, 224, 0.16);
+  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.24);
+  color: #c1cbff;
+}
+
+html[data-theme="dark"] .iv-trends-hero__swiper .swiper-pagination-bullet {
+  background: rgba(140, 153, 234, 0.28);
+}
+
+html[data-theme="dark"] .iv-trends-hero__swiper .swiper-pagination-bullet-active {
+  background: #8f9fff;
+}
+
+html[data-theme="dark"] .iv-trends-page .page-item .page-link {
+  border-color: rgba(134, 146, 224, 0.16);
+  background:
+    linear-gradient(180deg, rgba(20, 30, 57, 0.96), rgba(16, 24, 47, 0.94)),
+    rgba(18, 27, 53, 0.94);
+  color: #dbe3ff;
+}
+
+html[data-theme="dark"] .iv-trends-page .page-item.active .page-link {
+  border-color: rgba(134, 146, 224, 0.22);
+  background: linear-gradient(135deg, rgba(90, 110, 255, 0.22), rgba(135, 88, 255, 0.22));
+  color: #f4f7ff;
+}
+
+html[data-theme="dark"] .iv-trends-page .page-item.disabled .page-link {
+  background:
+    linear-gradient(180deg, rgba(20, 30, 57, 0.76), rgba(16, 24, 47, 0.74)),
+    rgba(18, 27, 53, 0.74);
+}
+
+html[data-theme="dark"] .iv-trends-page .page-item:not(.active):not(.disabled) .page-link:hover {
+  border-color: rgba(134, 146, 224, 0.24);
+  background:
+    linear-gradient(180deg, rgba(28, 39, 71, 0.98), rgba(21, 30, 58, 0.96)),
+    rgba(24, 35, 65, 0.96);
 }
 
 @media (max-width: 1180px) {
@@ -225,9 +610,49 @@
     font-size: 1.6rem;
   }
 
+  .iv-trends-hero__swiper {
+    padding-bottom: 24px;
+  }
+
+  .iv-trends-hero__swiper .swiper-button-prev,
+  .iv-trends-hero__swiper .swiper-button-next {
+    display: none;
+  }
+
+  .iv-trend-heroCard {
+    min-height: 340px;
+    padding: 22px;
+    border-radius: 26px;
+  }
+
+  .iv-trend-heroCard__title {
+    font-size: clamp(1.7rem, 7vw, 2.4rem);
+  }
+
+  .iv-trend-heroCard__text {
+    font-size: 0.94rem;
+    line-height: 1.65;
+  }
+
   .iv-trends-grid {
     grid-template-columns: 1fr;
     gap: 18px;
+  }
+
+  .iv-trend-revealCard {
+    min-height: 320px;
+    padding: 18px;
+    border-radius: 24px;
+  }
+
+  .iv-trend-revealCard__front {
+    opacity: 0;
+  }
+
+  .iv-trend-revealCard__overlay {
+    inset: auto 18px 18px 18px;
+    padding: 16px;
+    transform: translateY(0);
   }
 
   .iv-trends-page .page-item .page-link {

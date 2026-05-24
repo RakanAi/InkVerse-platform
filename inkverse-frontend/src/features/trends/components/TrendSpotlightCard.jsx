@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 import {
   getTrendBadgeLabel,
@@ -9,11 +10,17 @@ import {
 export default function TrendSpotlightCard({
   trend,
   compact = false,
-  badge = "Spotlight",
+  badge,
+  ctaLabel,
 }) {
+  const { t } = useTranslation();
   const [imageFailed, setImageFailed] = useState(false);
   const imageSrc = getTrendImageSrc(trend);
   const showImage = imageSrc && !imageFailed;
+  const resolvedBadge = badge ?? t("trends.cards.spotlight");
+  const resolvedCtaLabel = ctaLabel ?? t("trends.cards.viewTrend");
+  const description =
+    trend.description?.trim() || t("common.books.curatedCollection");
 
   return (
     <Link
@@ -39,7 +46,7 @@ export default function TrendSpotlightCard({
 
       <div className="iv-trend-spotlight__content">
         <div className="iv-trend-spotlight__eyebrowRow">
-          <span className="iv-trend-badge">{badge}</span>
+          <span className="iv-trend-badge">{resolvedBadge}</span>
           <span className="iv-trend-badge iv-trend-badge--ghost">
             {getTrendBadgeLabel(trend)}
           </span>
@@ -47,12 +54,12 @@ export default function TrendSpotlightCard({
 
         <div className="iv-trend-spotlight__copy">
           <h2 className="iv-trend-spotlight__title">{trend.name}</h2>
-          <p className="iv-trend-spotlight__text">{trend.description}</p>
+          <p className="iv-trend-spotlight__text">{description}</p>
         </div>
 
         <div className="iv-trend-spotlight__meta">
-          <span className="iv-trend-spotlight__hint">Open collection</span>
-          <span className="iv-trend-spotlight__cta">View trend</span>
+          <span className="iv-trend-spotlight__hint">{t("trends.cards.openCollection")}</span>
+          <span className="iv-trend-spotlight__cta">{resolvedCtaLabel}</span>
         </div>
       </div>
     </Link>

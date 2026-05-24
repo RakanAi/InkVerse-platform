@@ -9,6 +9,19 @@ import EmptyState from "../../Shared/ui/EmptyState";
 import AdminSection from "../../features/admin/components/AdminSection";
 import AdminTable from "../../features/admin/components/AdminTable";
 
+function sanitizePreview(content = "") {
+  return String(content).replace(/\s+/g, " ").trim();
+}
+
+function wordCount(content = "") {
+  const clean = sanitizePreview(content);
+  return clean ? clean.split(" ").length : 0;
+}
+
+function formatWordCount(count) {
+  return `${count.toLocaleString()} word${count === 1 ? "" : "s"}`;
+}
+
 export default function AdminChaptersPage() {
   const { bookId } = useParams();
   const bId = Number(bookId);
@@ -23,13 +36,15 @@ export default function AdminChaptersPage() {
     const number = Number(chapter.number ?? chapter.chapterNumber ?? 0) || 0;
     const title = (chapter.title ?? "").trim();
     const content = (chapter.content ?? "").trim();
-    return { number, title, content };
+    const url = String(chapter.url ?? chapter.Url ?? "").trim();
+    return { number, title, content, url };
   };
 
   const getChapterNumber = (chapter) =>
     Number(chapter?.chapterNumber ?? chapter?.ChapterNumber ?? 0) || 0;
 
-  const getChapterUrl = (chapter) => String(chapter?.url ?? chapter?.Url ?? "").trim();
+  const getChapterUrl = (chapter) =>
+    String(chapter?.url ?? chapter?.Url ?? "").trim();
 
   const importChaptersFile = async (file) => {
     if (!file) return;
@@ -47,7 +62,6 @@ export default function AdminChaptersPage() {
       const existingNumbers = new Set(
         currentItems.map(getChapterNumber).filter((value) => value > 0),
       );
-
       const existingUrls = new Set(currentItems.map(getChapterUrl).filter(Boolean));
 
       const text = await file.text();
@@ -71,7 +85,7 @@ export default function AdminChaptersPage() {
 
       const missingOnly = sorted.filter((chapter) => {
         const number = Number(chapter.number) || 0;
-        const url = (chapter.url || "").trim();
+        const url = chapter.url;
         const duplicateNumber = number > 0 && existingNumbers.has(number);
         const duplicateUrl = url && existingUrls.has(url);
         return !duplicateNumber && !duplicateUrl;
@@ -141,11 +155,16 @@ export default function AdminChaptersPage() {
         name,
         chapters: chapters
           .slice()
-          .sort((left, right) => (left.chapterNumber ?? 0) - (right.chapterNumber ?? 0)),
+          .sort(
+            (left, right) =>
+              (left.chapterNumber ?? 0) - (right.chapterNumber ?? 0),
+          ),
       }));
     }
 
-    const maxNumber = Math.max(...list.map((chapter) => Number(chapter.chapterNumber) || 0));
+    const maxNumber = Math.max(
+      ...list.map((chapter) => Number(chapter.chapterNumber) || 0),
+    );
     const step = maxNumber > 300 ? 250 : 100;
 
     const map = new Map();
@@ -166,9 +185,21 @@ export default function AdminChaptersPage() {
         name,
         chapters: chapters
           .slice()
-          .sort((left, right) => (left.chapterNumber ?? 0) - (right.chapterNumber ?? 0)),
+          .sort(
+            (left, right) =>
+              (left.chapterNumber ?? 0) - (right.chapterNumber ?? 0),
+          ),
       }));
   }, [items]);
+
+  const totalWords = useMemo(
+    () =>
+      items.reduce(
+        (sum, chapter) => sum + wordCount(chapter.content ?? chapter.Content ?? ""),
+        0,
+      ),
+    [items],
+  );
 
   const load = async () => {
     try {
@@ -211,16 +242,35 @@ export default function AdminChaptersPage() {
   };
 
   if (loading) return <LoadingState text="Loading chapters..." />;
-  if (err && !items.length) return <ErrorState title="Cannot load chapters" subtitle={err} onRetry={load} />;
+  if (err && !items.length) {
+    return (
+      <ErrorState
+        title="Cannot load chapters"
+        subtitle={err}
+        onRetry={load}
+      />
+    );
+  }
 
   return (
     <>
-      <AdminSection
-        title={bookTitle ? `Book: ${bookTitle}` : `Book #${bId}`}
-        actions={
-          <div className="admin-inline-actions">
-            <label className="iv-btn iv-btn-outline iv-btn-sm">
-              {importing ? "Importing..." : "Import JSON"}
+      <section className="admin-panel admin-chapters-toolbar">
+        <div className="admin-panel__head admin-chapters-toolbar__head">
+          <div className="admin-chapters-toolbar__copy">
+            <p className="admin-chapters-toolbar__eyebrow">Chapter workspace</p>
+            <h1 className="admin-chapters-toolbar__title">
+              {bookTitle || `Book #${bId}`}
+            </h1>
+            <p className="admin-chapters-toolbar__subtitle">
+              Keep arcs tidy, import batches safely, and jump into edits without
+              losing the reading order.
+            </p>
+          </div>
+
+          <div className="admin-chapters-toolbar__actions">
+            <label className="iv-btn iv-btn-outline iv-btn-md admin-chapters-toolbar__import">
+              <i className="bi bi-file-earmark-arrow-up" aria-hidden="true" />
+              <span>{importing ? "Importing..." : "Import JSON"}</span>
               <input
                 type="file"
                 hidden
@@ -233,70 +283,125 @@ export default function AdminChaptersPage() {
                 }}
               />
             </label>
-            <LinkButton to={`/admin/books/${bId}/chapters/new`}>New chapter</LinkButton>
+
+            <LinkButton
+              to={`/admin/books/${bId}/chapters/new`}
+              size="md"
+              className="admin-chapters-toolbar__create"
+            >
+              <i className="bi bi-plus-lg" aria-hidden="true" />
+              <span>New chapter</span>
+            </LinkButton>
           </div>
-        }
-      >
+        </div>
+
+        <div className="admin-chapters-toolbar__meta">
+          <span className="admin-trend-toolbar__count">
+            {items.length} chapter{items.length === 1 ? "" : "s"}
+          </span>
+          <span className="admin-trend-toolbar__count">
+            {groups.length} group{groups.length === 1 ? "" : "s"}
+          </span>
+          <span className="admin-trend-toolbar__count">
+            {formatWordCount(totalWords)}
+          </span>
+        </div>
+
         {err ? <div className="admin-alert">{err}</div> : null}
-        <p className="admin-page-note">
-          Chapters are grouped by real arcs when available, otherwise by numbered ranges.
-        </p>
-      </AdminSection>
+      </section>
 
       {!groups.length ? (
-        <EmptyState title="No chapters yet" subtitle="Import a batch or create the first chapter." />
+        <EmptyState
+          title="No chapters yet"
+          subtitle="Import a batch or create the first chapter."
+        />
       ) : (
-        groups.map((group) => (
-          <AdminSection key={group.name} title={group.name}>
-            <AdminTable
-              compact
-              columns={[
-                {
-                  key: "chapterNumber",
-                  label: "#",
-                  width: 90,
-                  render: (chapter) => chapter.chapterNumber,
-                },
-                {
-                  key: "title",
-                  label: "Title",
-                  render: (chapter) => (
-                    <div className="admin-simple-stack admin-simple-stack--sm">
-                      <p className="admin-row-title">{chapter.title}</p>
-                      <p className="admin-row-note">
-                        {chapter.arcName ?? chapter.ArcName ?? "No arc"}
-                      </p>
-                    </div>
-                  ),
-                },
-                {
-                  key: "actions",
-                  label: "Actions",
-                  align: "right",
-                  width: 240,
-                  render: (chapter) => (
-                    <div className="admin-action-row">
-                      <LinkButton
-                        to={`/admin/books/${bId}/chapters/${chapter.id}`}
-                        variant="outline"
-                        size="sm"
-                      >
-                        Edit
-                      </LinkButton>
-                      <Button variant="danger" size="sm" onClick={() => remove(chapter.id)}>
-                        Delete
-                      </Button>
-                    </div>
-                  ),
-                },
-              ]}
-              rows={group.chapters}
-              rowKey="id"
-              emptyTitle="No chapters in this group"
-              emptySubtitle="Add a chapter to populate this section."
-            />
-          </AdminSection>
-        ))
+        <div className="admin-chapter-groups">
+          {groups.map((group) => (
+            <AdminSection
+              key={group.name}
+              title={group.name}
+              subtitle={`${group.chapters.length} chapter${
+                group.chapters.length === 1 ? "" : "s"
+              } in this section.`}
+              className="admin-chapter-group"
+            >
+              <AdminTable
+                compact
+                className="admin-chapter-table"
+                columns={[
+                  {
+                    key: "chapterNumber",
+                    label: "#",
+                    width: 80,
+                    render: (chapter) => (
+                      <span className="admin-chapter-number">
+                        {chapter.chapterNumber}
+                      </span>
+                    ),
+                  },
+                  {
+                    key: "title",
+                    label: "Chapter",
+                    render: (chapter) => {
+                      const preview = sanitizePreview(
+                        chapter.content ?? chapter.Content ?? "",
+                      );
+                      const words = wordCount(
+                        chapter.content ?? chapter.Content ?? "",
+                      );
+
+                      return (
+                        <div className="admin-simple-stack admin-simple-stack--sm">
+                          <p className="admin-row-title">{chapter.title}</p>
+                          <p className="admin-row-note">
+                            {preview
+                              ? `${preview.slice(0, 140)}${
+                                  preview.length > 140 ? "…" : ""
+                                }`
+                              : "No preview yet."}
+                          </p>
+                          <div className="admin-chapter-inline-meta">
+                            <span>{formatWordCount(words)}</span>
+                          </div>
+                        </div>
+                      );
+                    },
+                  },
+                  {
+                    key: "actions",
+                    label: "Actions",
+                    align: "right",
+                    width: 230,
+                    render: (chapter) => (
+                      <div className="admin-action-row">
+                        <LinkButton
+                          to={`/admin/books/${bId}/chapters/${chapter.id}`}
+                          variant="outline"
+                          size="sm"
+                        >
+                          Edit
+                        </LinkButton>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => remove(chapter.id)}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    ),
+                  },
+                ]}
+                rows={group.chapters}
+                rowKey="id"
+                rowClassName="admin-chapter-row"
+                emptyTitle="No chapters in this group"
+                emptySubtitle="Add a chapter to populate this section."
+              />
+            </AdminSection>
+          ))}
+        </div>
       )}
     </>
   );

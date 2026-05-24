@@ -11,10 +11,15 @@ import AuthorBookDetails from "./Pages/Author/AuthorBookDetails";
 import AuthorChapterCreate from "./Pages/Author/AuthorChapterCreate";
 import AuthorIncome from "./Pages/Author/AuthorIncome";
 import AuthorContract from "./Pages/Author/AuthorContract";
+import AuthorStoryStudio from "./Pages/Author/AuthorStoryStudio";
 import BookDetails from "./Pages/BookDetails";
 import ChapterPage from "./Pages/ChapterPage";
+import WalletPage from "./Pages/WalletPage";
+import AchievementsPage from "./Pages/AchievementsPage";
+import NotificationsPage from "./Pages/NotificationsPage";
 import TrendsPage from "./Pages/Trends";
 import ProfilePage from "./Pages/ProfilePage";
+import PublicProfilePage from "./Pages/PublicProfilePage";
 import Layout from "./Componenets/Layout/Layout";
 import ProtectedRoute from "./Componenets/Layout/ProtectedRoute";
 import MyLibrary from "./Pages/MyLibraryPage";
@@ -25,6 +30,12 @@ import AdminTags from "./Componenets/Admin/AdminTags";
 import AdminGenres from "./Componenets/Admin/AdminGenres";
 import AdminTrends from "./Componenets/Admin/AdminTrends";
 import AdminUsers from "./Componenets/Admin/AdminUsers";
+import AdminReports from "./Componenets/Admin/AdminReports";
+import AdminModeration from "./Componenets/Admin/AdminModeration";
+import AdminNotifications from "./Componenets/Admin/AdminNotifications";
+import AdminCharacters from "./Componenets/Admin/AdminCharacters";
+import AdminBookContracts from "./Componenets/Admin/AdminBookContracts";
+import AdminVisualAssets from "./Componenets/Admin/AdminVisualAssets";
 import AdminBooksPage from "./Componenets/Admin/AdminBooksPage";
 import AdminBookEditor from "./Componenets/Admin/AdminBookEditor";
 import AdminChaptersPage from "./Componenets/Admin/AdminChapterPage";
@@ -52,6 +63,7 @@ function App() {
             <Route path="workspace/:bookId/chapters/new" element={<AuthorChapterCreate />} />
             <Route path="income" element={<AuthorIncome />} />
             <Route path="contract" element={<AuthorContract />} />
+            <Route path="story-studio" element={<AuthorStoryStudio />} />
           </Route>
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
@@ -60,6 +72,7 @@ function App() {
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/signin" element={<Home />} />
           <Route path="/book/:id" element={<BookDetails />} />
+          <Route path="/users/:userName" element={<PublicProfilePage />} />
 
           <Route
             element={
@@ -67,6 +80,9 @@ function App() {
             }
           >
             <Route path="/profilePage" element={<ProfilePage />} />
+            <Route path="/wallet" element={<WalletPage />} />
+            <Route path="/achievements" element={<AchievementsPage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
             <Route
               path="/book/:id/chapter/:chapterId"
               element={<ChapterPage />}
@@ -103,6 +119,12 @@ function App() {
 
               <Route path="tags" element={<AdminTags />} />
               <Route path="genres" element={<AdminGenres />} />
+              <Route path="characters" element={<AdminCharacters />} />
+              <Route path="contracts" element={<AdminBookContracts />} />
+              <Route path="reports" element={<AdminReports />} />
+              <Route path="moderation" element={<AdminModeration />} />
+              <Route path="notifications" element={<AdminNotifications />} />
+              <Route path="visual-assets" element={<AdminVisualAssets />} />
               <Route path="trends" element={<AdminTrends />} />
               <Route path="users" element={<AdminUsers />} />
             </Route>
@@ -117,7 +139,3 @@ function App() {
 }
 
 export default App;
-
-
-
-

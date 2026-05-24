@@ -34,10 +34,16 @@ export default function AdminTable({
                 const alignClass = column.align
                   ? `admin-table__cell--${column.align}`
                   : "";
+                const headerClassName = [
+                  alignClass,
+                  resolveClassName(column.headerClassName),
+                ]
+                  .filter(Boolean)
+                  .join(" ");
                 const content = column.onHeaderClick ? (
                   <button
                     type="button"
-                    className={`admin-table__sort ${alignClass}`.trim()}
+                    className={`admin-table__sort ${headerClassName}`.trim()}
                     onClick={column.onHeaderClick}
                   >
                     <span>{column.label}</span>
@@ -54,7 +60,7 @@ export default function AdminTable({
                 return (
                   <th
                     key={column.key}
-                    className={alignClass}
+                    className={headerClassName}
                     style={column.width ? { width: column.width } : undefined}
                   >
                     {content}

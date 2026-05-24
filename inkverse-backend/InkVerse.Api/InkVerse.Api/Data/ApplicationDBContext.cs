@@ -3,7 +3,15 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection.Emit;
 using InkVerse.Api.Entities;
+using InkVerse.Api.Entities.Achievements;
+using InkVerse.Api.Entities.BookBible;
+using InkVerse.Api.Entities.CharacterBank;
 using InkVerse.Api.Entities.Identity;
+using InkVerse.Api.Entities.Monetization;
+using InkVerse.Api.Entities.Moderation;
+using InkVerse.Api.Entities.Notifications;
+using InkVerse.Api.Entities.Reports;
+using InkVerse.Api.Entities.SiteVisuals;
 using InkVerse.Api.Entities.TrendEnti;
 
 namespace InkVerse.Api.Data
@@ -32,6 +40,45 @@ namespace InkVerse.Api.Data
 
         public DbSet<BookTrend> BookTrends => Set<BookTrend>();
         public DbSet<Arc> Arcs { get; set; }
+        public DbSet<CharacterWorld> CharacterWorlds => Set<CharacterWorld>();
+        public DbSet<CharacterTemplate> CharacterTemplates => Set<CharacterTemplate>();
+        public DbSet<BookCharacter> BookCharacters => Set<BookCharacter>();
+        public DbSet<WalletAccount> WalletAccounts => Set<WalletAccount>();
+        public DbSet<CoinLedgerEntry> CoinLedgerEntries => Set<CoinLedgerEntry>();
+        public DbSet<CoinPurchase> CoinPurchases => Set<CoinPurchase>();
+        public DbSet<ChapterMonetization> ChapterMonetizations => Set<ChapterMonetization>();
+        public DbSet<ChapterUnlock> ChapterUnlocks => Set<ChapterUnlock>();
+        public DbSet<AuthorAgreement> AuthorAgreements => Set<AuthorAgreement>();
+        public DbSet<AuthorAgreementAcceptance> AuthorAgreementAcceptances => Set<AuthorAgreementAcceptance>();
+        public DbSet<RoyaltyLedgerEntry> RoyaltyLedgerEntries => Set<RoyaltyLedgerEntry>();
+        public DbSet<AuthorBalance> AuthorBalances => Set<AuthorBalance>();
+        public DbSet<PayoutRequest> PayoutRequests => Set<PayoutRequest>();
+        public DbSet<BookAiApproval> BookAiApprovals => Set<BookAiApproval>();
+        public DbSet<AiServiceCatalog> AiServiceCatalog => Set<AiServiceCatalog>();
+        public DbSet<AiArtifact> AiArtifacts => Set<AiArtifact>();
+        public DbSet<AiServiceOrder> AiServiceOrders => Set<AiServiceOrder>();
+        public DbSet<BookNotebookEntry> BookNotebookEntries => Set<BookNotebookEntry>();
+        public DbSet<ProofreadingDraft> ProofreadingDrafts => Set<ProofreadingDraft>();
+        public DbSet<BookContract> BookContracts => Set<BookContract>();
+        public DbSet<BookBibleProfile> BookBibleProfiles => Set<BookBibleProfile>();
+        public DbSet<BookWorldEntry> BookWorldEntries => Set<BookWorldEntry>();
+        public DbSet<BookCharacterProfile> BookCharacterProfiles => Set<BookCharacterProfile>();
+        public DbSet<BookCharacterRelationship> BookCharacterRelationships => Set<BookCharacterRelationship>();
+        public DbSet<BookPlotThread> BookPlotThreads => Set<BookPlotThread>();
+        public DbSet<BookTimelineEvent> BookTimelineEvents => Set<BookTimelineEvent>();
+        public DbSet<BookBibleSuggestion> BookBibleSuggestions => Set<BookBibleSuggestion>();
+        public DbSet<ContentReport> ContentReports => Set<ContentReport>();
+        public DbSet<ContentModerationCase> ModerationCases => Set<ContentModerationCase>();
+        public DbSet<ModerationCaseMessage> ModerationCaseMessages => Set<ModerationCaseMessage>();
+        public DbSet<ReaderProgress> ReaderProgresses => Set<ReaderProgress>();
+        public DbSet<ReaderChapterRead> ReaderChapterReads => Set<ReaderChapterRead>();
+        public DbSet<ReaderReadSession> ReaderReadSessions => Set<ReaderReadSession>();
+        public DbSet<AchievementDefinition> AchievementDefinitions => Set<AchievementDefinition>();
+        public DbSet<UserAchievement> UserAchievements => Set<UserAchievement>();
+        public DbSet<SiteVisualAsset> SiteVisualAssets => Set<SiteVisualAsset>();
+        public DbSet<UserNotification> UserNotifications => Set<UserNotification>();
+        public DbSet<UserNotificationPreference> UserNotificationPreferences => Set<UserNotificationPreference>();
+        public DbSet<UserAuthorFollow> UserAuthorFollows => Set<UserAuthorFollow>();
 
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -61,6 +108,15 @@ namespace InkVerse.Api.Data
             .WithMany()
             .HasForeignKey(x => x.UserId)
             .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<ReviewReply>()
+                .HasOne(x => x.ParentReply)
+                .WithMany(x => x.Replies)
+                .HasForeignKey(x => x.ParentReplyId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<ReviewReply>()
+                .HasIndex(x => x.ParentReplyId);
 
             builder.Entity<ReadingProgress>()
                 .HasIndex(x => new { x.BookId, x.UserId })
@@ -136,6 +192,280 @@ namespace InkVerse.Api.Data
                 .HasOne(x => x.Trend)
                 .WithMany(t => t.BookTrends)
                 .HasForeignKey(x => x.TrendID);
+
+            builder.Entity<BookCharacter>()
+                .HasKey(x => new { x.BookId, x.CharacterTemplateId });
+
+            builder.Entity<BookCharacter>()
+                .HasOne(x => x.Book)
+                .WithMany(book => book.BookCharacters)
+                .HasForeignKey(x => x.BookId);
+
+            builder.Entity<BookCharacter>()
+                .HasOne(x => x.CharacterTemplate)
+                .WithMany(character => character.BookCharacters)
+                .HasForeignKey(x => x.CharacterTemplateId);
+
+            builder.Entity<CharacterTemplate>()
+                .HasOne(character => character.CharacterWorld)
+                .WithMany(world => world.Characters)
+                .HasForeignKey(character => character.CharacterWorldId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.Entity<CharacterWorld>()
+                .HasIndex(world => world.Slug)
+                .IsUnique();
+
+            builder.Entity<CharacterTemplate>()
+                .HasIndex(character => character.Slug)
+                .IsUnique();
+
+            builder.Entity<WalletAccount>()
+                .HasIndex(wallet => wallet.UserId)
+                .IsUnique();
+
+            builder.Entity<ChapterMonetization>()
+                .HasIndex(item => item.ChapterId)
+                .IsUnique();
+
+            builder.Entity<ChapterUnlock>()
+                .HasIndex(item => new { item.UserId, item.ChapterId })
+                .IsUnique();
+
+            builder.Entity<AuthorAgreement>()
+                .HasIndex(item => item.Version)
+                .IsUnique();
+
+            builder.Entity<AuthorAgreementAcceptance>()
+                .HasIndex(item => new { item.AuthorId, item.Version })
+                .IsUnique();
+
+            builder.Entity<AuthorBalance>()
+                .HasIndex(item => item.AuthorId)
+                .IsUnique();
+
+            builder.Entity<BookAiApproval>()
+                .HasIndex(item => item.BookId)
+                .IsUnique();
+
+            builder.Entity<BookContract>()
+                .HasIndex(item => item.BookId)
+                .IsUnique();
+
+            builder.Entity<BookContract>()
+                .HasOne(item => item.RightsAttestedBy)
+                .WithMany()
+                .HasForeignKey(item => item.RightsAttestedById)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<BookContract>()
+                .HasOne(item => item.ReviewedBy)
+                .WithMany()
+                .HasForeignKey(item => item.ReviewedById)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<AiServiceCatalog>()
+                .HasIndex(item => item.ServiceKey)
+                .IsUnique();
+
+            builder.Entity<SiteVisualAsset>()
+                .HasIndex(item => item.SlotKey)
+                .IsUnique();
+
+            builder.Entity<UserNotification>()
+                .HasIndex(item => new { item.RecipientId, item.IsRead, item.CreatedAt });
+
+            builder.Entity<UserNotification>()
+                .HasIndex(item => new { item.RecipientId, item.DedupeKey })
+                .IsUnique();
+
+            builder.Entity<UserNotification>()
+                .HasOne(item => item.Recipient)
+                .WithMany()
+                .HasForeignKey(item => item.RecipientId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<UserNotification>()
+                .HasOne(item => item.Actor)
+                .WithMany()
+                .HasForeignKey(item => item.ActorId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<UserNotificationPreference>()
+                .HasIndex(item => new { item.UserId, item.Category })
+                .IsUnique();
+
+            builder.Entity<UserNotificationPreference>()
+                .HasOne(item => item.User)
+                .WithMany()
+                .HasForeignKey(item => item.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<UserAuthorFollow>()
+                .HasIndex(item => new { item.FollowerId, item.AuthorId })
+                .IsUnique();
+
+            builder.Entity<UserAuthorFollow>()
+                .HasOne(item => item.Follower)
+                .WithMany()
+                .HasForeignKey(item => item.FollowerId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<UserAuthorFollow>()
+                .HasOne(item => item.Author)
+                .WithMany()
+                .HasForeignKey(item => item.AuthorId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<AiArtifact>()
+                .HasIndex(item => new { item.ServiceKey, item.ChapterId, item.Language });
+
+            builder.Entity<BookBibleProfile>()
+                .HasIndex(item => item.BookId)
+                .IsUnique();
+
+            builder.Entity<BookWorldEntry>()
+                .HasIndex(item => new { item.BookId, item.EntryType });
+
+            builder.Entity<BookCharacterProfile>()
+                .HasIndex(item => new { item.BookId, item.Name });
+
+            builder.Entity<BookCharacterRelationship>()
+                .HasOne(item => item.SourceCharacter)
+                .WithMany()
+                .HasForeignKey(item => item.SourceCharacterId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<BookCharacterRelationship>()
+                .HasOne(item => item.TargetCharacter)
+                .WithMany()
+                .HasForeignKey(item => item.TargetCharacterId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<BookCharacterRelationship>()
+                .HasIndex(item => new { item.BookId, item.SourceCharacterId, item.TargetCharacterId });
+
+            builder.Entity<BookPlotThread>()
+                .HasIndex(item => new { item.BookId, item.Status });
+
+            builder.Entity<BookTimelineEvent>()
+                .HasIndex(item => new { item.BookId, item.OrderIndex });
+
+            builder.Entity<BookBibleSuggestion>()
+                .HasIndex(item => new { item.BookId, item.Status });
+
+            builder.Entity<ContentReport>()
+                .HasIndex(item => new { item.Status, item.TargetType, item.CreatedAt });
+
+            builder.Entity<ContentReport>()
+                .HasIndex(item => new { item.ReporterId, item.TargetType, item.TargetId, item.Status });
+
+            builder.Entity<ContentReport>()
+                .HasOne(item => item.Reporter)
+                .WithMany()
+                .HasForeignKey(item => item.ReporterId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<ContentReport>()
+                .HasOne(item => item.TargetOwner)
+                .WithMany()
+                .HasForeignKey(item => item.TargetOwnerId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<ContentReport>()
+                .HasOne(item => item.ResolvedBy)
+                .WithMany()
+                .HasForeignKey(item => item.ResolvedById)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<ContentModerationCase>()
+                .HasIndex(item => new { item.Status, item.RequiresAdmin, item.CreatedAt });
+
+            builder.Entity<ContentModerationCase>()
+                .HasIndex(item => new { item.TargetType, item.TargetId, item.Category, item.Source });
+
+            builder.Entity<ContentModerationCase>()
+                .HasIndex(item => item.SourceReportId);
+
+            builder.Entity<ContentModerationCase>()
+                .HasOne(item => item.TargetOwner)
+                .WithMany()
+                .HasForeignKey(item => item.TargetOwnerId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<ContentModerationCase>()
+                .HasOne(item => item.SourceReport)
+                .WithMany()
+                .HasForeignKey(item => item.SourceReportId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<ContentModerationCase>()
+                .HasOne(item => item.ResolvedBy)
+                .WithMany()
+                .HasForeignKey(item => item.ResolvedById)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<ModerationCaseMessage>()
+                .HasIndex(item => new { item.CaseId, item.CreatedAt });
+
+            builder.Entity<ModerationCaseMessage>()
+                .HasOne(item => item.Case)
+                .WithMany(item => item.Messages)
+                .HasForeignKey(item => item.CaseId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<ModerationCaseMessage>()
+                .HasOne(item => item.Sender)
+                .WithMany()
+                .HasForeignKey(item => item.SenderId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<ReaderProgress>()
+                .HasIndex(item => item.UserId)
+                .IsUnique();
+
+            builder.Entity<ReaderProgress>()
+                .HasOne(item => item.User)
+                .WithMany()
+                .HasForeignKey(item => item.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<ReaderChapterRead>()
+                .HasIndex(item => new { item.UserId, item.ChapterId })
+                .IsUnique();
+
+            builder.Entity<ReaderChapterRead>()
+                .HasIndex(item => new { item.UserId, item.BookId });
+
+            builder.Entity<ReaderChapterRead>()
+                .HasOne(item => item.User)
+                .WithMany()
+                .HasForeignKey(item => item.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<ReaderReadSession>()
+                .HasIndex(item => item.SessionId)
+                .IsUnique();
+
+            builder.Entity<AchievementDefinition>()
+                .HasIndex(item => item.Key)
+                .IsUnique();
+
+            builder.Entity<AchievementDefinition>()
+                .HasIndex(item => new { item.MetricType, item.Tier });
+
+            builder.Entity<UserAchievement>()
+                .HasIndex(item => new { item.UserId, item.AchievementKey })
+                .IsUnique();
+
+            builder.Entity<UserAchievement>()
+                .HasIndex(item => new { item.UserId, item.UnlockedAt });
+
+            builder.Entity<UserAchievement>()
+                .HasOne(item => item.User)
+                .WithMany()
+                .HasForeignKey(item => item.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
 
             builder.Entity<Trend>()
                 .HasIndex(t => t.Name)

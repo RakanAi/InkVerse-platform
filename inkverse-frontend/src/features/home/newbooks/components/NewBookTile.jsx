@@ -5,6 +5,10 @@ import { normalizeHomeBookPreview } from "@/features/home/shared/home.models";
 
 export default function NewBookTile({ book }) {
   const preview = normalizeHomeBookPreview(book);
+  const authorProfilePath =
+    preview.authorName && preview.authorName !== "Unknown author"
+      ? `/users/${encodeURIComponent(preview.authorName)}`
+      : null;
 
   return (
     <article className="iv-home-book-card">
@@ -20,8 +24,8 @@ export default function NewBookTile({ book }) {
         </div>
       </Link>
 
-      {preview.authorId ? (
-        <Link to={`/author/${preview.authorId}`} className="iv-home-book-card__author">
+      {authorProfilePath ? (
+        <Link to={authorProfilePath} className="iv-home-book-card__author">
           {preview.authorName}
         </Link>
       ) : (

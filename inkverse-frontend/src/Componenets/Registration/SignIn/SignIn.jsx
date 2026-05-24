@@ -1,4 +1,5 @@
 import { useContext, useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import api from "../../../Api/api";
@@ -8,7 +9,7 @@ import GoogleLoginButton from "../../LoginComp/GoogleLoginButton";
 import AuthAside from "@/features/auth/components/AuthAside";
 import AuthField from "@/features/auth/components/AuthField";
 import AuthPanel from "@/features/auth/components/AuthPanel";
-import { LOGIN_FEATURES } from "@/features/auth/auth.copy";
+import { getLoginFeatures } from "@/features/auth/auth.copy";
 import {
   getLoginErrorMessage,
   isLoginReady,
@@ -16,6 +17,7 @@ import {
 
 const Form = () => {
   const { setAuth, closeLogin } = useContext(AuthContext);
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const afterLogin = location.state?.from?.pathname || "/profilePage";
@@ -40,18 +42,18 @@ const Form = () => {
       });
 
       if (response.status === 200) {
-        const { token, userName, email, roles } = response.data;
+        const { token, userName, email, avatarUrl, roles } = response.data;
 
         setAuth({
           accessToken: token,
-          user: { userName, email, roles: roles ?? [] },
+          user: { userName, email, avatarUrl, roles: roles ?? [] },
         });
 
         closeLogin();
         navigate(afterLogin, { replace: true });
       }
     } catch (err) {
-      setError(getLoginErrorMessage(err));
+      setError(getLoginErrorMessage(t, err));
     } finally {
       setLoading(false);
     }
@@ -61,20 +63,21 @@ const Form = () => {
     <AuthPanel
       aside={
         <AuthAside
-          eyebrow="Reader login"
-          title="Step back into your shelf."
-          text="Sign in to keep reading, save what matters, and rejoin the stories already waiting for you."
-          items={LOGIN_FEATURES}
+          eyebrow={t("auth.login.aside.eyebrow")}
+          title={t("auth.login.aside.title")}
+          text={t("auth.login.aside.text")}
+          items={getLoginFeatures(t)}
         />
       }
-      formEyebrow="Welcome back"
-      formTitle="Enter InkVerse"
-      formText="Use your reader details to pick up right where you left off."
+      formEyebrow={t("auth.login.form.eyebrow")}
+      formTitle={t("auth.login.form.title")}
+      formText={t("auth.login.form.text")}
       footer={
         <p className="iv-auth-legal">
-          By continuing, you agree to InkVerse&apos;s{" "}
-          <Link to="/terms">Terms of Service</Link> and{" "}
-          <Link to="/privacy">Privacy Policy</Link>.
+          <Trans
+            i18nKey="auth.legal.signIn"
+            components={[<Link to="/terms" />, <Link to="/privacy" />]}
+          />
         </p>
       }
     >
@@ -87,28 +90,28 @@ const Form = () => {
       <form className="iv-auth-form" onSubmit={handleSubmit}>
         <AuthField
           id="login-input"
-          label="Email or username"
+          label={t("auth.login.form.loginInput")}
           type="text"
           value={loginInput}
           onChange={(event) => setLoginInput(event.target.value)}
-          placeholder="readername or name@example.com"
+          placeholder={t("auth.login.form.loginPlaceholder")}
           autoComplete="username"
         />
 
         <AuthField
           id="login-password"
-          label="Password"
+          label={t("auth.login.form.password")}
           type={showPassword ? "text" : "password"}
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          placeholder="Enter your password"
+          placeholder={t("auth.login.form.passwordPlaceholder")}
           autoComplete="current-password"
           action={
             <button
               type="button"
               onClick={() => setShowPassword((current) => !current)}
             >
-              {showPassword ? "Hide" : "Show"}
+              {showPassword ? t("auth.login.form.hide") : t("auth.login.form.show")}
             </button>
           }
         />
@@ -118,11 +121,11 @@ const Form = () => {
           className="iv-auth-submit"
           disabled={!isReady || loading}
         >
-          {loading ? "Signing in..." : "Sign in"}
+          {loading ? t("auth.login.form.submitting") : t("auth.login.form.submit")}
         </button>
       </form>
 
-      <div className="iv-auth-bridge">or continue with</div>
+      <div className="iv-auth-bridge">{t("auth.googleBridge")}</div>
 
       <div className="iv-auth-social iv-auth-social--standalone">
         <div className="iv-auth-googleShell">

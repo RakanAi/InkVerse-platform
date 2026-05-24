@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import "./BrowseBookCard.css";
 import BookCover from "@/Shared/books/BookCover/BookCover";
 import { getBookCoverSrc } from "@/domain/books/book-cover";
@@ -22,12 +23,13 @@ export default function BrowseBookCard({
   isBookmarked,
   onToggleBookmark,
 }) {
+  const { t } = useTranslation();
   const id = book.id ?? book.Id;
-  const title = book.title ?? book.Title ?? "Untitled";
-  const authorName = book.authorName ?? book.AuthorName ?? "Unknown";
-  const description = book.description ?? book.Description ?? "No description yet.";
+  const title = book.title ?? book.Title ?? t("common.books.untitled");
+  const authorName = book.authorName ?? book.AuthorName ?? t("common.books.unknownAuthor");
+  const description = book.description ?? book.Description ?? t("common.books.noDescription");
   const status = book.status ?? book.Status ?? "";
-  const verseType = book.verseType ?? book.VerseType ?? "Verse";
+  const verseType = book.verseType ?? book.VerseType ?? t("browse.card.verseFallback");
   const originType = book.originType ?? book.OriginType ?? "";
   const rating = Number(
     book.averageRating ?? book.rating ?? book.AverageRating ?? book.Rating ?? 0,
@@ -53,7 +55,11 @@ export default function BrowseBookCard({
             className="iv-browse-bookmark"
             type="button"
             onClick={() => onToggleBookmark?.(book)}
-            title={isBookmarked ? "Remove from bookmarks" : "Add to bookmarks"}
+            title={
+              isBookmarked
+                ? t("browse.card.bookmarkRemove")
+                : t("browse.card.bookmarkAdd")
+            }
           >
             <i className={`bi ${isBookmarked ? "bi-bookmark-fill" : "bi-bookmark"}`} />
           </button>
@@ -64,7 +70,7 @@ export default function BrowseBookCard({
         </Link>
 
         <div className="iv-browse-author">
-          by <span>{authorName}</span>
+          {t("browse.card.by")} <span>{authorName}</span>
           {originType ? <em className="iv-browse-origin"> · {originType}</em> : null}
         </div>
 
@@ -77,13 +83,17 @@ export default function BrowseBookCard({
             <span className="iv-browse-star">★</span>
             <span className="iv-browse-rating">{rating}</span>
             <span className="iv-browse-dot">•</span>
-            <span className="iv-browse-metric">{reviewsCount} reviews</span>
+            <span className="iv-browse-metric">
+              {t("browse.card.reviews", { count: reviewsCount })}
+            </span>
             <span className="iv-browse-dot">•</span>
-            <span className="iv-browse-metric">{chaptersCount} chapters</span>
+            <span className="iv-browse-metric">
+              {t("browse.card.chapters", { count: chaptersCount })}
+            </span>
           </div>
 
           <Link to={bookUrl} className="iv-browse-open">
-            Open story
+            {t("common.actions.openStory")}
           </Link>
         </div>
       </div>

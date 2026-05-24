@@ -20,10 +20,10 @@ public class ChapterCommentsController : ControllerBase
     }
 
     [HttpGet("chapters/{chapterId:int}/comments")]
-    public async Task<IActionResult> Get(int chapterId)
+    public async Task<IActionResult> Get(int chapterId, [FromQuery] string? paragraphId = null, [FromQuery] bool includeAll = false)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var comments = await _service.GetChapterCommentsAsync(chapterId, userId);
+        var comments = await _service.GetChapterCommentsAsync(chapterId, userId, paragraphId, includeAll);
         return Ok(comments);
     }
 
@@ -35,8 +35,20 @@ public class ChapterCommentsController : ControllerBase
         if (banCheck != null) return banCheck;
 
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        var created = await _service.AddCommentAsync(chapterId, userId, dto);
-        return Ok(created);
+
+        try
+        {
+            var created = await _service.AddCommentAsync(chapterId, userId, dto);
+            return Ok(created);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [Authorize]

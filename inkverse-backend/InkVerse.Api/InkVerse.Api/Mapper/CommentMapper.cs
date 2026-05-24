@@ -11,6 +11,7 @@ namespace InkVerse.Api.Mapper
                 Id = comment.ID,
                 Content = comment.Content,
                 CreatedAt = comment.CreatedAt,
+                ParagraphId = comment.ParagraphId,
                 ChapterId = comment.ChapterId,
                 UserId = comment.UserId,
                 UserName = comment.User?.UserName ?? string.Empty

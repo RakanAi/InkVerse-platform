@@ -1,17 +1,19 @@
-export const HOME_HERO_CONTENT = {
-  eyebrow: "InkVerse Home",
-  title: "Fall into the kinds of stories people actually obsess over.",
-  subtitle:
-    "Discover new originals, wild fanfiction, and the latest reader buzz in one curated landing space built for exploration.",
-  primaryAction: {
-    label: "Start Reading",
-    to: "/Browser",
-  },
-  secondaryAction: {
-    label: "Start Writing",
-    to: "/Author",
-  },
-  pills: ["Original fantasy", "Smart fanfiction", "Reader-first reviews"],
-  posterLabel: "Tonight's vibe",
-  posterText: "Big feelings. Sharp worlds. One more chapter.",
-};
+export function getHomeHeroContent(t) {
+  return {
+    eyebrow: t("home.hero.eyebrow"),
+    title: t("home.hero.title"),
+    subtitle: t("home.hero.subtitle"),
+    primaryAction: {
+      label: t("home.hero.primaryAction"),
+      to: "/Browser",
+    },
+    secondaryAction: {
+      label: t("home.hero.secondaryAction"),
+      to: "/Author",
+    },
+    pills: t("home.hero.pills", { returnObjects: true }),
+    posterLabel: t("home.hero.posterLabel"),
+    posterText: t("home.hero.posterText"),
+    posterAlt: t("home.hero.posterAlt"),
+  };
+}

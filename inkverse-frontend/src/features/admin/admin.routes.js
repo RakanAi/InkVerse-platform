@@ -1,78 +1,126 @@
-export const ADMIN_NAV_ITEMS = [
-  { to: "/admin", label: "Dashboard", exact: true },
-  { to: "/admin/books", label: "Books" },
-  { to: "/admin/trends", label: "Trends" },
-  { to: "/admin/tags", label: "Tags" },
-  { to: "/admin/genres", label: "Genres" },
-  { to: "/admin/users", label: "Users" },
-];
+export function getAdminNavItems(t) {
+  return [
+    { to: "/admin", label: t("admin.nav.dashboard"), exact: true },
+    { to: "/admin/books", label: t("admin.nav.books") },
+    { to: "/admin/characters", label: t("admin.nav.characters") },
+    { to: "/admin/contracts", label: t("admin.nav.contracts", { defaultValue: "Contracts" }) },
+    { to: "/admin/reports", label: t("admin.nav.reports", { defaultValue: "Reports" }) },
+    { to: "/admin/moderation", label: t("admin.nav.moderation", { defaultValue: "Moderation" }) },
+    { to: "/admin/notifications", label: t("admin.nav.notifications", { defaultValue: "Notifications" }) },
+    { to: "/admin/visual-assets", label: t("admin.nav.visualAssets", { defaultValue: "Visual assets" }) },
+    { to: "/admin/trends", label: t("admin.nav.trends") },
+    { to: "/admin/tags", label: t("admin.nav.tags") },
+    { to: "/admin/genres", label: t("admin.nav.genres") },
+    { to: "/admin/users", label: t("admin.nav.users") },
+  ];
+}
 
 const ADMIN_ROUTE_META = [
   {
     match: (pathname) => pathname === "/admin",
-    title: "Dashboard",
-    subtitle: "Catalog health, moderation, and publishing at a glance.",
+    key: "dashboard",
   },
   {
     match: (pathname) => pathname === "/admin/books",
-    title: "Books",
-    subtitle: "Manage titles, taxonomy, and chapter entry points.",
+    key: "books",
+  },
+  {
+    match: (pathname) => pathname === "/admin/characters",
+    key: "characters",
+  },
+  {
+    match: (pathname) => pathname === "/admin/contracts",
+    key: "contracts",
+  },
+  {
+    match: (pathname) => pathname === "/admin/reports",
+    key: "reports",
+  },
+  {
+    match: (pathname) => pathname === "/admin/moderation",
+    key: "moderation",
+  },
+  {
+    match: (pathname) => pathname === "/admin/notifications",
+    key: "notifications",
+  },
+  {
+    match: (pathname) => pathname === "/admin/visual-assets",
+    key: "visualAssets",
   },
   {
     match: (pathname) => pathname === "/admin/books/new",
-    title: "New Book",
-    subtitle: "Create a new title and prepare it for publishing.",
+    key: "newBook",
   },
   {
     match: (pathname) =>
       /^\/admin\/books\/[^/]+\/chapters\/new$/.test(pathname),
-    title: "New Chapter",
-    subtitle: "Draft a chapter and place it in the right arc.",
+    key: "newChapter",
   },
   {
     match: (pathname) =>
       /^\/admin\/books\/[^/]+\/chapters\/[^/]+$/.test(pathname),
-    title: "Edit Chapter",
-    subtitle: "Update chapter content, numbering, and arc placement.",
+    key: "editChapter",
   },
   {
     match: (pathname) => /^\/admin\/books\/[^/]+\/chapters$/.test(pathname),
-    title: "Chapters",
-    subtitle: "Organize arcs, import batches, and keep chapter order clean.",
+    key: "chapters",
   },
   {
     match: (pathname) =>
       /^\/admin\/books\/[^/]+$/.test(pathname) && pathname !== "/admin/books/new",
-    title: "Edit Book",
-    subtitle: "Update metadata, cover art, and discovery settings.",
+    key: "editBook",
   },
   {
     match: (pathname) => pathname === "/admin/trends",
-    title: "Trends",
-    subtitle: "Curate spotlight collections and connected books.",
+    key: "trends",
   },
   {
     match: (pathname) => pathname === "/admin/tags",
-    title: "Tags",
-    subtitle: "Keep reader-facing tags clean, searchable, and active.",
+    key: "tags",
   },
   {
     match: (pathname) => pathname === "/admin/genres",
-    title: "Genres",
-    subtitle: "Manage the shelf structure readers browse by.",
+    key: "genres",
   },
   {
     match: (pathname) => pathname === "/admin/users",
-    title: "Users",
-    subtitle: "Handle moderation and account restrictions.",
+    key: "users",
   },
 ];
 
-export function getAdminRouteMeta(pathname) {
-  return (
-    ADMIN_ROUTE_META.find((item) => item.match(pathname)) ?? {
-      title: "Admin",
-      subtitle: "Manage the platform workspace.",
-    }
-  );
+export function getAdminRouteMeta(pathname, t) {
+  const match = ADMIN_ROUTE_META.find((item) => item.match(pathname));
+  const key = match?.key ?? "fallback";
+
+  return {
+    title: t(`admin.routes.${key}.title`, {
+      defaultValue:
+        key === "contracts"
+          ? "Contracts"
+          : key === "reports"
+            ? "Reports"
+            : key === "moderation"
+              ? "Moderation"
+              : key === "notifications"
+                ? "Notifications"
+                : key === "visualAssets"
+                  ? "Visual assets"
+                  : "Admin",
+    }),
+    subtitle: t(`admin.routes.${key}.subtitle`, {
+      defaultValue:
+        key === "contracts"
+          ? "Review eligible books and manage active contracts."
+          : key === "reports"
+            ? "Review reader and author reports from across the platform."
+            : key === "moderation"
+              ? "Let Clawbot handle repeated moderation work and review only risky cases."
+              : key === "notifications"
+                ? "Send persisted in-app notices without email or push."
+                : key === "visualAssets"
+                  ? "Control page artwork slots used across the public experience."
+                  : "",
+    }),
+  };
 }

@@ -69,6 +69,8 @@
 }
 
 .iv-top-cover img,
+.iv-top-cover .iv-cover,
+.iv-top-cover .iv-cover__img,
 .iv-top-cover .iv-book-cover,
 .iv-top-cover .iv-book-cover__img {
   width: 100%;

@@ -3,10 +3,9 @@ import "./ReviewCardV2.css";
 
 import BookCover from "@/Shared/books/BookCover/BookCover";
 import { getBookCoverSrc } from "@/domain/books/book-cover";
-import { absUrl } from "@/Utils/absUrl";
+import { canOpenPublicProfile, getPublicProfilePath } from "@/domain/users/public-profile";
 import LinkButton from "@/Shared/ui/LinkButton";
-
-const FALLBACK_USER_IMG = "https://ui-avatars.com/api/?name=User";
+import UserAvatar from "../../user/UserAvatar";
 
 export default function ReviewCardV2({
   review,
@@ -44,25 +43,34 @@ export default function ReviewCardV2({
     review?.Image ??
     "";
 
-  const userAvatarUrl = rawAvatar ? absUrl(rawAvatar) : FALLBACK_USER_IMG;
   const ratingValue = review?.rating ?? review?.Rating ?? null;
   const bookLike =
     review?.book ??
     review?.Book ??
     {
+      bookCoverImageUrl: review?.bookCoverImageUrl ?? review?.BookCoverImageUrl,
       coverImageUrl: review?.coverImageUrl ?? review?.CoverImageUrl,
       CoverImageUrl: review?.CoverImageUrl,
+      BookCoverImageUrl: review?.BookCoverImageUrl,
       cover: review?.cover,
     };
 
   const coverSrc = getBookCoverSrc(bookLike);
+  const canViewProfile = canOpenPublicProfile(userName);
+  const profilePath = canViewProfile ? getPublicProfilePath(userName) : null;
 
   return (
-    <div className="iv-rv2-card mb-3" style={{ height }}>
+    <div className="iv-rv2-card" style={{ height }}>
       <Link to={bookId ? `/book/${bookId}` : "#"} className="iv-rv2-coverLink">
         <div className="iv-rv2-cover">
           <BookCover variant="tile" src={coverSrc} alt={bookTitle} />
           <div className="iv-rv2-coverFade" />
+          <div className="iv-rv2-coverMeta">
+            <span className="iv-rv2-coverKicker">Book</span>
+            <span className="iv-rv2-coverTitle" title={bookTitle}>
+              {bookTitle}
+            </span>
+          </div>
           {typeof ratingValue === "number" ? (
             <span className="iv-rv2-rating">★ {ratingValue.toFixed(1)}</span>
           ) : null}
@@ -79,19 +87,29 @@ export default function ReviewCardV2({
         </div>
 
         <div className="iv-rv2-footer">
-          <div className="iv-rv2-user">
-            <img
-              className="iv-rv2-userImg"
-              src={userAvatarUrl}
-              alt={userName}
-              onError={(e) => {
-                e.currentTarget.src = FALLBACK_USER_IMG;
-              }}
-            />
-            <span className="iv-rv2-userName" title={userName}>
-              {userName}
-            </span>
-          </div>
+          {profilePath ? (
+            <Link to={profilePath} className="iv-rv2-user iv-rv2-userLink" title={`View ${userName}`}>
+              <UserAvatar
+                className="iv-rv2-userImg"
+                src={rawAvatar}
+                name={userName}
+              />
+              <span className="iv-rv2-userName" title={userName}>
+                {userName}
+              </span>
+            </Link>
+          ) : (
+            <div className="iv-rv2-user">
+              <UserAvatar
+                className="iv-rv2-userImg"
+                src={rawAvatar}
+                name={userName}
+              />
+              <span className="iv-rv2-userName" title={userName}>
+                {userName}
+              </span>
+            </div>
+          )}
 
           {bookId ? (
             <LinkButton to={`/book/${bookId}`} variant="ghost" size="sm" className="iv-rv2-action">

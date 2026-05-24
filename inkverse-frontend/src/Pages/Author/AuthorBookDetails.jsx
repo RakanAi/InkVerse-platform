@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { FiArrowLeft, FiEdit2 } from "react-icons/fi";
 import Surface from "../../Shared/ui/Surface";
 import Button from "../../Shared/ui/Button";
@@ -11,6 +12,15 @@ import EmptyState from "../../Shared/ui/EmptyState";
 import DropdownSelectSearchable from "../../Shared/ui/DropdownSelectSearchable";
 import MultiSelectDropdownSearchable from "../../Shared/ui/MultiSelectDropdownSearchable";
 import Segmented from "../../Shared/ui/Segmented";
+import AuthorSectionHeading from "../../features/author/components/AuthorSectionHeading";
+import { buildBookCoverUploadFile } from "../../domain/books/build-book-cover-upload-file";
+import {
+  formatCompactNumber,
+  formatStatusLabel,
+  getBookCover,
+  getBookDescription,
+  getBookTitle,
+} from "../../features/author/author.utils";
 import {
   fetchBookById,
   fetchBookArcs,
@@ -24,6 +34,12 @@ import {
   linkBookToTrend,
   uploadBookCover,
 } from "./authorApi";
+import {
+  attestAuthorBookRights,
+  fetchAuthorBookContract,
+} from "../../Api/book-contracts.api";
+import { updateChapterMonetization } from "../../Api/monetization.api";
+import AuthorBookBible from "./AuthorBookBible";
 
 const DEFAULT_EDIT = {
   title: "",
@@ -37,11 +53,21 @@ const DEFAULT_EDIT = {
   trendId: "",
   coverFile: null,
   coverPreviewUrl: "",
+  coverImageW: 0,
+  coverImageH: 0,
   coverZoom: 1,
+  coverOffsetX: 0,
+  coverOffsetY: 0,
 };
 
 const COVER_CANVAS_W = 600;
-const COVER_CANVAS_H = 900;
+const COVER_CANVAS_H = 800;
+const COVER_PREVIEW_W = 180;
+const COVER_PREVIEW_H = COVER_PREVIEW_W * (4 / 3);
+const COVER_EDITOR_W = 280;
+const COVER_EDITOR_H = COVER_EDITOR_W * (4 / 3);
+
+const clamp = (val, min, max) => Math.max(min, Math.min(max, val));
 
 function loadImageFromUrl(url) {
   return new Promise((resolve, reject) => {
@@ -52,44 +78,61 @@ function loadImageFromUrl(url) {
   });
 }
 
-async function buildAdjustedCoverFile(file, title, zoom) {
-  const srcUrl = URL.createObjectURL(file);
-  try {
-    const img = await loadImageFromUrl(srcUrl);
-    const canvas = document.createElement("canvas");
-    canvas.width = COVER_CANVAS_W;
-    canvas.height = COVER_CANVAS_H;
+function getCoverStyle(imageW, imageH, zoom, offsetX, offsetY, frameW, frameH) {
+  if (!imageW || !imageH) return null;
+  const baseScale = Math.max(frameW / imageW, frameH / imageH);
+  const drawW = imageW * baseScale * zoom;
+  const drawH = imageH * baseScale * zoom;
 
-    const ctx = canvas.getContext("2d");
-    if (!ctx) throw new Error("Unable to prepare cover image.");
+  return {
+    width: `${drawW}px`,
+    height: `${drawH}px`,
+    left: `${(frameW - drawW) / 2 + offsetX}px`,
+    top: `${(frameH - drawH) / 2 + offsetY}px`,
+  };
+}
 
-    ctx.fillStyle = "#0f172a";
-    ctx.fillRect(0, 0, COVER_CANVAS_W, COVER_CANVAS_H);
+function distance(t1, t2) {
+  const dx = t1.clientX - t2.clientX;
+  const dy = t1.clientY - t2.clientY;
+  return Math.sqrt(dx * dx + dy * dy);
+}
 
-    const baseScale = Math.max(COVER_CANVAS_W / img.width, COVER_CANVAS_H / img.height);
-    const drawW = img.width * baseScale * zoom;
-    const drawH = img.height * baseScale * zoom;
-    const drawX = (COVER_CANVAS_W - drawW) / 2;
-    const drawY = (COVER_CANVAS_H - drawH) / 2;
+function midpoint(t1, t2) {
+  return {
+    x: (t1.clientX + t2.clientX) / 2,
+    y: (t1.clientY + t2.clientY) / 2,
+  };
+}
 
-    ctx.drawImage(img, drawX, drawY, drawW, drawH);
-
-    const blob = await new Promise((resolve) => {
-      canvas.toBlob(resolve, "image/webp", 0.92);
-    });
-
-    if (!blob) throw new Error("Could not build cover preview.");
-
-    const safeName = (title || "book")
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "") || "book";
-
-    return new File([blob], `${safeName}-cover.webp`, { type: blob.type });
-  } finally {
-    URL.revokeObjectURL(srcUrl);
+function getCoverOffsetBounds(imageW, imageH, zoom) {
+  if (!imageW || !imageH) {
+    return { minX: 0, maxX: 0, minY: 0, maxY: 0 };
   }
+
+  const baseScale = Math.max(COVER_CANVAS_W / imageW, COVER_CANVAS_H / imageH);
+  const drawW = imageW * baseScale * zoom;
+  const drawH = imageH * baseScale * zoom;
+  const maxOffsetX = Math.max(0, (drawW - COVER_CANVAS_W) / 2);
+  const maxOffsetY = Math.max(0, (drawH - COVER_CANVAS_H) / 2);
+
+  return {
+    minX: -maxOffsetX,
+    maxX: maxOffsetX,
+    minY: -maxOffsetY,
+    maxY: maxOffsetY,
+  };
+}
+
+function clampCoverDraft(draft, imageW, imageH) {
+  const zoom = clamp(Number(draft?.zoom) || 1, 1, 3);
+  const bounds = getCoverOffsetBounds(imageW, imageH, zoom);
+
+  return {
+    zoom,
+    offsetX: clamp(Number(draft?.offsetX) || 0, bounds.minX, bounds.maxX),
+    offsetY: clamp(Number(draft?.offsetY) || 0, bounds.minY, bounds.maxY),
+  };
 }
 
 function chapterBucket(chapter) {
@@ -227,11 +270,24 @@ function reorderById(items, fromId, toId) {
   next.splice(toIndex, 0, moved);
   return next;
 }
+
+function formatContractStatus(value, t) {
+  if (!value) return t("author.studio.book.notEligible");
+  return String(value)
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
 export default function AuthorBookDetails() {
+  const { t } = useTranslation();
   const { bookId } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [book, setBook] = useState(null);
+  const [contract, setContract] = useState(null);
+  const [contractError, setContractError] = useState("");
+  const [contractDialogOpen, setContractDialogOpen] = useState(false);
+  const [attestingRights, setAttestingRights] = useState(false);
   const [arcs, setArcs] = useState([]);
   const [chapters, setChapters] = useState([]);
   const [genres, setGenres] = useState([]);
@@ -245,9 +301,13 @@ export default function AuthorBookDetails() {
   const [savingEdit, setSavingEdit] = useState(false);
   const [editError, setEditError] = useState("");
   const [editForm, setEditForm] = useState(DEFAULT_EDIT);
+  const [editCoverEditorOpen, setEditCoverEditorOpen] = useState(false);
+  const [editCoverDraft, setEditCoverDraft] = useState({ zoom: 1, offsetX: 0, offsetY: 0 });
+  const [editCoverFrameSize, setEditCoverFrameSize] = useState({ width: COVER_EDITOR_W, height: COVER_EDITOR_H });
   const [hoveredChapterId, setHoveredChapterId] = useState(null);
   const [hoveredArcLabel, setHoveredArcLabel] = useState("");
   const [deletingChapterId, setDeletingChapterId] = useState(null);
+  const [monetizingChapterId, setMonetizingChapterId] = useState(null);
   const [localVersion, setLocalVersion] = useState(0);
   const [chapterActionError, setChapterActionError] = useState("");
   const [arcModalOpen, setArcModalOpen] = useState(false);
@@ -263,20 +323,69 @@ export default function AuthorBookDetails() {
   const [draggingArcId, setDraggingArcId] = useState("");
   const [adjustArcError, setAdjustArcError] = useState("");
   const [deletingArcId, setDeletingArcId] = useState("");
+  const deskTab = searchParams.get("tab") || "details";
+  const setupMode = searchParams.get("setup") === "1";
+  const editCoverDraftRef = useRef(editCoverDraft);
+  const editCoverDragRef = useRef(null);
+  const editCoverTouchRef = useRef(null);
+  const editCoverPreviewUrlRef = useRef("");
+  const editCoverFrameRef = useRef(null);
+
+  useEffect(() => {
+    editCoverDraftRef.current = editCoverDraft;
+  }, [editCoverDraft]);
+
+  const getEditCoverFrameSize = useCallback(() => {
+    const rect = editCoverFrameRef.current?.getBoundingClientRect();
+    if (!rect?.width || !rect?.height) return editCoverFrameSize;
+    return { width: rect.width, height: rect.height };
+  }, [editCoverFrameSize]);
+
+  const cleanupEditCoverPreview = useCallback((url) => {
+    if (url?.startsWith("blob:")) URL.revokeObjectURL(url);
+  }, []);
+
+  useEffect(() => {
+    editCoverPreviewUrlRef.current = editForm.coverPreviewUrl;
+  }, [editForm.coverPreviewUrl]);
+
+  useEffect(() => () => cleanupEditCoverPreview(editCoverPreviewUrlRef.current), [cleanupEditCoverPreview]);
+
+  useEffect(() => {
+    if (!editCoverEditorOpen) return undefined;
+
+    const updateFrameSize = () => {
+      const rect = editCoverFrameRef.current?.getBoundingClientRect();
+      if (!rect?.width || !rect?.height) return;
+      setEditCoverFrameSize({ width: rect.width, height: rect.height });
+    };
+
+    updateFrameSize();
+    const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(updateFrameSize) : null;
+    if (observer && editCoverFrameRef.current) observer.observe(editCoverFrameRef.current);
+    window.addEventListener("resize", updateFrameSize);
+
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", updateFrameSize);
+    };
+  }, [editCoverEditorOpen]);
 
   const load = useCallback(async () => {
     if (!bookId) return;
     setLoading(true);
     setError("");
+    setContractError("");
 
     try {
-      const [bookRes, chaptersRes, arcsRes, genresRes, tagsRes, trendsRes] = await Promise.allSettled([
+      const [bookRes, chaptersRes, arcsRes, genresRes, tagsRes, trendsRes, contractRes] = await Promise.allSettled([
         fetchBookById(bookId),
         fetchBookChapters(bookId),
         fetchBookArcs(bookId),
         fetchGenres(),
         fetchTags(),
         fetchTrends(),
+        fetchAuthorBookContract(bookId),
       ]);
 
       if (bookRes.status !== "fulfilled") throw bookRes.reason;
@@ -309,6 +418,12 @@ export default function AuthorBookDetails() {
           ? tagsRes.value
           : [],
       );
+      if (contractRes.status === "fulfilled") {
+        setContract(contractRes.value);
+      } else {
+        setContract(null);
+        setContractError(contractRes.reason?.response?.data?.message || t("author.studio.book.errors.contract"));
+      }
 
       const initialTagIds = Array.isArray(nextBook?.tags)
         ? nextBook.tags.map((t) => Number(getTagId(t))).filter((id) => Number.isFinite(id))
@@ -326,10 +441,14 @@ export default function AuthorBookDetails() {
         trendId: "",
         coverFile: null,
         coverPreviewUrl: nextBook?.coverImageUrl ?? nextBook?.CoverImageUrl ?? "",
+        coverImageW: 0,
+        coverImageH: 0,
         coverZoom: 1,
+        coverOffsetX: 0,
+        coverOffsetY: 0,
       });
     } catch (e) {
-      setError(e?.response?.data?.message || "Could not load book details.");
+      setError(e?.response?.data?.message || t("author.studio.book.errors.load"));
     } finally {
       setLoading(false);
     }
@@ -351,7 +470,7 @@ export default function AuthorBookDetails() {
       ...localDrafts.map((d) => ({
         id: `local-${d.id}`,
         draftId: d.id,
-        title: String(d?.title ?? "").trim() || "Untitled Draft",
+        title: String(d?.title ?? "").trim() || t("author.studio.common.untitledDraft"),
         chapterNumber: null,
         createdAt: d?.savedAt ?? null,
         arcId: d?.arcId ?? "",
@@ -380,10 +499,26 @@ export default function AuthorBookDetails() {
   }, [chapters, bookId, localVersion]);
 
   const tabList = [
-    { key: "draft", label: "Draft", count: grouped.draft.length },
-    { key: "published", label: "Published", count: grouped.published.length },
-    { key: "trash", label: "Trash", count: grouped.trash.length },
+    { key: "draft", label: t("author.studio.common.draft"), count: grouped.draft.length },
+    { key: "published", label: t("author.studio.common.published"), count: grouped.published.length },
+    { key: "trash", label: t("author.studio.common.trash"), count: grouped.trash.length },
   ];
+  const deskTabs = [
+    { key: "details", label: t("author.studio.book.tabs.details") },
+    { key: "chapters", label: t("author.studio.book.tabs.chapters") },
+    { key: "bible", label: t("author.studio.book.tabs.bible") },
+    { key: "world", label: t("author.studio.book.tabs.world") },
+    { key: "characters", label: t("author.studio.book.tabs.characters") },
+    { key: "plot", label: t("author.studio.book.tabs.plot") },
+    { key: "notebook", label: t("author.studio.book.tabs.notebook") },
+  ];
+
+  const changeDeskTab = (nextTab) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("tab", nextTab);
+    params.delete("setup");
+    setSearchParams(params);
+  };
 
   const visibleChapters = grouped[activeTab] || [];
   const normalizedArcs = useMemo(() => {
@@ -391,7 +526,7 @@ export default function AuthorBookDetails() {
       .map((arc, index) => ({
         ...arc,
         id: String(arc?.id ?? arc?.ID ?? ""),
-        name: String(arc?.name ?? arc?.Name ?? "").trim() || `Volume #${arc?.id ?? arc?.ID ?? index + 1}`,
+        name: String(arc?.name ?? arc?.Name ?? "").trim() || t("author.studio.book.volumeNumber", { id: arc?.id ?? arc?.ID ?? index + 1 }),
         order: Number(arc?.order ?? arc?.Order ?? index),
       }))
       .filter((arc) => arc.id)
@@ -414,12 +549,12 @@ export default function AuthorBookDetails() {
 
   const getArcLabel = useCallback((chapter) => {
     const arcId = getArcId(chapter);
-    if (!arcId) return "No Volume";
+    if (!arcId) return t("author.studio.book.noVolume");
 
     const namedArc = String(chapter?.arcName ?? chapter?.ArcName ?? "").trim();
     if (namedArc) return namedArc;
 
-    return arcNameById.get(arcId) || `Volume #${arcId}`;
+    return arcNameById.get(arcId) || t("author.studio.book.volumeNumber", { id: arcId });
   }, [arcNameById, getArcId]);
 
   const chapterSections = useMemo(() => {
@@ -461,37 +596,37 @@ export default function AuthorBookDetails() {
   }));
 
   const genreOptions = [
-    { value: "", label: "Genre" },
+    { value: "", label: t("author.studio.common.genre") },
     ...genres.map((g) => ({
       value: String(g.id ?? g.ID),
       label: g.name ?? g.Name,
     })),
   ];
   const bookTypeOptions = [
-    { value: "Original", label: "Book Type: Original" },
-    { value: "Fanfic", label: "Book Type: Fanfic" },
-    { value: "AU", label: "Book Type: AU" },
+    { value: "Original", label: `${t("author.studio.common.bookType")}: ${t("author.studio.common.original")}` },
+    { value: "Fanfic", label: `${t("author.studio.common.bookType")}: ${t("author.studio.common.fanfic")}` },
+    { value: "AU", label: `${t("author.studio.common.bookType")}: ${t("author.studio.common.au")}` },
   ];
   const leadGenderOptions = [
-    { value: "", label: "Leading Gender" },
-    { value: "Male", label: "Male" },
-    { value: "Female", label: "Female" },
-    { value: "Mixed", label: "Mixed" },
-    { value: "Unknown", label: "Unknown" },
+    { value: "", label: t("author.studio.common.leadingGender") },
+    { value: "Male", label: t("author.studio.common.male") },
+    { value: "Female", label: t("author.studio.common.female") },
+    { value: "Mixed", label: t("author.studio.common.mixed") },
+    { value: "Unknown", label: t("author.studio.common.unknown") },
   ];
   const languageOptions = [
-    { value: "English", label: "Language: English" },
-    { value: "Arabic", label: "Language: Arabic" },
-    { value: "Spanish", label: "Language: Spanish" },
-    { value: "French", label: "Language: French" },
-    { value: "Turkish", label: "Language: Turkish" },
-    { value: "Other", label: "Language: Other" },
+    { value: "English", label: `${t("author.studio.common.languagePrefix")}: ${t("author.studio.common.english")}` },
+    { value: "Arabic", label: `${t("author.studio.common.languagePrefix")}: ${t("author.studio.common.arabic")}` },
+    { value: "Spanish", label: `${t("author.studio.common.languagePrefix")}: ${t("author.studio.common.spanish")}` },
+    { value: "French", label: `${t("author.studio.common.languagePrefix")}: ${t("author.studio.common.french")}` },
+    { value: "Turkish", label: `${t("author.studio.common.languagePrefix")}: ${t("author.studio.common.turkish")}` },
+    { value: "Other", label: `${t("author.studio.common.languagePrefix")}: ${t("author.studio.common.other")}` },
   ];
   const trendOptions = [
-    { value: "", label: "No Trend" },
-    ...trends.map((t) => ({
-      value: String(t?.id ?? t?.ID ?? ""),
-      label: t?.name ?? t?.Name ?? "Unnamed trend",
+    { value: "", label: t("author.studio.common.noTrend") },
+    ...trends.map((trend) => ({
+      value: String(trend?.id ?? trend?.ID ?? ""),
+      label: trend?.name ?? trend?.Name ?? t("author.studio.common.untitled"),
     })),
   ];
 
@@ -501,11 +636,90 @@ export default function AuthorBookDetails() {
     book?.AuthorName ??
     book?.userName ??
     book?.UserName ??
-    "Unknown author";
+    t("author.studio.common.unknownAuthor");
 
   const verseType = book?.verseType ?? book?.VerseType ?? "-";
   const bookState = book?.status ?? book?.Status ?? "-";
-  const isContracted = Boolean(book?.isContracted ?? book?.contracted ?? false);
+  const contractStatus = contract?.status ?? book?.contractStatus ?? (book?.isContracted ? "approved" : "not_eligible");
+  const isContracted = Boolean(contract?.isContracted ?? book?.isContracted ?? book?.contracted ?? false);
+  const paidChaptersAllowedAfter =
+    contract?.paidChaptersAllowedAfter ??
+    contract?.PaidChaptersAllowedAfter ??
+    null;
+  const contentLockedAfter =
+    contract?.contentLockedAfter ??
+    contract?.ContentLockedAfter ??
+    null;
+  const paidCutoffTime = paidChaptersAllowedAfter ? new Date(paidChaptersAllowedAfter).getTime() : null;
+  const publishedContentLocked = Boolean(contentLockedAfter);
+  const contractMissingRequirements = Array.isArray(contract?.contractMissingRequirements)
+    ? contract.contractMissingRequirements
+    : [];
+  const canAttestRights = Boolean(
+    contract?.requiresRightsAttestation &&
+      contract?.meetsContractMetrics &&
+      !contract?.rightsAttested &&
+      contractStatus !== "approved",
+  );
+  const contractRequirements = {
+    words: {
+      current: contract?.wordCount ?? book?.wordCount ?? book?.WordCount ?? 0,
+      required: contract?.requiredWordCount ?? 20000,
+    },
+    chapters: {
+      current: contract?.chapterCount ?? chapters.length,
+      required: contract?.requiredChapterCount ?? 10,
+    },
+    views: {
+      current: contract?.totalViews ?? book?.totalViews ?? book?.TotalViews ?? 0,
+      required: contract?.requiredTotalViews ?? 1000,
+    },
+  };
+  const coverImage = getBookCover(book);
+  const bookTitle = getBookTitle(book);
+  const bookDescription = getBookDescription(book);
+
+  const isChapterBeforePaidCutoff = useCallback((chapter) => {
+    if (!paidCutoffTime) return true;
+    const createdAt = chapter?.createdAt ?? chapter?.CreatedAt;
+    const createdTime = createdAt ? new Date(createdAt).getTime() : Number.NaN;
+    return !Number.isFinite(createdTime) || createdTime < paidCutoffTime;
+  }, [paidCutoffTime]);
+
+  const isChapterLockedForAuthor = useCallback((chapter) => {
+    if (!publishedContentLocked || chapter?.isLocalDraft || chapter?.isLocalTrash) return false;
+    return chapterBucket(chapter) === "published";
+  }, [publishedContentLocked]);
+
+  const editCoverPreviewStyle = useMemo(() => {
+    if (!editForm.coverPreviewUrl || !editForm.coverImageW || !editForm.coverImageH) return null;
+    const previewOffsetX = editForm.coverOffsetX * (COVER_PREVIEW_W / COVER_CANVAS_W);
+    const previewOffsetY = editForm.coverOffsetY * (COVER_PREVIEW_H / COVER_CANVAS_H);
+    return getCoverStyle(
+      editForm.coverImageW,
+      editForm.coverImageH,
+      editForm.coverZoom,
+      previewOffsetX,
+      previewOffsetY,
+      COVER_PREVIEW_W,
+      COVER_PREVIEW_H,
+    );
+  }, [editForm]);
+
+  const editCoverEditorStyle = useMemo(() => {
+    if (!editForm.coverPreviewUrl || !editForm.coverImageW || !editForm.coverImageH) return null;
+    const editorOffsetX = editCoverDraft.offsetX * (editCoverFrameSize.width / COVER_CANVAS_W);
+    const editorOffsetY = editCoverDraft.offsetY * (editCoverFrameSize.height / COVER_CANVAS_H);
+    return getCoverStyle(
+      editForm.coverImageW,
+      editForm.coverImageH,
+      editCoverDraft.zoom,
+      editorOffsetX,
+      editorOffsetY,
+      editCoverFrameSize.width,
+      editCoverFrameSize.height,
+    );
+  }, [editForm, editCoverDraft, editCoverFrameSize]);
 
   const openEdit = () => {
     setEditError("");
@@ -514,8 +728,197 @@ export default function AuthorBookDetails() {
 
   const closeEdit = () => {
     if (savingEdit) return;
+    cleanupEditCoverPreview(editForm.coverPreviewUrl);
+    const currentCover = book?.coverImageUrl ?? book?.CoverImageUrl ?? "";
+    setEditForm((prev) => ({
+      ...prev,
+      coverFile: null,
+      coverPreviewUrl: currentCover,
+      coverImageUrl: currentCover,
+      coverImageW: 0,
+      coverImageH: 0,
+      coverZoom: 1,
+      coverOffsetX: 0,
+      coverOffsetY: 0,
+    }));
+    setEditCoverEditorOpen(false);
     setEditOpen(false);
     setEditError("");
+  };
+
+  const openEditCoverEditor = () => {
+    if (!editForm.coverPreviewUrl || !editForm.coverImageW || !editForm.coverImageH) return;
+    setEditCoverDraft(clampCoverDraft({
+      zoom: editForm.coverZoom,
+      offsetX: editForm.coverOffsetX,
+      offsetY: editForm.coverOffsetY,
+    }, editForm.coverImageW, editForm.coverImageH));
+    setEditCoverEditorOpen(true);
+  };
+
+  const closeEditCoverEditor = () => {
+    editCoverDragRef.current = null;
+    editCoverTouchRef.current = null;
+    setEditCoverEditorOpen(false);
+  };
+
+  const saveEditCoverEditor = () => {
+    const nextDraft = clampCoverDraft(editCoverDraft, editForm.coverImageW, editForm.coverImageH);
+    setEditForm((prev) => ({
+      ...prev,
+      coverZoom: nextDraft.zoom,
+      coverOffsetX: nextDraft.offsetX,
+      coverOffsetY: nextDraft.offsetY,
+    }));
+    closeEditCoverEditor();
+  };
+
+  const updateEditCoverZoom = (zoom) => {
+    setEditCoverDraft((prev) => clampCoverDraft({ ...prev, zoom }, editForm.coverImageW, editForm.coverImageH));
+  };
+
+  const handleEditCoverWheel = (event) => {
+    event.preventDefault();
+    updateEditCoverZoom(editCoverDraftRef.current.zoom + (event.deltaY < 0 ? 0.06 : -0.06));
+  };
+
+  const handleEditCoverMouseDown = (event) => {
+    event.preventDefault();
+    editCoverDragRef.current = {
+      lastX: event.clientX,
+      lastY: event.clientY,
+    };
+  };
+
+  useEffect(() => {
+    if (!editCoverEditorOpen) return undefined;
+
+    const onMouseMove = (event) => {
+      if (!editCoverDragRef.current) return;
+      const dx = event.clientX - editCoverDragRef.current.lastX;
+      const dy = event.clientY - editCoverDragRef.current.lastY;
+      editCoverDragRef.current.lastX = event.clientX;
+      editCoverDragRef.current.lastY = event.clientY;
+      const frameSize = getEditCoverFrameSize();
+      const dxCanvas = dx * (COVER_CANVAS_W / frameSize.width);
+      const dyCanvas = dy * (COVER_CANVAS_H / frameSize.height);
+      setEditCoverDraft((prev) => clampCoverDraft({
+        ...prev,
+        offsetX: prev.offsetX + dxCanvas,
+        offsetY: prev.offsetY + dyCanvas,
+      }, editForm.coverImageW, editForm.coverImageH));
+    };
+
+    const onMouseUp = () => {
+      editCoverDragRef.current = null;
+    };
+
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+  }, [editCoverEditorOpen, editForm.coverImageW, editForm.coverImageH, getEditCoverFrameSize]);
+
+  const handleEditCoverTouchStart = (event) => {
+    if (event.touches.length === 1) {
+      const touch = event.touches[0];
+      editCoverTouchRef.current = { mode: "pan", lastX: touch.clientX, lastY: touch.clientY };
+      return;
+    }
+
+    if (event.touches.length >= 2) {
+      const first = event.touches[0];
+      const second = event.touches[1];
+      const mid = midpoint(first, second);
+      editCoverTouchRef.current = {
+        mode: "pinch",
+        startDistance: distance(first, second),
+        startZoom: editCoverDraftRef.current.zoom,
+        startOffsetX: editCoverDraftRef.current.offsetX,
+        startOffsetY: editCoverDraftRef.current.offsetY,
+        startMidX: mid.x,
+        startMidY: mid.y,
+      };
+    }
+  };
+
+  const handleEditCoverTouchMove = (event) => {
+    if (!editCoverTouchRef.current) return;
+    event.preventDefault();
+
+    if (editCoverTouchRef.current.mode === "pan" && event.touches.length === 1) {
+      const touch = event.touches[0];
+      const dx = touch.clientX - editCoverTouchRef.current.lastX;
+      const dy = touch.clientY - editCoverTouchRef.current.lastY;
+      editCoverTouchRef.current.lastX = touch.clientX;
+      editCoverTouchRef.current.lastY = touch.clientY;
+
+      const frameSize = getEditCoverFrameSize();
+      setEditCoverDraft((prev) => clampCoverDraft({
+        ...prev,
+        offsetX: prev.offsetX + dx * (COVER_CANVAS_W / frameSize.width),
+        offsetY: prev.offsetY + dy * (COVER_CANVAS_H / frameSize.height),
+      }, editForm.coverImageW, editForm.coverImageH));
+      return;
+    }
+
+    if (editCoverTouchRef.current.mode === "pinch" && event.touches.length >= 2) {
+      const first = event.touches[0];
+      const second = event.touches[1];
+      const currentDistance = distance(first, second);
+      const currentMid = midpoint(first, second);
+      const ratio = currentDistance / Math.max(editCoverTouchRef.current.startDistance, 1);
+      const nextZoom = clamp(editCoverTouchRef.current.startZoom * ratio, 1, 3);
+      const frameSize = getEditCoverFrameSize();
+      const dx = (currentMid.x - editCoverTouchRef.current.startMidX) * (COVER_CANVAS_W / frameSize.width);
+      const dy = (currentMid.y - editCoverTouchRef.current.startMidY) * (COVER_CANVAS_H / frameSize.height);
+      setEditCoverDraft((prev) => clampCoverDraft({
+        ...prev,
+        zoom: nextZoom,
+        offsetX: editCoverTouchRef.current.startOffsetX + dx,
+        offsetY: editCoverTouchRef.current.startOffsetY + dy,
+      }, editForm.coverImageW, editForm.coverImageH));
+    }
+  };
+
+  const handleEditCoverTouchEnd = (event) => {
+    if (event.touches.length === 0) {
+      editCoverTouchRef.current = null;
+      return;
+    }
+
+    if (event.touches.length === 1) {
+      const touch = event.touches[0];
+      editCoverTouchRef.current = { mode: "pan", lastX: touch.clientX, lastY: touch.clientY };
+    }
+  };
+
+  const handleEditCoverFileChange = async (file) => {
+    if (!file) return;
+    cleanupEditCoverPreview(editForm.coverPreviewUrl);
+
+    const previewUrl = URL.createObjectURL(file);
+    try {
+      const img = await loadImageFromUrl(previewUrl);
+      setEditForm((prev) => ({
+        ...prev,
+        coverFile: file,
+        coverPreviewUrl: previewUrl,
+        coverImageUrl: previewUrl,
+        coverImageW: img.width,
+        coverImageH: img.height,
+        coverZoom: 1,
+        coverOffsetX: 0,
+        coverOffsetY: 0,
+      }));
+      setEditCoverDraft({ zoom: 1, offsetX: 0, offsetY: 0 });
+      setEditCoverEditorOpen(true);
+    } catch {
+      cleanupEditCoverPreview(previewUrl);
+      setEditError(t("author.studio.book.errors.image"));
+    }
   };
 
   const openDraft = (draftId) => {
@@ -550,6 +953,11 @@ export default function AuthorBookDetails() {
       return;
     }
 
+    if (isChapterLockedForAuthor(chapter)) {
+      setChapterActionError(t("author.studio.book.errors.locked"));
+      return;
+    }
+
     const chapterId = chapter.id ?? chapter.ID;
     if (!chapterId) return;
 
@@ -569,7 +977,7 @@ export default function AuthorBookDetails() {
       });
       setLocalVersion((v) => v + 1);
     } catch (err) {
-      setChapterActionError(err?.response?.data?.message || "Failed to delete chapter.");
+      setChapterActionError(err?.response?.data?.message || t("author.studio.book.errors.deleteChapter"));
     } finally {
       setDeletingChapterId(null);
     }
@@ -599,6 +1007,64 @@ export default function AuthorBookDetails() {
     setActiveTab("draft");
   };
 
+  const toggleChapterPaid = async (chapter, event) => {
+    event.stopPropagation();
+    const chapterId = chapter?.id ?? chapter?.ID;
+    if (!chapterId) return;
+
+    const nextIsPaid = !(chapter?.isPaid ?? chapter?.IsPaid);
+    if (nextIsPaid && !isContracted) {
+      setChapterActionError(t("author.studio.book.errors.contractNeeded"));
+      return;
+    }
+    if (nextIsPaid && isChapterBeforePaidCutoff(chapter)) {
+      setChapterActionError(t("author.studio.book.errors.postContractOnly"));
+      return;
+    }
+
+    setMonetizingChapterId(String(chapterId));
+    setChapterActionError("");
+    try {
+      const updated = await updateChapterMonetization(chapterId, {
+        isPaid: nextIsPaid,
+        teaser: chapter?.teaser ?? chapter?.Teaser ?? "",
+      });
+      setChapters((current) =>
+        current.map((item) => {
+          const itemId = item?.id ?? item?.ID;
+          if (String(itemId) !== String(chapterId)) return item;
+          return {
+            ...item,
+            isPaid: updated?.isPaid ?? nextIsPaid,
+            IsPaid: updated?.isPaid ?? nextIsPaid,
+            priceCoins: updated?.priceCoins ?? 5,
+            PriceCoins: updated?.priceCoins ?? 5,
+            teaser: updated?.teaser ?? item?.teaser,
+            Teaser: updated?.teaser ?? item?.Teaser,
+          };
+        }),
+      );
+    } catch (err) {
+      setChapterActionError(err?.response?.data?.message || t("author.studio.book.errors.monetization"));
+    } finally {
+      setMonetizingChapterId(null);
+    }
+  };
+
+  const handleAttestRights = async () => {
+    if (!bookId) return;
+
+    setAttestingRights(true);
+    setContractError("");
+    try {
+      setContract(await attestAuthorBookRights(bookId));
+    } catch (err) {
+      setContractError(err?.response?.data?.message || t("author.studio.book.errors.attestRights"));
+    } finally {
+      setAttestingRights(false);
+    }
+  };
+
   
   const openArcModal = () => {
     setArcError("");
@@ -618,7 +1084,7 @@ export default function AuthorBookDetails() {
 
     const cleanName = arcName.trim();
     if (!cleanName) {
-      setArcError("Volume name is required.");
+      setArcError(t("author.studio.book.errors.volumeName"));
       return;
     }
 
@@ -630,7 +1096,7 @@ export default function AuthorBookDetails() {
       setArcModalOpen(false);
       setArcName("");
     } catch (err) {
-      setArcError(err?.response?.data?.message || "Failed to create volume.");
+      setArcError(err?.response?.data?.message || t("author.studio.book.errors.createVolume"));
     } finally {
       setArcSaving(false);
     }
@@ -657,7 +1123,7 @@ export default function AuthorBookDetails() {
     e.preventDefault();
     const clean = renameArcName.trim();
     if (!clean) {
-      setRenameArcError("Volume name is required.");
+      setRenameArcError(t("author.studio.book.errors.volumeName"));
       return;
     }
 
@@ -719,6 +1185,13 @@ export default function AuthorBookDetails() {
     setDeletingArcId(String(arcId));
 
     const targetArcId = String(arcId);
+    const chaptersInArc = chapters.filter((chapter) => String(chapter?.arcId ?? chapter?.ArcId ?? "") === targetArcId);
+    if (chaptersInArc.some((chapter) => isChapterLockedForAuthor(chapter))) {
+      setChapterActionError(t("author.studio.book.errors.locked"));
+      setDeletingArcId("");
+      return;
+    }
+
     const draftEntries = readLocalDrafts(bookId);
     const draftsInArc = draftEntries.filter((draft) => String(draft?.arcId ?? "") === targetArcId);
 
@@ -728,7 +1201,7 @@ export default function AuthorBookDetails() {
       draftsInArc.forEach((draft) => {
         addToTrash(bookId, {
           id: `trash-arc-draft-${draft.id}`,
-          title: String(draft?.title ?? "Untitled Draft"),
+          title: String(draft?.title ?? t("author.studio.common.untitledDraft")),
           chapterNumber: null,
           createdAt: draft?.savedAt ?? null,
           contentHtml: String(draft?.contentHtml ?? ""),
@@ -739,7 +1212,6 @@ export default function AuthorBookDetails() {
       });
     }
 
-    const chaptersInArc = chapters.filter((chapter) => String(chapter?.arcId ?? chapter?.ArcId ?? "") === targetArcId);
     const deleteResults = await Promise.allSettled(
       chaptersInArc.map(async (chapter) => {
         const chapterId = chapter?.id ?? chapter?.ID;
@@ -781,7 +1253,7 @@ export default function AuthorBookDetails() {
     setLocalVersion((v) => v + 1);
 
     if (failedCount > 0) {
-      setChapterActionError(`Deleted arc, but ${failedCount} chapter(s) could not be moved to trash.`);
+      setChapterActionError(t("author.studio.book.errors.deleteArcPartial", { count: failedCount }));
     }
 
     setDeletingArcId("");
@@ -796,12 +1268,18 @@ export default function AuthorBookDetails() {
     try {
       let coverImageUrl = editForm.coverImageUrl?.trim() || book.coverImageUrl;
       if (editForm.coverFile) {
-        const adjustedFile = await buildAdjustedCoverFile(
-          editForm.coverFile,
-          editForm.title?.trim() || book.title,
-          Number(editForm.coverZoom || 1),
-        );
-        coverImageUrl = await uploadBookCover(adjustedFile);
+        const adjustedFile = await buildBookCoverUploadFile(editForm.coverFile, {
+          title: editForm.title?.trim() || book.title,
+          width: COVER_CANVAS_W,
+          height: COVER_CANVAS_H,
+          zoom: Number(editForm.coverZoom || 1),
+          offsetX: Number(editForm.coverOffsetX || 0),
+          offsetY: Number(editForm.coverOffsetY || 0),
+        });
+        coverImageUrl = await uploadBookCover(adjustedFile, {
+          bookId,
+          title: editForm.title?.trim() || book.title,
+        });
       }
 
       const payload = {
@@ -827,32 +1305,39 @@ export default function AuthorBookDetails() {
           // Keep book update successful even when trend-link endpoint is restricted.
         }
       }
+      const previousCoverPreviewUrl = editForm.coverPreviewUrl;
       await load();
+      cleanupEditCoverPreview(previousCoverPreviewUrl);
       setEditOpen(false);
+      setEditCoverEditorOpen(false);
     } catch (err) {
-      setEditError(err?.response?.data?.message || "Failed to update book details.");
+      setEditError(err?.response?.data?.message || t("author.studio.book.errors.update"));
     } finally {
       setSavingEdit(false);
     }
   };
 
-  if (loading) return <LoadingState text="Loading book workspace..." />;
-  if (error) return <ErrorState title="Book Unavailable" subtitle={error} onRetry={load} />;
+  if (loading) return <LoadingState text={t("author.studio.book.loading")} />;
+  if (error) return <ErrorState title={t("author.studio.book.unavailable")} subtitle={error} onRetry={load} />;
 
   return (
     <div className="authorx-detail-page">
-      <section className="authorx-detail-head">
+      <section className="authorx-detail-head authorx-detail-head--studio">
         <div className="authorx-detail-head-left">
           <button
             type="button"
             className="authorx-back-btn border-0 bg-none"
             onClick={() => navigate("/author/workspace")}
-            aria-label="Back to workspace"
-            title="Back"
+            aria-label={t("author.studio.book.backToWorkspace")}
+            title={t("author.studio.common.back")}
           >
             <FiArrowLeft size={25} />
           </button>
-          <h1>{book?.title || "Book Details"}</h1>
+          <div className="authorx-detail-head-copy">
+            <span className="author-studio-eyebrow">{t("author.studio.book.storyDesk")}</span>
+            <h1>{bookTitle || t("author.studio.book.bookDetails")}</h1>
+            <p>{t("author.studio.book.subtitle")}</p>
+          </div>
         </div>
 
         <div className="authorx-detail-head-right justify-content-end">
@@ -862,8 +1347,8 @@ export default function AuthorBookDetails() {
             size="md"
             style={{height:"auto"}}
             onClick={openEdit}
-            aria-label="Edit book"
-            title="Edit"
+            aria-label={t("author.studio.book.editBook")}
+            title={t("author.studio.common.edit")}
           >
             <FiEdit2 size={16} />
           </Button>
@@ -873,47 +1358,148 @@ export default function AuthorBookDetails() {
             size="md"
             onClick={createDraftAndOpen}
           >
-            Create Chapter
+            {t("author.studio.book.createChapter")}
           </Button>
         </div>
       </section>
 
+      <Surface className="authorx-desk-tabs">
+        <Segmented
+          value={deskTab}
+          onChange={changeDeskTab}
+          options={deskTabs.map((tab) => ({
+            value: tab.key,
+            label: tab.label,
+          }))}
+        />
+      </Surface>
+
+      {deskTab === "details" ? (
       <Surface className="authorx-book-detail-card">
         <div className="authorx-book-detail-main">
           <div className="authorx-book-detail-cover">
-            {book?.coverImageUrl ? <img src={book.coverImageUrl} alt={book?.title || "Book cover"} /> : <span>No Cover</span>}
+            {coverImage ? <img src={coverImage} alt={bookTitle || t("author.studio.common.bookCover")} /> : <span>{bookTitle.slice(0, 1)}</span>}
           </div>
 
           <div className="authorx-book-detail-meta">
-            <h2>{book?.title || "Untitled"}</h2>
+            <h2>{bookTitle}</h2>
             <p>
-              By <strong>{authorName}</strong>
+              {t("author.studio.book.byAuthor")} <strong>{authorName}</strong>
             </p>
-            <p>{book?.description || book?.synopsis || "No synopsis yet."}</p>
+            <p>{bookDescription || t("author.studio.common.noSynopsis")}</p>
           </div>
         </div>
 
         <div className="authorx-book-detail-stats">
           <div>
-            <span>Type</span>
+            <span>{t("author.studio.book.type")}</span>
             <strong>{verseType}</strong>
           </div>
           <div>
-            <span>State</span>
-            <strong>{bookState}</strong>
+            <span>{t("author.studio.book.state")}</span>
+            <strong>{formatStatusLabel(bookState)}</strong>
           </div>
+          <button
+            type="button"
+            className="authorx-book-detail-stat-button"
+            onClick={() => setContractDialogOpen(true)}
+            aria-label={`${t("author.studio.book.contractReadiness")}: ${isContracted ? t("author.studio.book.approved") : formatContractStatus(contractStatus, t)}`}
+          >
+            <span>{t("author.studio.book.contract")}</span>
+            <strong>{isContracted ? t("author.studio.book.approved") : formatContractStatus(contractStatus, t)}</strong>
+          </button>
           <div>
-            <span>Contract</span>
-            <strong>{isContracted ? "Contracted" : "Uncontracted"}</strong>
-          </div>
-          <div>
-            <span>Chapters</span>
-            <strong>{chapters.length}</strong>
+            <span>{t("author.studio.common.chapters")}</span>
+            <strong>{formatCompactNumber(chapters.length)}</strong>
           </div>
         </div>
       </Surface>
+      ) : null}
 
+      {contractDialogOpen && (
+        <div className="authorx-modal-backdrop" onClick={() => setContractDialogOpen(false)}>
+          <div
+            className="authorx-modal authorx-contract-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-label={t("author.studio.book.contractReadiness")}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <PageHeader
+              title={t("author.studio.book.contractReadiness")}
+              subtitle={t("author.studio.book.contractSubtitle")}
+              variant="light"
+            />
+
+            <div className="authorx-contract-dialog-status">
+              <span>{t("author.studio.book.currentStatus")}</span>
+              <strong>{isContracted ? t("author.studio.book.approved") : formatContractStatus(contractStatus, t)}</strong>
+            </div>
+
+            <div className="authorx-contract-meter-grid">
+              <div>
+                <span>{t("author.studio.common.words")}</span>
+                <strong>{formatCompactNumber(contractRequirements.words.current)}</strong>
+                <small>{t("author.studio.book.required", { value: formatCompactNumber(contractRequirements.words.required) })}</small>
+              </div>
+              <div>
+                <span>{t("author.studio.common.chapters")}</span>
+                <strong>{formatCompactNumber(contractRequirements.chapters.current)}</strong>
+                <small>{t("author.studio.book.required", { value: formatCompactNumber(contractRequirements.chapters.required) })}</small>
+              </div>
+              <div>
+                <span>{t("author.studio.common.views")}</span>
+                <strong>{formatCompactNumber(contractRequirements.views.current)}</strong>
+                <small>{t("author.studio.book.required", { value: formatCompactNumber(contractRequirements.views.required) })}</small>
+              </div>
+            </div>
+
+            {contractError ? <div className="authorx-form-error">{contractError}</div> : null}
+
+            {contractMissingRequirements.length ? (
+              <div className="authorx-contract-missing-list authorx-contract-missing-list--plain">
+                {contractMissingRequirements.map((item) => (
+                  <span key={item}>{item}</span>
+                ))}
+              </div>
+            ) : (
+              <p className="authorx-contract-note">
+                {isContracted ? t("author.studio.book.contractApprovedNote") : t("author.studio.book.contractReviewNote")}
+              </p>
+            )}
+
+            <div className="authorx-modal-actions">
+              {canAttestRights ? (
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="md"
+                  onClick={handleAttestRights}
+                  disabled={attestingRights}
+                >
+                  {attestingRights ? t("author.studio.common.saving") : t("author.studio.book.attestRights")}
+                </Button>
+              ) : null}
+              <Button
+                type="button"
+                variant="outline"
+                size="md"
+                onClick={() => setContractDialogOpen(false)}
+              >
+                {t("author.studio.common.close")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deskTab === "chapters" ? (
       <Surface className="authorx-chapter-panel">
+        <AuthorSectionHeading
+          eyebrow={t("author.studio.book.chapterBoard")}
+          title={t("author.studio.book.chapterBoardTitle")}
+          description={t("author.studio.book.chapterBoardDescription")}
+        />
         <div className="authorx-tab-row">
           <Segmented
             value={activeTab}
@@ -929,13 +1515,13 @@ export default function AuthorBookDetails() {
 
         {visibleChapters.length === 0 ? (
           <EmptyState
-            title={`No ${activeTab} chapters`}
-            subtitle="Chapters will appear here once available."
+            title={t("author.studio.book.noTabChapters", { tab: activeTab })}
+            subtitle={t("author.studio.book.chaptersAppear")}
           />
         ) : (
           <div className="authorx-chapter-list">
             <div className="authorx-chapter-head">
-              <span>Chapter Title</span>
+              <span>{t("author.studio.book.chapterTitle")}</span>
               <div className="d-flex align-items-center gap-2 justify-content-end">
                 {activeTab === "published" && (
                   <button
@@ -943,16 +1529,17 @@ export default function AuthorBookDetails() {
                     className="btn btn-sm btn-link text-decoration-none p-0"
                     onClick={openArcModal}
                   >
-                    + New Volume
+                    {t("author.studio.book.newVolume")}
                   </button>
                 )}
-                <span>Created Time</span>
+                <span>{t("author.studio.book.createdTime")}</span>
               </div>
             </div>
             {chapterSections.map((section, sectionIndex) => {
               const sectionKey = `${section.label}-${sectionIndex}`;
               const isManagedArc = activeTab === "published" && Boolean(section.arcId);
               const showArcActions = isManagedArc && hoveredArcLabel === sectionKey;
+              const sectionHasLockedChapters = section.items.some((chapter) => isChapterLockedForAuthor(chapter));
 
               return (
                 <div key={sectionKey}>
@@ -974,7 +1561,7 @@ export default function AuthorBookDetails() {
                               openRenameArcModal(section.arcId);
                             }}
                           >
-                            Edit
+                            {t("author.studio.common.edit")}
                           </button>
                           <button
                             type="button"
@@ -984,18 +1571,19 @@ export default function AuthorBookDetails() {
                               openAdjustArcModal();
                             }}
                           >
-                            Adjust Sequence
+                            {t("author.studio.book.adjustSequence")}
                           </button>
                           <button
                             type="button"
                             className="btn btn-link btn-sm p-0 text-decoration-none text-danger"
-                            disabled={deletingArcId === String(section.arcId)}
+                            disabled={deletingArcId === String(section.arcId) || sectionHasLockedChapters}
+                            title={sectionHasLockedChapters ? t("author.studio.book.errors.locked") : undefined}
                             onClick={(e) => {
                               e.stopPropagation();
                               deleteArcAndMoveChaptersToTrash(section.arcId);
                             }}
                           >
-                            {deletingArcId === String(section.arcId) ? "Deleting..." : "Delete"}
+                            {deletingArcId === String(section.arcId) ? t("author.studio.common.deleting") : t("author.studio.common.delete")}
                           </button>
                         </>
                       )}
@@ -1003,9 +1591,14 @@ export default function AuthorBookDetails() {
                   </div>
                   {section.items.map((ch) => {
                     const rowId = String(ch.id ?? ch.ID ?? ch.draftId ?? "");
-                    const canDelete = activeTab !== "trash";
+                    const chapterPaid = Boolean(ch.isPaid || ch.IsPaid);
+                    const beforePaidCutoff = isChapterBeforePaidCutoff(ch);
+                    const canMakePaid = isContracted && !beforePaidCutoff;
+                    const chapterLocked = isChapterLockedForAuthor(ch);
+                    const canDelete = activeTab !== "trash" && !chapterLocked;
                     const showDelete = canDelete && hoveredChapterId === rowId;
                     const showRecover = activeTab === "trash" && hoveredChapterId === rowId;
+                    const showLockPill = chapterLocked && activeTab === "published" && hoveredChapterId === rowId;
 
                     return (
                       <div
@@ -1025,10 +1618,36 @@ export default function AuthorBookDetails() {
                         style={ch.isLocalDraft ? { cursor: "pointer" } : undefined}
                       >
                         <div>
-                          <strong>{ch.title || "Untitled"}</strong>
-                          <div>{ch.isLocalDraft ? "Local Draft" : `#${ch.chapterNumber ?? "?"}`}</div>
+                          <strong>{ch.title || t("author.studio.common.untitled")}</strong>
+                          <div>
+                            {ch.isLocalDraft ? t("author.studio.book.localDraft") : t("author.studio.book.chapterNumber", { number: ch.chapterNumber ?? "?" })}
+                            {!ch.isLocalDraft && chapterPaid ? ` · ${t("author.studio.book.paidCoins")}` : ""}
+                          </div>
                         </div>
                         <div className="d-flex align-items-center gap-2 justify-content-end">
+                          {!ch.isLocalDraft && activeTab === "published" && (
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-primary"
+                              disabled={monetizingChapterId === rowId || (!chapterPaid && !canMakePaid)}
+                              onClick={(e) => toggleChapterPaid(ch, e)}
+                              title={!chapterPaid && !canMakePaid
+                                ? isContracted
+                                  ? t("author.studio.book.errors.postContractOnly")
+                                  : t("author.studio.book.errors.paidNeedsContract")
+                                : undefined}
+                            >
+                              {monetizingChapterId === rowId
+                                ? t("author.studio.common.saving")
+                                : chapterPaid
+                                  ? t("author.studio.book.makeFree")
+                                  : canMakePaid
+                                    ? t("author.studio.book.makePaid")
+                                    : isContracted
+                                      ? t("author.studio.book.preContract")
+                                      : t("author.studio.book.contractRequired")}
+                            </button>
+                          )}
                           {showDelete && (
                             <button
                               type="button"
@@ -1036,8 +1655,16 @@ export default function AuthorBookDetails() {
                               disabled={deletingChapterId === rowId}
                               onClick={(e) => handleDeleteChapter(ch, e)}
                             >
-                              {deletingChapterId === rowId ? "Deleting..." : "Delete"}
+                              {deletingChapterId === rowId ? t("author.studio.common.deleting") : t("author.studio.common.delete")}
                             </button>
+                          )}
+                          {showLockPill && (
+                            <span
+                              className="authorx-chapter-lock-pill"
+                              title={t("author.studio.book.errors.locked")}
+                            >
+                              {t("author.studio.book.locked")}
+                            </span>
                           )}
                           {showRecover && (
                             <button
@@ -1045,7 +1672,7 @@ export default function AuthorBookDetails() {
                               className="btn btn-sm btn-outline-success"
                               onClick={(e) => handleRecoverChapter(ch, e)}
                             >
-                              Recover
+                              {t("author.studio.book.recover")}
                             </button>
                           )}
                           <span>
@@ -1069,13 +1696,24 @@ export default function AuthorBookDetails() {
           </div>
         )}
       </Surface>
+      ) : null}
+
+      {deskTab !== "details" && deskTab !== "chapters" ? (
+        <AuthorBookBible
+          bookId={bookId}
+          section={deskTab}
+          chapters={chapters}
+          setupMode={setupMode}
+          onOpenChapters={() => changeDeskTab("chapters")}
+        />
+      ) : null}
 
             {arcModalOpen && (
         <div className="authorx-modal-backdrop" onClick={closeArcModal}>
           <div className="authorx-modal" onClick={(e) => e.stopPropagation()}>
             <PageHeader
-              title="New Volume"
-              subtitle="Create a new volume (arc) for this book."
+              title={t("author.studio.book.newVolumeTitle")}
+              subtitle={t("author.studio.book.newVolumeSubtitle")}
               variant="light"
             />
 
@@ -1083,17 +1721,17 @@ export default function AuthorBookDetails() {
               <TextField
                 value={arcName}
                 onChange={(v) => setArcName(v)}
-                placeholder="Volume name"
+                placeholder={t("author.studio.book.volumeName")}
               />
 
               {arcError && <div className="authorx-form-error">{arcError}</div>}
 
               <div className="authorx-modal-actions">
                 <Button type="button" variant="outline" size="md" onClick={closeArcModal} disabled={arcSaving}>
-                  Cancel
+                  {t("author.studio.common.cancel")}
                 </Button>
                 <Button type="submit" variant="primary" size="md" disabled={arcSaving}>
-                  {arcSaving ? "Creating..." : "Create"}
+                  {arcSaving ? t("author.studio.common.creating") : t("author.studio.workspace.createBook")}
                 </Button>
               </div>
             </form>
@@ -1104,8 +1742,8 @@ export default function AuthorBookDetails() {
         <div className="authorx-modal-backdrop" onClick={closeRenameArcModal}>
           <div className="authorx-modal" onClick={(e) => e.stopPropagation()}>
             <PageHeader
-              title="Edit Volume"
-              subtitle="Update the volume name."
+              title={t("author.studio.book.editVolumeTitle")}
+              subtitle={t("author.studio.book.editVolumeSubtitle")}
               variant="light"
             />
 
@@ -1113,17 +1751,17 @@ export default function AuthorBookDetails() {
               <TextField
                 value={renameArcName}
                 onChange={(v) => setRenameArcName(v)}
-                placeholder="Volume name"
+                placeholder={t("author.studio.book.volumeName")}
               />
 
               {renameArcError && <div className="authorx-form-error">{renameArcError}</div>}
 
               <div className="authorx-modal-actions">
                 <Button type="button" variant="outline" size="md" onClick={closeRenameArcModal}>
-                  Cancel
+                  {t("author.studio.common.cancel")}
                 </Button>
                 <Button type="submit" variant="primary" size="md">
-                  Save
+                  {t("author.studio.common.save")}
                 </Button>
               </div>
             </form>
@@ -1135,8 +1773,8 @@ export default function AuthorBookDetails() {
         <div className="authorx-modal-backdrop" onClick={closeAdjustArcModal}>
           <div className="authorx-modal" onClick={(e) => e.stopPropagation()}>
             <PageHeader
-              title="Adjust Volume Sequence"
-              subtitle="Drag and drop to reorder volumes."
+              title={t("author.studio.book.adjustVolumeTitle")}
+              subtitle={t("author.studio.book.adjustVolumeSubtitle")}
               variant="light"
             />
 
@@ -1161,10 +1799,10 @@ export default function AuthorBookDetails() {
 
               <div className="authorx-modal-actions">
                 <Button type="button" variant="outline" size="md" onClick={closeAdjustArcModal}>
-                  Cancel
+                  {t("author.studio.common.cancel")}
                 </Button>
                 <Button type="button" variant="primary" size="md" onClick={saveArcSequence}>
-                  Save Order
+                  {t("author.studio.book.saveOrder")}
                 </Button>
               </div>
             </div>
@@ -1175,8 +1813,8 @@ export default function AuthorBookDetails() {
         <div className="authorx-modal-backdrop" onClick={closeEdit}>
           <div className="authorx-modal authorx-modal-lg" onClick={(e) => e.stopPropagation()}>
             <PageHeader
-              title="Edit Book"
-              subtitle="Update all book details."
+              title={t("author.studio.book.editBook")}
+              subtitle={t("author.studio.book.updateDetails")}
               variant="light"
             />
 
@@ -1184,7 +1822,7 @@ export default function AuthorBookDetails() {
               <TextField
                 value={editForm.title}
                 onChange={(v) => setEditForm((prev) => ({ ...prev, title: v }))}
-                placeholder="Book name"
+                placeholder={t("author.studio.common.bookName")}
               />
 
               <div className="authorx-form-grid">
@@ -1192,13 +1830,13 @@ export default function AuthorBookDetails() {
                   value={editForm.verseType}
                   onChange={(v) => setEditForm((prev) => ({ ...prev, verseType: v }))}
                   options={bookTypeOptions}
-                  placeholder="Book Type"
+                  placeholder={t("author.studio.common.bookType")}
                 />
                 <DropdownSelectSearchable
                   value={editForm.leadGender}
                   onChange={(v) => setEditForm((prev) => ({ ...prev, leadGender: v }))}
                   options={leadGenderOptions}
-                  placeholder="Leading Gender"
+                  placeholder={t("author.studio.common.leadingGender")}
                 />
               </div>
 
@@ -1207,150 +1845,133 @@ export default function AuthorBookDetails() {
                   value={editForm.genreId}
                   onChange={(v) => setEditForm((prev) => ({ ...prev, genreId: v }))}
                   options={genreOptions}
-                  placeholder="Genre"
+                  placeholder={t("author.studio.common.genre")}
                 />
                 <DropdownSelectSearchable
                   value={editForm.language}
                   onChange={(v) => setEditForm((prev) => ({ ...prev, language: v }))}
                   options={languageOptions}
-                  placeholder="Language"
+                  placeholder={t("author.studio.common.language")}
                 />
               </div>
 
-              <div className="authorx-upload-row">
-                <label className="authorx-upload-label">Cover</label>
-                <input
-                  type="file"
-                  accept=".jpg,.jpeg,.png,.webp"
-                  className="authorx-file-input"
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0] || null;
-                    if (!file) return;
-                    const previewUrl = URL.createObjectURL(file);
-                    setEditForm((prev) => ({
-                      ...prev,
-                      coverFile: file,
-                      coverPreviewUrl: previewUrl,
-                      coverImageUrl: previewUrl,
-                    }));
-                  }}
-                />
-              </div>
-
-              <div className="authorx-cover-summary">
-                {editForm.coverImageUrl ? (
-                  <div className="authorx-cover-thumb-btn" style={{ cursor: "default" }}>
-                    <div className="authorx-cover-preview-frame">
-                      <img
-                        src={editForm.coverImageUrl}
-                        alt="Cover preview"
-                        className="authorx-cover-preview-image"
-                        style={{ transform: `scale(${editForm.coverZoom || 1})`, transformOrigin: "center center" }}
-                      />
-                    </div>
-                    <span>Cover preview</span>
-                  </div>
-                ) : (
-                  <div className="authorx-cover-placeholder">No cover selected</div>
-                )}
-              </div>
-
-              <div className="authorx-cover-editor-quick">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setEditForm((prev) => ({ ...prev, coverZoom: Math.max(1, Number(prev.coverZoom || 1) - 0.08) }))}
-                >
-                  Zoom -
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setEditForm((prev) => ({ ...prev, coverZoom: Math.min(3, Number(prev.coverZoom || 1) + 0.08) }))}
-                >
-                  Zoom +
-                </Button>
-                <span className="authorx-cover-zoom-label">{Number(editForm.coverZoom || 1).toFixed(2)}x</span>
+              <div className="authorx-cover-slot-field">
+                <span className="authorx-upload-label">{t("author.studio.common.cover")}</span>
+                <label className={`authorx-cover-slot ${editForm.coverImageUrl ? "has-image" : ""}`}>
+                  <input
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.webp"
+                    onChange={(e) => handleEditCoverFileChange(e.target.files?.[0] || null)}
+                  />
+                  <span className="authorx-cover-slot-frame">
+                    {editForm.coverImageUrl ? (
+                      editCoverPreviewStyle ? (
+                        <img
+                          src={editForm.coverImageUrl}
+                          alt={t("author.studio.workspace.coverPreview")}
+                          className="authorx-cover-preview-image"
+                          style={editCoverPreviewStyle}
+                        />
+                      ) : (
+                        <img
+                          src={editForm.coverImageUrl}
+                          alt={t("author.studio.workspace.coverPreview")}
+                          className="authorx-cover-preview-image authorx-cover-preview-image--fit"
+                        />
+                      )
+                    ) : (
+                      <span className="authorx-cover-slot-empty">{t("author.studio.common.cover")}</span>
+                    )}
+                  </span>
+                  <span className="authorx-cover-slot-overlay">{t("author.studio.common.uploadImage")}</span>
+                </label>
+                {editForm.coverFile ? (
+                  <button type="button" className="authorx-cover-slot-adjust" onClick={openEditCoverEditor}>
+                    {t("author.studio.common.adjustCover")}
+                  </button>
+                ) : null}
               </div>
 
               <DropdownSelectSearchable
                 value={editForm.trendId}
                 onChange={(v) => setEditForm((prev) => ({ ...prev, trendId: v }))}
                 options={trendOptions}
-                placeholder="Link to Trend (optional)"
+                placeholder={t("author.studio.common.trendOptional")}
               />
 
               <MultiSelectDropdownSearchable
-                label="Tags (default website tags)"
+                label={t("author.studio.common.tagsDefault")}
                 values={editForm.tagIds}
                 onChange={(vals) => setEditForm((prev) => ({ ...prev, tagIds: vals }))}
                 options={tagOptions}
               />
 
-              <TextField
+              <textarea
+                className="authorx-textarea authorx-textarea--compact"
                 value={editForm.synopsis}
-                onChange={(v) => setEditForm((prev) => ({ ...prev, synopsis: v }))}
-                placeholder="Synopsis"
+                onChange={(e) => setEditForm((prev) => ({ ...prev, synopsis: e.target.value }))}
+                placeholder={t("author.studio.common.synopsis")}
+                rows={4}
               />
 
               {editError && <div className="authorx-form-error">{editError}</div>}
 
               <div className="authorx-modal-actions">
                 <Button type="button" variant="outline" size="md" onClick={closeEdit} disabled={savingEdit}>
-                  Cancel
+                  {t("author.studio.common.cancel")}
                 </Button>
                 <Button type="submit" variant="primary" size="md" disabled={savingEdit}>
-                  {savingEdit ? "Saving..." : "Save"}
+                  {savingEdit ? t("author.studio.common.saving") : t("author.studio.common.save")}
                 </Button>
               </div>
             </form>
           </div>
         </div>
       )}
+      {editCoverEditorOpen && (
+        <div className="authorx-modal-backdrop authorx-modal-backdrop--cover-editor" onClick={closeEditCoverEditor}>
+          <div className="authorx-cover-editor-modal" onClick={(e) => e.stopPropagation()}>
+            <PageHeader title={t("author.studio.common.adjustCover")} variant="light" />
+
+            <div className="authorx-cover-editor-stage">
+              <div
+                ref={editCoverFrameRef}
+                className="authorx-cover-editor-frame"
+                onWheel={handleEditCoverWheel}
+                onMouseDown={handleEditCoverMouseDown}
+                onTouchStart={handleEditCoverTouchStart}
+                onTouchMove={handleEditCoverTouchMove}
+                onTouchEnd={handleEditCoverTouchEnd}
+              >
+                {editCoverEditorStyle && (
+                  <img src={editForm.coverImageUrl} alt={t("author.studio.workspace.coverEditor")} className="authorx-cover-preview-image" style={editCoverEditorStyle} />
+                )}
+              </div>
+            </div>
+
+            <label className="authorx-cover-editor-range">
+              <span>{t("author.studio.common.zoom")}</span>
+              <input
+                type="range"
+                min="1"
+                max="3"
+                step="0.01"
+                value={editCoverDraft.zoom}
+                onChange={(e) => updateEditCoverZoom(e.target.value)}
+              />
+            </label>
+
+            <div className="authorx-modal-actions">
+              <Button type="button" variant="outline" size="md" onClick={closeEditCoverEditor}>
+                {t("author.studio.common.cancel")}
+              </Button>
+              <Button type="button" variant="primary" size="md" onClick={saveEditCoverEditor}>
+                {t("author.studio.common.confirm")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

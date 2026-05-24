@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useRef, useState, useEffect } from "react";
 import Modal from "react-bootstrap/Modal";
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Popover from "react-bootstrap/Popover";
@@ -12,6 +12,7 @@ export default function ReviewModal({
   onSubmitted,
   initialReview, // ✅ NEW
 }) {
+  const modalLayoutRef = useRef(null);
   const [content, setContent] = useState("");
 
   
@@ -109,6 +110,8 @@ export default function ReviewModal({
     emotionalDamage,
   ]);
 
+  const roundedAverage = averagePreview ? Math.round(averagePreview) : 0;
+
   const reset = () => {
     setContent("");
     setCharacterAccuracy(0);
@@ -117,6 +120,11 @@ export default function ReviewModal({
     setCanonIntegration(0);
     setEmotionalDamage(0);
     setErr("");
+  };
+
+  const dismiss = () => {
+    reset();
+    onClose?.();
   };
 
   const submit = async () => {
@@ -191,116 +199,163 @@ export default function ReviewModal({
   return (
     <Modal
       show={show}
-      onHide={() => {
-        reset();
-        onClose?.();
-      }}
+      onHide={dismiss}
       centered
+      className="iv-book-review-modal"
+      contentClassName="iv-book-review-modal__content"
     >
-      <Modal.Header closeButton>
-        <Modal.Title>
-          {initialReview ? "Edit your Review" : "Write a Review"}
-        </Modal.Title>
+      <Modal.Header closeButton className="iv-book-review-modal__header">
+        <div className="iv-book-review-modal__header-copy">
+          <Modal.Title>
+            {initialReview ? "Edit your review" : "Write a review"}
+          </Modal.Title>
+          <p className="iv-book-review-modal__subtitle">
+            {initialReview
+              ? "Adjust the score breakdown and tighten your take before saving it back."
+              : "Rate the story, then leave a thoughtful take other readers can actually use."}
+          </p>
+        </div>
       </Modal.Header>
 
-      <Modal.Body>
-        {err ? <div className="alert alert-danger">{err}</div> : null}
+      <Modal.Body className="iv-book-review-modal__body">
+        {err ? <div className="iv-book-review-modal__error">{err}</div> : null}
 
-        <div className="mb-3 p-3 border rounded">
-          <div className="d-flex justify-content-between align-items-center mb-2">
-            <div className="fw-semibold">Category ratings</div>
-            <div className="text-muted small">
-              Overall preview:{" "}
-              <strong>{averagePreview ? averagePreview.toFixed(1) : "—"}</strong>
+        <div className="iv-book-review-modal__layout" ref={modalLayoutRef}>
+          <div className="iv-book-review-modal__ratings">
+            <div className="iv-book-review-modal__ratings-head">
+              <div>
+                <div className="iv-book-review-modal__eyebrow">Category ratings</div>
+                <div className="iv-book-review-modal__section-title">
+                  Score the parts that shaped your read
+                </div>
+              </div>
+            </div>
+
+            <div className="iv-book-review-modal__ratings-shell">
+              <div className="iv-book-review-modal__ratings-list">
+                <div className="iv-book-review-modal__rating-row">
+                  <div className="iv-book-review-modal__rating-label">
+                    Character Accuracy
+                  </div>
+                  <StarRatingInput
+                    value={characterAccuracy}
+                    onChange={setCharacterAccuracy}
+                  />
+                </div>
+
+                <div className="iv-book-review-modal__rating-row">
+                  <div className="iv-book-review-modal__rating-label">
+                    Chemistry & Relationships
+                  </div>
+                  <StarRatingInput
+                    value={chemistryRelationships}
+                    onChange={setChemistryRelationships}
+                  />
+                </div>
+
+                <div className="iv-book-review-modal__rating-row">
+                  <div className="iv-book-review-modal__rating-label">
+                    Plot & Creativity
+                  </div>
+                  <StarRatingInput
+                    value={plotCreativity}
+                    onChange={setPlotCreativity}
+                  />
+                </div>
+
+                <div className="iv-book-review-modal__rating-row">
+                  <div className="iv-book-review-modal__rating-label">
+                    Canon Integration
+                  </div>
+                  <StarRatingInput
+                    value={canonIntegration}
+                    onChange={setCanonIntegration}
+                  />
+                </div>
+
+                <div className="iv-book-review-modal__rating-row iv-book-review-modal__rating-row--damage">
+                  <div className="iv-book-review-modal__rating-label iv-book-review-modal__rating-label--with-help">
+                    <span>Emotional Damage</span>
+                    <OverlayTrigger
+                      trigger="click"
+                      placement="top"
+                      overlay={damagePopover}
+                      container={modalLayoutRef.current}
+                      rootClose
+                    >
+                      <button
+                        type="button"
+                        className="iv-book-review-modal__help"
+                        title="How does this work?"
+                      >
+                        <i className="bi bi-info-circle" />
+                      </button>
+                    </OverlayTrigger>
+                  </div>
+
+                  <div className="iv-book-review-modal__damage-control">
+                    <StarRatingInput
+                      value={emotionalDamage}
+                      onChange={setEmotionalDamage}
+                    />
+                    {damageLabel ? (
+                      <span className="iv-book-review-modal__damage-label">
+                        {damageLabel}
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+
+              <aside className="iv-book-review-modal__score-card" aria-live="polite">
+                <span className="iv-book-review-modal__score-label">Total score</span>
+                <strong className="iv-book-review-modal__score-value">
+                  {averagePreview ? averagePreview.toFixed(1) : "0.0"}
+                </strong>
+                <div className="iv-book-review-modal__score-stars" aria-hidden="true">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <i
+                      key={star}
+                      className={`bi ${
+                        star <= roundedAverage ? "bi-star-fill" : "bi-star"
+                      }`}
+                    />
+                  ))}
+                </div>
+              </aside>
             </div>
           </div>
 
-          <div className="d-flex flex-column gap-3">
-            <div className="d-flex justify-content-between align-items-center">
-              <div className="fw-semibold">Character Accuracy</div>
-              <StarRatingInput
-                value={characterAccuracy}
-                onChange={setCharacterAccuracy}
-              />
-            </div>
-
-            <div className="d-flex justify-content-between align-items-center">
-              <div className="fw-semibold">Chemistry & Relationships</div>
-              <StarRatingInput
-                value={chemistryRelationships}
-                onChange={setChemistryRelationships}
-              />
-            </div>
-
-            <div className="d-flex justify-content-between align-items-center">
-              <div className="fw-semibold">Plot & Creativity</div>
-              <StarRatingInput
-                value={plotCreativity}
-                onChange={setPlotCreativity}
-              />
-            </div>
-
-            <div className="d-flex justify-content-between align-items-center">
-              <div className="fw-semibold">Canon Integration</div>
-              <StarRatingInput
-                value={canonIntegration}
-                onChange={setCanonIntegration}
-              />
-            </div>
-
-            <div className="d-flex justify-content-between align-items-center">
-              <div className="fw-semibold d-flex align-items-center gap-2">
-                Emotional Damage
-                <OverlayTrigger
-                  trigger="click"
-                  placement="top"
-                  overlay={damagePopover}
-                  rootClose
-                >
-                  <span
-                    role="button"
-                    className="text-muted"
-                    style={{ cursor: "pointer" }}
-                    title="How does this work?"
-                  >
-                    <i className="bi bi-info-circle" />
-                  </span>
-                </OverlayTrigger>
-              </div>
-
-              <div className="d-flex align-items-center gap-2">
-                <StarRatingInput
-                  value={emotionalDamage}
-                  onChange={setEmotionalDamage}
-                />
-                <span className="text-muted small">{damageLabel}</span>
-              </div>
-            </div>
+          <div className="iv-book-review-modal__field">
+            <label className="iv-book-review-modal__field-label">Review</label>
+            <textarea
+              className="iv-book-review-modal__textarea"
+              rows={6}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Tell readers what landed, what missed, and which details actually made this story memorable."
+            />
+            <p className="iv-book-review-modal__field-note">
+              A grounded review with specific details helps far more than a one-line reaction.
+            </p>
           </div>
-        </div>
-
-        <div className="mb-2">
-          <label className="form-label fw-semibold">Review</label>
-          <textarea
-            className="form-control"
-            rows={5}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Tell us what you loved (or what destroyed you) 👀"
-          />
         </div>
       </Modal.Body>
 
-      <Modal.Footer>
+      <Modal.Footer className="iv-book-review-modal__footer">
         <button
-          className="btn btn-outline-secondary"
-          onClick={onClose}
+          className="iv-book-review-modal__button iv-book-review-modal__button--ghost"
+          onClick={dismiss}
           disabled={loading}
         >
           Cancel
         </button>
-        <button className="btn btn-primary" onClick={submit} disabled={loading}>
-          {loading ? "Submitting..." : initialReview ? "Save" : "Submit"}
+        <button
+          className="iv-book-review-modal__button"
+          onClick={submit}
+          disabled={loading}
+        >
+          {loading ? "Submitting..." : initialReview ? "Save review" : "Post review"}
         </button>
       </Modal.Footer>
     </Modal>

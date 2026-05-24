@@ -1,31 +1,39 @@
-export const LIBRARY_FILTERS = [
-  { value: "All", label: "All shelf", icon: "bi-collection" },
-  { value: "Reading", label: "Reading", icon: "bi-book" },
-  { value: "Completed", label: "Finished", icon: "bi-check2-circle" },
-  { value: "Planned", label: "Planning", icon: "bi-bookmark" },
-  { value: "Dropped", label: "Dropped", icon: "bi-x-circle" },
-  { value: "History", label: "History", icon: "bi-clock-history" },
-];
+export function getLibraryFilters(t) {
+  return [
+    { value: "All", label: t("library.filters.All"), icon: "bi-collection" },
+    { value: "Reading", label: t("library.filters.Reading"), icon: "bi-book" },
+    { value: "Completed", label: t("library.filters.Completed"), icon: "bi-check2-circle" },
+    { value: "Planned", label: t("library.filters.Planned"), icon: "bi-bookmark" },
+    { value: "Dropped", label: t("library.filters.Dropped"), icon: "bi-x-circle" },
+    { value: "History", label: t("library.filters.History"), icon: "bi-clock-history" },
+  ];
+}
 
-export const LIBRARY_STATUS_OPTIONS = [
-  { value: "Reading", label: "Reading" },
-  { value: "Completed", label: "Finished" },
-  { value: "Planned", label: "Planning" },
-  { value: "Dropped", label: "Dropped" },
-];
+export function getLibraryStatusOptions(t) {
+  return [
+    { value: "Reading", label: t("library.statusOptions.Reading") },
+    { value: "Completed", label: t("library.statusOptions.Completed") },
+    { value: "Planned", label: t("library.statusOptions.Planned") },
+    { value: "Dropped", label: t("library.statusOptions.Dropped") },
+  ];
+}
 
-export const LIBRARY_SORT_OPTIONS = [
-  { value: "recent", label: "Recently opened" },
-  { value: "title", label: "Title A-Z" },
-  { value: "status", label: "Shelf status" },
-];
+export function getLibrarySortOptions(t) {
+  return [
+    { value: "recent", label: t("library.sortOptions.recent") },
+    { value: "title", label: t("library.sortOptions.title") },
+    { value: "status", label: t("library.sortOptions.status") },
+  ];
+}
 
-export const LIBRARY_STATUS_COPY = {
-  Reading: "Still in motion, with your next reading session waiting right where you left it.",
-  Completed: "Finished, kept close, and ready for a revisit whenever the mood comes back.",
-  Planned: "Queued on your shelf for the next time you want something new without searching again.",
-  Dropped: "Set aside for now, but still close enough to return if the story pulls you back in.",
-};
+export function getLibraryStatusCopy(t) {
+  return {
+    Reading: t("library.statusCopy.Reading"),
+    Completed: t("library.statusCopy.Completed"),
+    Planned: t("library.statusCopy.Planned"),
+    Dropped: t("library.statusCopy.Dropped"),
+  };
+}
 
 export function normalizeLibraryStatus(value) {
   return ["Reading", "Completed", "Planned", "Dropped"].includes(value)

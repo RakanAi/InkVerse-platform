@@ -1,10 +1,14 @@
 import React, { useMemo, useState, useContext } from "react";
+import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import RatingEle from "./BookRating2";
 import "./Data.css";
 import api from "../../../Api/api";
 import ReviewReplies from "./ReviewReplies";
 import AuthContext from "../../../Context/AuthProvider";
-import { absUrl } from "../../../Utils/absUrl";
+import UserAvatar from "../../../Shared/user/UserAvatar";
+import { canOpenPublicProfile, getPublicProfilePath } from "../../../domain/users/public-profile";
+import ReportMenuButton from "../../../features/reports/ReportMenuButton";
 
 function clamp(n, min = 0, max = 5) {
   const x = Number(n);
@@ -19,15 +23,15 @@ function getVal(review, camel, pascal) {
 function damageLabel(v) {
   switch (Math.round(v)) {
     case 1:
-      return "I'm destroyed 💀";
+      return "High";
     case 2:
-      return "Pain 😭";
+      return "Heavy";
     case 3:
-      return "Ouch 🥲";
+      return "Medium";
     case 4:
-      return "Soft hurt 😔";
+      return "Light";
     case 5:
-      return "No damage 😌";
+      return "Safe";
     default:
       return "";
   }
@@ -37,12 +41,15 @@ function formatDate(iso) {
   if (!iso) return "";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleString();
+  return d.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 }
 
-export default function ReviewCard({ review, onRefresh }) {
-  const [open, setOpen] = useState(false);
-
+export default function ReviewCard({ review, onRefresh, isLast = false }) {
+  const { t } = useTranslation();
   const { auth } = useContext(AuthContext);
   const canReply = !!auth?.accessToken;
 
@@ -69,14 +76,14 @@ export default function ReviewCard({ review, onRefresh }) {
       console.error("Reaction failed", e);
 
       if (e?.response?.status === 401) {
-        alert("You must be logged in to react.");
+        alert(t("bookPage.reviewCard.loginToReact"));
       }
     } finally {
       setReacting(false);
     }
   };
 
-  const userName = review?.userName ?? review?.UserName ?? "Unknown";
+  const userName = review?.userName ?? review?.UserName ?? t("common.unknown");
 
   const avatarUrl =
     review?.userAvatarUrl ??
@@ -86,14 +93,8 @@ export default function ReviewCard({ review, onRefresh }) {
     review?.profilePictureUrl ??
     review?.ProfilePictureUrl ??
     "";
-
-  const avatarSrc = avatarUrl ? absUrl(avatarUrl) : "";
-
-  const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-    userName || "User",
-  )}`;
-
-  const imgSrc = avatarSrc || fallbackAvatar;
+  const canViewProfile = canOpenPublicProfile(userName);
+  const profilePath = canViewProfile ? getPublicProfilePath(userName) : null;
 
   const content = review?.content ?? review?.Content ?? "";
   const rating = clamp(review?.rating ?? review?.Rating ?? 0);
@@ -145,9 +146,6 @@ export default function ReviewCard({ review, onRefresh }) {
       emotionalDamage,
     };
   }, [review]);
-  console.log("REVIEW OBJ:", review);
-  console.log("AVATAR URL PICKED:", avatarUrl);
-  console.log("AVATAR SRC:", avatarSrc);
   const createdAt = review?.createdAt ?? review?.CreatedAt;
   const updatedAt = review?.updatedAt ?? review?.UpdatedAt;
   const edited =
@@ -155,102 +153,148 @@ export default function ReviewCard({ review, onRefresh }) {
     createdAt &&
     new Date(updatedAt).getTime() > new Date(createdAt).getTime();
 
-  return (
-    <div className="p-3 border rounded shadow my-3">
-      {/* header */}
-      <div className="d-flex align-items-center mb-2">
-        <img
-          src={imgSrc}
-          alt={userName}
-          className="rounded-circle"
-          width={70}
-          height={70}
-          style={{ objectFit: "cover" }}
-          onError={(e) => {
-            e.currentTarget.src = fallbackAvatar;
-          }}
-        />
+  const metrics = breakdown.hasAny
+    ? [
+        { label: "Characters", value: breakdown.characterAccuracy.toFixed(1) },
+        {
+          label: "Chemistry",
+          value: breakdown.chemistryRelationships.toFixed(1),
+        },
+        { label: "Plot", value: breakdown.plotCreativity.toFixed(1) },
+        { label: "Canon", value: breakdown.canonIntegration.toFixed(1) },
+        { label: "Impact", value: damageLabel(breakdown.emotionalDamage) },
+      ]
+    : [];
 
-        <div className="text-start mx-3">
-          <strong>{userName}</strong>
-          <div className="text-muted small fst-italic">
-            {formatDate(createdAt)}
-            {edited ? (
-              <span className="ms-2 badge text-bg-secondary">Edited</span>
-            ) : null}
+  const translatedMetrics = metrics.map((metric) => ({
+    ...metric,
+    label:
+      {
+        Characters: t("bookPage.reviewCard.metrics.characters"),
+        Chemistry: t("bookPage.reviewCard.metrics.chemistry"),
+        Plot: t("bookPage.reviewCard.metrics.plot"),
+        Canon: t("bookPage.reviewCard.metrics.canon"),
+        Impact: t("bookPage.reviewCard.metrics.impact"),
+      }[metric.label] ?? metric.label,
+    value:
+      {
+        High: t("bookPage.rating.damageLevels.High"),
+        Heavy: t("bookPage.rating.damageLevels.Heavy"),
+        Medium: t("bookPage.rating.damageLevels.Medium"),
+        Light: t("bookPage.rating.damageLevels.Light"),
+        Safe: t("bookPage.rating.damageLevels.Safe"),
+      }[metric.value] ?? metric.value,
+  }));
+
+  return (
+    <article className={`iv-book-review ${isLast ? "is-last" : ""}`}>
+      <div className="iv-book-review__head">
+        {profilePath ? (
+          <Link
+            to={profilePath}
+            className="iv-book-review__identity iv-book-review__identityLink"
+            title={`View ${userName}`}
+          >
+            <UserAvatar
+              src={avatarUrl}
+              name={userName}
+              className="iv-book-review__avatar"
+            />
+
+            <div className="iv-book-review__identity-copy">
+              <div className="iv-book-review__author">
+                <strong>{userName}</strong>
+                {edited ? <span className="iv-book-review__edited">{t("bookPage.reviews.edited")}</span> : null}
+              </div>
+              <div className="iv-book-review__date">{formatDate(createdAt)}</div>
+            </div>
+          </Link>
+        ) : (
+          <div className="iv-book-review__identity">
+            <UserAvatar
+              src={avatarUrl}
+              name={userName}
+              className="iv-book-review__avatar"
+            />
+
+            <div className="iv-book-review__identity-copy">
+              <div className="iv-book-review__author">
+                <strong>{userName}</strong>
+                {edited ? <span className="iv-book-review__edited">{t("bookPage.reviews.edited")}</span> : null}
+              </div>
+              <div className="iv-book-review__date">{formatDate(createdAt)}</div>
+            </div>
           </div>
+        )}
+
+        <div className="iv-book-review__score">
+          <span className="iv-book-review__score-number">
+            {rating.toFixed(1)}
+          </span>
+          <RatingEle rating={rating} />
         </div>
       </div>
 
-      {/* content */}
-      <div className="my-2 text-start">
-        <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 text-center col-4">
-          <RatingEle rating={rating} />
-          {breakdown.hasAny ? (
-            <button
-              type="button"
-              className="btn btn-sm btn-outline-secondary"
-              onClick={() => setOpen((v) => !v)}
-            >
-              {open ? "Hide breakdown" : "View breakdown"}
-            </button>
-          ) : null}
-        </div>
-
+      <div className="iv-book-review__body">
         {content ? (
-          <p className="mt-2 mb-2">{content}</p>
+          <p className="iv-book-review__content">{content}</p>
         ) : (
-          <p className="mt-2 mb-2 text-muted fst-italic">No content.</p>
+          <p className="iv-book-review__content iv-book-review__content--muted">
+            {t("bookPage.reviewCard.noWrittenReview")}
+          </p>
         )}
 
-        {/* breakdown panel */}
-        {breakdown.hasAny ? (
-          <div
-            className={`review-breakdown mt-3 p-3 rounded border bg-light ${open ? "open" : ""}`}
-          >
-            <div className="d-flex flex-column gap-2">
-              <Row
-                label="Character Accuracy"
-                value={breakdown.characterAccuracy}
-              />
-              <Row
-                label="Chemistry & Relationships"
-                value={breakdown.chemistryRelationships}
-              />
-              <Row label="Plot & Creativity" value={breakdown.plotCreativity} />
-              <Row
-                label="Canon Integration"
-                value={breakdown.canonIntegration}
-              />
-
-              <div className="d-flex justify-content-between align-items-center">
-                <div>
-                  <div className="fw-semibold">Emotional Damage</div>
-                  <div className="text-muted small">
-                    Lower stars = higher damage 😈
-                  </div>
-                </div>
-                <div className="text-end">
-                  <div className="d-flex justify-content-end">
-                    <RatingEle rating={breakdown.emotionalDamage} />
-                  </div>
-                  <div className="text-muted small">
-                    {damageLabel(breakdown.emotionalDamage)}
-                  </div>
-                </div>
-              </div>
-            </div>
+        {metrics.length ? (
+          <div className="iv-book-review__metrics" aria-label={t("bookPage.reviewCard.detailedRatings")}>
+            {translatedMetrics.map((metric) => (
+              <Metric key={metric.label} label={metric.label} value={metric.value} />
+            ))}
           </div>
         ) : null}
 
-        <div className="d-flex gap-2 mt-2">
+        <div className="iv-book-review__actions">
+          <button
+            className={`iv-book-review__action ${
+              liked ? "is-active is-positive" : ""
+            }`}
+            onClick={() => handleReact("like")}
+            disabled={reacting}
+            type="button"
+          >
+            <i className="bi bi-hand-thumbs-up" />
+            <span>{t("bookPage.reviewCard.helpful")}</span>
+            <span>{review?.likes ?? review?.Likes ?? 0}</span>
+          </button>
+
+          <button
+            className={`iv-book-review__action ${
+              disliked ? "is-active is-negative" : ""
+            }`}
+            onClick={() => handleReact("dislike")}
+            disabled={reacting}
+            type="button"
+          >
+            <i className="bi bi-hand-thumbs-down" />
+            <span>{t("bookPage.reviewCard.notForMe")}</span>
+            <span>{review?.dislikes ?? review?.Dislikes ?? 0}</span>
+          </button>
+
           <button
             type="button"
-            className="btn btn-sm btn-outline-primary"
+            className={`iv-book-review__action ${showReplies ? "is-active" : ""}`}
             onClick={() => setShowReplies((v) => !v)}
           >
-            {showReplies ? "Hide replies" : `View replies (${replyCount})`}
+            <i className={`bi ${showReplies ? "bi-chat-square-text-fill" : "bi-chat-square-text"}`} />
+            <span>{showReplies ? t("bookPage.reviewCard.hideReplies") : t("bookPage.reviewCard.replies")}</span>
+            <span>{replyCount}</span>
           </button>
+
+          <ReportMenuButton
+            targetType="review"
+            targetId={reviewId}
+            targetLabel={t("bookPage.reviewCard.review", { defaultValue: "Review" })}
+            buttonClassName="iv-book-review__action iv-book-review__action--more"
+          />
         </div>
 
         <ReviewReplies
@@ -259,45 +303,16 @@ export default function ReviewCard({ review, onRefresh }) {
           canReply={canReply}
           onCountChange={(n) => setReplyCount(n)}
         />
-
-        {/* footer actions */}
-        <div className="d-flex align-items-center gap-3 text-muted small mt-3">
-          <button
-            className={`btn btn-sm d-flex align-items-center gap-1 ${
-              liked ? "btn-success" : "btn-outline-success"
-            }`}
-            onClick={() => handleReact("like")}
-            disabled={reacting}
-            type="button"
-          >
-            <i className="bi bi-hand-thumbs-up" />
-            <span>{review?.likes ?? review?.Likes ?? 0}</span>
-          </button>
-
-          <button
-            className={`btn btn-sm d-flex align-items-center gap-1 ${
-              disliked ? "btn-danger" : "btn-outline-danger"
-            }`}
-            onClick={() => handleReact("dislike")}
-            disabled={reacting}
-            type="button"
-          >
-            <i className="bi bi-hand-thumbs-down" />
-            <span>{review?.dislikes ?? review?.Dislikes ?? 0}</span>
-          </button>
-
-          <span role="button">⋯</span>
-        </div>
       </div>
-    </div>
+    </article>
   );
 }
 
-function Row({ label, value }) {
+function Metric({ label, value }) {
   return (
-    <div className="d-flex justify-content-between align-items-center">
-      <div className="fw-semibold">{label}</div>
-      <RatingEle rating={value} />
-    </div>
+    <span className="iv-book-review__metric">
+      <small>{label}</small>
+      <strong>{value}</strong>
+    </span>
   );
 }

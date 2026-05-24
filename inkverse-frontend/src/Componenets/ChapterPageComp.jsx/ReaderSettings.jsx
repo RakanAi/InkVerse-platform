@@ -1,9 +1,11 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
-const DEFAULTS = {
+export const DEFAULTS = {
   fontSize: 18,
   lineHeight: 1.85,
   font: "system",
+  backgroundTheme: "mist",
 };
 
 export function loadReaderPrefs(key = "iv_reader_prefs") {
@@ -28,16 +30,25 @@ export default function ReaderSettings({
   onChange,
   offcanvasId = "settingsSheet",
 }) {
+  const { t } = useTranslation();
   const prefs = value ?? DEFAULTS;
 
   const fonts = useMemo(
     () => [
-      { value: "system", label: "System" },
-      { value: "serif", label: "Serif" },
-      { value: "sans", label: "Sans" },
-      { value: "mono", label: "Mono" },
+      { value: "system", label: t("reader.settings.fonts.system") },
+      { value: "serif", label: t("reader.settings.fonts.serif") },
+      { value: "sans", label: t("reader.settings.fonts.sans") },
+      { value: "mono", label: t("reader.settings.fonts.mono") },
     ],
-    []
+    [t]
+  );
+
+  const themes = useMemo(
+    () => [
+      { value: "mist", label: t("reader.settings.backgrounds.mist") },
+      { value: "paper", label: t("reader.settings.backgrounds.paper") },
+    ],
+    [t]
   );
 
   const set = (patch) => onChange?.({ ...prefs, ...patch });
@@ -51,13 +62,13 @@ export default function ReaderSettings({
     >
       <div className="offcanvas-header">
         <h5 className="offcanvas-title" id={`${offcanvasId}Label`}>
-          Reader settings
+          {t("reader.settings.title")}
         </h5>
         <button
           type="button"
           className="btn-close"
           data-bs-dismiss="offcanvas"
-          aria-label="Close"
+          aria-label={t("common.actions.close")}
         />
       </div>
 
@@ -65,7 +76,7 @@ export default function ReaderSettings({
         <div className="d-flex flex-column gap-3">
           <div>
             <div className="d-flex justify-content-between">
-              <span className="fw-semibold">Text size</span>
+              <span className="fw-semibold">{t("reader.settings.textSize")}</span>
               <span className="text-muted">{prefs.fontSize}px</span>
             </div>
             <input
@@ -80,7 +91,7 @@ export default function ReaderSettings({
 
           <div>
             <div className="d-flex justify-content-between">
-              <span className="fw-semibold">Line spacing</span>
+              <span className="fw-semibold">{t("reader.settings.lineSpacing")}</span>
               <span className="text-muted">{prefs.lineHeight.toFixed(2)}</span>
             </div>
             <input
@@ -95,7 +106,7 @@ export default function ReaderSettings({
           </div>
 
           <div>
-            <div className="fw-semibold mb-1">Font</div>
+            <div className="fw-semibold mb-1">{t("reader.settings.font")}</div>
             <select
               className="form-select"
               value={prefs.font}
@@ -109,12 +120,27 @@ export default function ReaderSettings({
             </select>
           </div>
 
+          <div>
+            <div className="fw-semibold mb-1">{t("reader.settings.background")}</div>
+            <select
+              className="form-select"
+              value={prefs.backgroundTheme}
+              onChange={(e) => set({ backgroundTheme: e.target.value })}
+            >
+              {themes.map((theme) => (
+                <option key={theme.value} value={theme.value}>
+                  {theme.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <button
             className="btn btn-outline-secondary"
             type="button"
             onClick={() => onChange?.(DEFAULTS)}
           >
-            Reset to default
+            {t("reader.settings.reset")}
           </button>
         </div>
       </div>

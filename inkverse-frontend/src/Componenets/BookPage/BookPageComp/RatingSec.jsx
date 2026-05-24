@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import RatingEle from "./BookRating2";
 
 function clamp(n, min = 0, max = 5) {
@@ -13,18 +14,18 @@ function getVal(breakdown, camel, pascal) {
   return clamp(v);
 }
 
-function damageLabel(v) {
+function damageLabel(t, v) {
   switch (Math.round(v)) {
     case 1:
-      return "I'm destroyed 💀";
+      return t("bookPage.rating.damageLevels.High");
     case 2:
-      return "Pain 😭";
+      return t("bookPage.rating.damageLevels.Heavy");
     case 3:
-      return "Ouch 🥲";
+      return t("bookPage.rating.damageLevels.Medium");
     case 4:
-      return "Soft hurt 😔";
+      return t("bookPage.rating.damageLevels.Light");
     case 5:
-      return "No damage 😌";
+      return t("bookPage.rating.damageLevels.Safe");
     default:
       return "";
   }
@@ -38,6 +39,7 @@ export default function RatingBox({
   myReview,
   onDeleteMyReview,
 }) {
+  const { t } = useTranslation();
   // ✅ read values safely
   const characterAccuracy = getVal(
     breakdown,
@@ -65,33 +67,34 @@ export default function RatingBox({
     return [
       {
         key: "characterAccuracy",
-        label: "Character Accuracy",
+        label: t("bookPage.rating.categories.characterAccuracy"),
         value: characterAccuracy,
       },
       {
         key: "chemistryRelationships",
-        label: "Chemistry & Relationships",
+        label: t("bookPage.rating.categories.chemistryRelationships"),
         value: chemistryRelationships,
       },
       {
         key: "plotCreativity",
-        label: "Plot & Creativity",
+        label: t("bookPage.rating.categories.plotCreativity"),
         value: plotCreativity,
       },
       {
         key: "canonIntegration",
-        label: "Canon Integration",
+        label: t("bookPage.rating.categories.canonIntegration"),
         value: canonIntegration,
       },
       {
         key: "emotionalDamage",
-        label: "Emotional Damage",
+        label: t("bookPage.rating.categories.emotionalDamage"),
         value: emotionalDamage,
-        helper: "Lower stars = higher damage 😈",
-        valueText: damageLabel(emotionalDamage),
+        helper: t("bookPage.rating.damageHelper"),
+        valueText: damageLabel(t, emotionalDamage),
       },
     ];
   }, [
+    t,
     characterAccuracy,
     chemistryRelationships,
     plotCreativity,
@@ -102,96 +105,98 @@ export default function RatingBox({
   const hasBreakdown = entries.some((e) => Number(e.value) > 0);
 
   return (
-    <div className="row mx-0 my-4 g-3">
-      {/* LEFT */}
-      <div className="col-12 col-lg-5">
-        <div className="p-4 border rounded shadow-sm h-100">
-          <div className="d-flex align-items-center justify-content-between">
-            <h5 className="mb-0 fw-bold">Ratings</h5>
-            <span className="text-muted small">{totalReviews} reviews</span>
+    <section className="iv-book-section iv-book-section--plain iv-book-rating-row">
+      <div className="iv-book-section__head">
+        <div className="iv-book-section__title-wrap">
+          <span className="borderStart" />
+          <div>
+            <h3 className="iv-book-section__title">{t("bookPage.rating.title")}</h3>
+            <p className="iv-book-section__subtitle mb-0">
+              {t("bookPage.rating.subtitle")}
+            </p>
           </div>
+        </div>
+      </div>
 
-          <div className="my-3 d-flex align-items-center gap-3 ">
-            <div
-              style={{ fontSize: "3rem", lineHeight: 1 }}
-              className="fw-bold"
-            >
+      <div className="iv-book-rating__grid">
+        <div className="iv-book-rating__summary">
+          <div className="iv-book-rating__summary-top">
+            <div className="iv-book-rating__score">
               {clamp(averageRating).toFixed(1)}
             </div>
-            <div>
+            <div className="iv-book-rating__score-copy">
               <RatingEle rating={clamp(averageRating)} />
-              <div className="text-muted small mt-1">Average rating</div>
+              <div className="iv-book-rating__score-note">{t("bookPage.rating.averageLabel")}</div>
             </div>
           </div>
 
-          <div className="d-flex flex-column m-auto w-50">
+          <div className="iv-book-rating__meta">
+            <span className="iv-book-rating__meta-pill">
+              {t("bookPage.rating.reviewCount", { count: totalReviews })}
+            </span>
+            <span className="iv-book-rating__meta-copy">
+              {t("bookPage.rating.liveCopy")}
+            </span>
+          </div>
+
+          <div className="iv-book-rating__actions">
             <button
-              className="btn btn-primary"
+              className="iv-book-review__action iv-book-review__action--primary"
               type="button"
               onClick={onWriteReview}
             >
-              {myReview ? "Edit your review" : "Write a review"}
+              {myReview ? t("bookPage.rating.editReview") : t("bookPage.rating.writeReview")}
             </button>
 
             {myReview && (
               <button
-                className="btn btn-outline-link "
+                className="iv-book-review__action"
                 type="button"
                 onClick={onDeleteMyReview}
-                style={{ textDecoration: "none" }}
               >
-                Delete your review
+                {t("bookPage.rating.deleteReview")}
               </button>
             )}
           </div>
-          <hr />
-          {/* {authorNote ? (
-            <div className="mt-4 p-3 bg-light rounded">
-              <div className="fw-semibold mb-1">Author note</div>
-              <div className="small text-muted">{authorNote}</div>
-            </div>
-          ) : null} */}
         </div>
-      </div>
 
-      {/* RIGHT */}
-      <div className="col-12 col-lg-7">
-        <div className="p-4 border rounded shadow-sm h-100">
-          <h5 className="mb-3 fw-bold">Category breakdown</h5>
+        <div className="iv-book-rating__details">
+          <div className="iv-book-rating__details-head">
+            <h4 className="iv-book-rating__details-title">{t("bookPage.rating.breakdownTitle")}</h4>
+            <span className="iv-book-rating__details-note">
+              {t("bookPage.rating.breakdownSubtitle")}
+            </span>
+          </div>
 
           {hasBreakdown ? (
-            <div className="d-flex flex-column gap-3">
+            <div className="iv-book-rating__list">
               {entries.map(({ key, label, value, helper, valueText }) => {
                 const v = clamp(value);
                 const percent = (v / 5) * 100;
 
                 return (
-                  <div key={key}>
-                    <div className="d-flex justify-content-between align-items-center">
-                      <div className="fw-semibold">
-                        {label}
+                  <div className="iv-book-rating__item" key={key}>
+                    <div className="iv-book-rating__item-head">
+                      <div className="iv-book-rating__label-wrap">
+                        <div className="iv-book-rating__label">{label}</div>
                         {helper ? (
-                          <div className="text-muted small fw-normal">
-                            {helper}
-                          </div>
+                          <div className="iv-book-rating__helper">{helper}</div>
                         ) : null}
                       </div>
 
-                      <div className="d-flex flex-column align-items-end">
-                        <div className="d-flex align-items-center gap-2">
-                          <span className="text-muted small">
-                            {v.toFixed(1)}
-                          </span>
+                      <div className="iv-book-rating__value-wrap">
+                        <div className="iv-book-rating__value-row">
+                          <span className="iv-book-rating__value">{v.toFixed(1)}</span>
                           <RatingEle rating={v} />
                         </div>
 
                         {valueText ? (
-                          <div className="text-muted small">{valueText}</div>
+                          <div className="iv-book-rating__value-text">{valueText}</div>
                         ) : null}
                       </div>
                     </div>
 
-                    <div className="progress mt-2" style={{ height: "8px" }}>
+                    <div className="progress iv-book-rating__progress" style={{ height: "8px" }}>
                       <div
                         className="progress-bar"
                         style={{ width: `${percent}%` }}
@@ -206,14 +211,10 @@ export default function RatingBox({
               })}
             </div>
           ) : (
-            <div className="text-muted">No detailed ratings yet.</div>
+            <div className="iv-book-empty">{t("bookPage.rating.empty")}</div>
           )}
-
-          <div className="text-muted small mt-3">
-            Breakdown updates as reviews are added.
-          </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

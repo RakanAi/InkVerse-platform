@@ -80,6 +80,7 @@ public class GoogleAuthService : IGoogleAuthService
         {
             UserName = user.UserName ?? "",
             Email = user.Email ?? "",
+            AvatarUrl = user.AvatarUrl,
             Token = token,
             Roles = roles
         };

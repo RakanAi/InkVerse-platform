@@ -24,13 +24,14 @@ export default function GoogleLoginButton({
               idToken: response.credential,
             });
 
-            const dto = res.data; // { userName, email, token, roles }
+            const dto = res.data; // { userName, email, avatarUrl, token, roles }
 
             const authToStore = {
               accessToken: dto.token,
               user: {
                 userName: dto.userName,
                 email: dto.email,
+                avatarUrl: dto.avatarUrl,
                 roles: dto.roles ?? [],
               },
             };

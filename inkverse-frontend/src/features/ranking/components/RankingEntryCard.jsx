@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import BookCover from "@/Shared/books/BookCover/BookCover";
 import { getBookCoverSrc } from "@/domain/books/book-cover";
 import "./RankingEntryCard.css";
@@ -20,7 +21,7 @@ function formatNumber(value) {
 function formatOrigin(originType) {
   switch (originType) {
     case "PlatformOriginal":
-      return "InkVerse Original";
+      return "PlatformOriginal";
     case "AlternateUniverse":
       return "AU";
     default:
@@ -36,13 +37,18 @@ export default function RankingEntryCard({
   isBookmarked = false,
   onToggleBookmark,
 }) {
+  const { t } = useTranslation();
   const id = book.id ?? book.Id;
-  const title = book.title ?? book.Title ?? "Untitled";
-  const authorName = book.authorName ?? book.AuthorName ?? "Unknown";
-  const description = book.description ?? book.Description ?? "No description yet.";
+  const title = book.title ?? book.Title ?? t("common.books.untitled");
+  const authorName = book.authorName ?? book.AuthorName ?? t("common.books.unknownAuthor");
+  const description = book.description ?? book.Description ?? t("common.books.noDescription");
   const status = book.status ?? book.Status ?? "";
-  const verseType = book.verseType ?? book.VerseType ?? "Verse";
-  const originType = formatOrigin(book.originType ?? book.OriginType ?? "");
+  const verseType = book.verseType ?? book.VerseType ?? t("browse.card.verseFallback");
+  const rawOriginType = formatOrigin(book.originType ?? book.OriginType ?? "");
+  const originType =
+    rawOriginType === "PlatformOriginal"
+      ? t("ranking.entry.inkverseOriginal")
+      : rawOriginType;
   const rating = Number(
     book.averageRating ?? book.rating ?? book.AverageRating ?? book.Rating ?? 0,
   ).toFixed(2);
@@ -60,7 +66,9 @@ export default function RankingEntryCard({
       }`}
     >
       <div className="iv-ranking-entry__rankRail">
-        <span className="iv-ranking-entry__rankLabel">{featured ? "Spotlight" : "Rank"}</span>
+        <span className="iv-ranking-entry__rankLabel">
+          {featured ? t("ranking.entry.spotlight") : t("ranking.entry.rank")}
+        </span>
         <span className="iv-ranking-entry__rankNumber">#{rank}</span>
       </div>
 
@@ -85,7 +93,10 @@ export default function RankingEntryCard({
             className="iv-ranking-entry__bookmark"
             type="button"
             onClick={() => onToggleBookmark?.(book)}
-            title={isBookmarked ? "Remove from bookmarks" : "Add to bookmarks"}
+            title={isBookmarked ? t("browse.card.bookmarkRemove") : t("browse.card.bookmarkAdd")}
+            aria-label={
+              isBookmarked ? t("browse.card.bookmarkRemove") : t("browse.card.bookmarkAdd")
+            }
           >
             <i className={`bi ${isBookmarked ? "bi-bookmark-fill" : "bi-bookmark"}`} />
           </button>
@@ -96,7 +107,7 @@ export default function RankingEntryCard({
         </Link>
 
         <div className="iv-ranking-entry__author">
-          by <span>{authorName}</span>
+          {t("browse.card.by")} <span>{authorName}</span>
           {originType ? <em className="iv-ranking-entry__origin"> · {originType}</em> : null}
         </div>
 
@@ -106,21 +117,23 @@ export default function RankingEntryCard({
 
         <div className="iv-ranking-entry__footer">
           <div className="iv-ranking-entry__metric">
-            <span className="iv-ranking-entry__metricLabel">{metric?.label ?? "Leader signal"}</span>
+            <span className="iv-ranking-entry__metricLabel">
+              {metric?.label ?? t("ranking.entry.leaderSignal")}
+            </span>
             <strong className="iv-ranking-entry__metricValue">
-              {metric?.value ?? `${rating} rating`}
+              {metric?.value ?? t("ranking.entry.rating", { rating })}
             </strong>
           </div>
 
           <div className="iv-ranking-entry__stats">
             <span className="iv-ranking-entry__statHighlight">★ {rating}</span>
-            <span>{reviewsCount} reviews</span>
-            <span>{chaptersCount} chapters</span>
-            <span>{totalViews} views</span>
+            <span>{t("browse.card.reviews", { count: reviewsCount })}</span>
+            <span>{t("browse.card.chapters", { count: chaptersCount })}</span>
+            <span>{t("ranking.page.views", { count: totalViews })}</span>
           </div>
 
           <Link to={bookUrl} className="iv-ranking-entry__cta">
-            Open story
+            {t("common.actions.openStory")}
           </Link>
         </div>
       </div>

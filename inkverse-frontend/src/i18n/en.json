@@ -1,0 +1,1583 @@
+{
+  "common": {
+    "appName": "InkVerse",
+    "brandKicker": "Read. Write. Wander.",
+    "unknown": "Unknown",
+    "notAvailable": "Not available",
+    "ellipsis": "...",
+    "actions": {
+      "retry": "Retry",
+      "cancel": "Cancel",
+      "clear": "Clear",
+      "reset": "Reset",
+      "saveChanges": "Save changes",
+      "closeEditor": "Close editor",
+      "editProfile": "Edit profile",
+      "openLibrary": "Open library",
+      "browseAll": "Browse all",
+      "browseShelf": "Browse shelf",
+      "openBook": "Open book",
+      "openStory": "Open story",
+      "removeFromLibrary": "Remove {{title}} from library"
+    },
+    "books": {
+      "untitled": "Untitled book",
+      "unknownAuthor": "Unknown",
+      "noDescription": "No description yet.",
+      "freshArrival": "Fresh arrival",
+      "curatedCollection": "Explore this curated collection."
+    },
+    "languages": {
+      "en": "English",
+      "zh": "Chinese",
+      "hi": "Hindi",
+      "es": "Spanish",
+      "fr": "French",
+      "ar": "Arabic",
+      "bn": "Bengali",
+      "pt": "Portuguese",
+      "ru": "Russian",
+      "ur": "Urdu",
+      "id": "Indonesian",
+      "de": "German",
+      "ja": "Japanese",
+      "tr": "Turkish",
+      "ko": "Korean",
+      "vi": "Vietnamese",
+      "it": "Italian",
+      "fa": "Persian",
+      "pl": "Polish",
+      "nl": "Dutch",
+      "th": "Thai",
+      "ms": "Malay",
+      "ta": "Tamil",
+      "te": "Telugu"
+    },
+    "theme": {
+      "light": "Light mode",
+      "dark": "Dark mode",
+      "switchToLight": "Light mode",
+      "switchToDark": "Dark mode"
+    }
+  },
+  "nav": {
+    "links": {
+      "browse": "Browse",
+      "ranking": "Ranking",
+      "authorStudio": "Author Studio",
+      "trends": "Trends",
+      "admin": "Admin"
+    },
+    "actions": {
+      "library": "Library",
+      "enterInkVerse": "Enter InkVerse",
+      "enter": "Enter",
+      "menu": "Menu"
+    },
+    "profile": {
+      "signedIn": "Signed in",
+      "profile": "Profile",
+      "settings": "Settings",
+      "adminDashboard": "Admin dashboard",
+      "logout": "Log out"
+    },
+    "language": {
+      "label": "Language",
+      "ariaLabel": "Change language"
+    },
+    "mobile": {
+      "navigation": "Navigation",
+      "title": "Pick your next corner of InkVerse",
+      "myLibrary": "My library",
+      "profileSettings": "Profile & settings",
+      "closeMenu": "Close navigation menu",
+      "openMenu": "Open navigation menu"
+    }
+  },
+  "footer": {
+    "summary": "A reading multiverse for original stories, wild fanfiction, and the people who love getting lost in both.",
+    "social": {
+      "email": "Email InkVerse",
+      "contact": "Contact page",
+      "about": "About InkVerse"
+    },
+    "groups": {
+      "explore": "Explore",
+      "support": "Support"
+    },
+    "links": {
+      "home": "Home",
+      "browse": "Browse",
+      "rankings": "Rankings",
+      "trends": "Trends",
+      "about": "About",
+      "contact": "Contact",
+      "privacy": "Privacy",
+      "dmca": "DMCA"
+    },
+    "card": {
+      "kicker": "Now Live",
+      "title": "InkVerse demo is open.",
+      "text": "Browse live books, test ranking and moderation flows, and keep an eye out for the upcoming author experience.",
+      "browse": "Start browsing",
+      "email": "Email us",
+      "badge": "v1.0 Demo",
+      "note": "Author tools, profiles, and more are on the roadmap."
+    },
+    "bottom": {
+      "rights": "© {{year}} InkVerse. All rights reserved.",
+      "tagline": "Built for readers who stay one chapter too long."
+    }
+  },
+  "auth": {
+    "modal": {
+      "signIn": "Sign in",
+      "createAccount": "Create account",
+      "close": "Close auth dialog",
+      "loginLabel": "Sign in to InkVerse",
+      "registerLabel": "Create an InkVerse account"
+    },
+    "googleBridge": "or continue with",
+    "legal": {
+      "signIn": "By continuing, you agree to InkVerse's <0>Terms of Service</0> and <1>Privacy Policy</1>.",
+      "register": "By creating an account, you agree to InkVerse's <0>Terms of Service</0> and <1>Privacy Policy</1>."
+    },
+    "login": {
+      "aside": {
+        "eyebrow": "Reader login",
+        "title": "Step back into your shelf.",
+        "text": "Sign in to keep reading, save what matters, and rejoin the stories already waiting for you.",
+        "features": [
+          {
+            "title": "Save your shelf",
+            "text": "Keep your bookmarks, library picks, and reader profile synced in one place."
+          },
+          {
+            "title": "Join the live discourse",
+            "text": "Leave reviews, react to stories, and follow the books climbing fast."
+          },
+          {
+            "title": "Carry one reader identity",
+            "text": "Move across original stories, AU worlds, and fanfic lanes without losing your place."
+          }
+        ]
+      },
+      "form": {
+        "eyebrow": "Welcome back",
+        "title": "Enter InkVerse",
+        "text": "Use your reader details to pick up right where you left off.",
+        "loginInput": "Email or username",
+        "loginPlaceholder": "readername or name@example.com",
+        "password": "Password",
+        "passwordPlaceholder": "Enter your password",
+        "show": "Show",
+        "hide": "Hide",
+        "submit": "Sign in",
+        "submitting": "Signing in..."
+      },
+      "errors": {
+        "invalidCredentials": "Invalid username, email, or password. Please try again.",
+        "validLoginInput": "Enter a valid username or email address.",
+        "passwordRequired": "Enter your password to continue.",
+        "generic400": "Login failed. Please check your information.",
+        "reviewFields": "Please review the fields and try again.",
+        "server": "Server error. Please try again in a moment.",
+        "generic": "Login failed. Please try again.",
+        "network": "Network error. Check your connection and try again.",
+        "unexpected": "An unexpected error occurred. Please try again."
+      }
+    },
+    "register": {
+      "aside": {
+        "eyebrow": "Account setup",
+        "title": "Build a reader pass that travels with you.",
+        "text": "We only need a few clean details to open your spot inside InkVerse."
+      },
+      "form": {
+        "eyebrow": "Create your pass",
+        "successEyebrow": "Account ready",
+        "title": "Create your InkVerse account",
+        "successTitle": "Your account is ready.",
+        "text": "Set up a reader identity for reviews, saved books, rankings, and your personal library.",
+        "successText": "Sign in with your new credentials and start shaping your shelf.",
+        "firstName": "First name",
+        "lastName": "Last name",
+        "username": "Username",
+        "email": "Email",
+        "password": "Password",
+        "confirmPassword": "Confirm password",
+        "firstNamePlaceholder": "Rakan",
+        "lastNamePlaceholder": "Odeh",
+        "usernamePlaceholder": "inkverse_reader",
+        "emailPlaceholder": "name@example.com",
+        "passwordPlaceholder": "Create a secure password",
+        "confirmPasswordPlaceholder": "Repeat your password",
+        "usernameHelper": "3 to 20 characters, starting with a letter. Letters, numbers, and underscores only.",
+        "passwordHelper": "Use 8+ characters with upper, lower, number, and symbol.",
+        "submit": "Create account",
+        "submitting": "Creating account...",
+        "successCardTitle": "Welcome to InkVerse.",
+        "successCardText": "Your reader account is live. You can sign in now with your new username and password, or continue with Google whenever you like.",
+        "signInNow": "Sign in now",
+        "continueBrowsing": "Continue browsing",
+        "show": "Show",
+        "hide": "Hide"
+      },
+      "checklist": {
+        "progressLabel": "Setup progress",
+        "progressCopy": "{{completed}} of {{total}} checks complete",
+        "sections": {
+          "identity": "Identity",
+          "credentials": "Credentials",
+          "confirmation": "Confirmation"
+        },
+        "rules": {
+          "firstNameLength": "First name has at least 2 characters",
+          "lastNameLength": "Last name has at least 2 characters",
+          "usernameLength": "Username is 3 to 20 characters",
+          "usernameLetter": "Username starts with a letter",
+          "usernameCharset": "Username uses letters, numbers, or underscores",
+          "emailValid": "Email looks valid",
+          "passwordLength": "At least 8 characters",
+          "passwordUpper": "One uppercase letter",
+          "passwordLower": "One lowercase letter",
+          "passwordNumber": "One number",
+          "passwordSpecial": "One special character",
+          "passwordsMatch": "Passwords match"
+        }
+      },
+      "errors": {
+        "usernameTaken": "That username is already taken. Try another one.",
+        "emailTaken": "That email is already registered. Try signing in instead.",
+        "bothTaken": "Both the username and email are already in use.",
+        "generic400": "Registration failed. Please check your information.",
+        "reviewFields": "Please review the form details and make sure every requirement is met.",
+        "server": "Server error. Please try again later.",
+        "generic": "Registration failed. Please try again.",
+        "network": "Network error. Check your connection and try again.",
+        "unexpected": "An unexpected error occurred. Please try again."
+      }
+    }
+  },
+  "home": {
+    "hero": {
+      "eyebrow": "InkVerse Home",
+      "title": "Fall into the kinds of stories people actually obsess over.",
+      "subtitle": "Discover new originals, wild fanfiction, and the latest reader buzz in one curated landing space built for exploration.",
+      "primaryAction": "Start Reading",
+      "secondaryAction": "Start Writing",
+      "pills": [
+        "Original fantasy",
+        "Smart fanfiction",
+        "Reader-first reviews"
+      ],
+      "posterLabel": "Tonight's vibe",
+      "posterText": "Big feelings. Sharp worlds. One more chapter.",
+      "posterAlt": "InkVerse fantasy artwork"
+    },
+    "newBooks": {
+      "title": "New on InkVerse",
+      "subtitle": "Fresh shelves, new obsessions, and the latest worlds added to the platform.",
+      "cta": "Browse all",
+      "loading": "Loading new books…",
+      "empty": "No books yet.",
+      "error": "Failed to load new books."
+    },
+    "trends": {
+      "title": "Trending Concepts",
+      "subtitle": "Follow the moods, themes, and ideas that are pulling readers in right now.",
+      "cta": "See all trends",
+      "badge": "Trending concept",
+      "action": "Explore trend",
+      "loading": "Loading trends…",
+      "empty": "No trending items yet.",
+      "error": "Failed to load trends."
+    },
+    "tags": {
+      "title": "Tags",
+      "subtitle": "Discover the most popular themes and story worlds readers love.",
+      "cta": "Browse genres",
+      "badge": "Popular Tags",
+      "directoryKicker": "Tag Directory",
+      "directoryText": "Tap any tag to jump straight into matching books.",
+      "visualHint": "Explore dense shelves of themes, moods, and story hooks readers keep chasing.",
+      "loading": "Loading tags...",
+      "empty": "No tags yet.",
+      "error": "Failed to load tags.",
+      "errorSubtitle": "Please try again.",
+      "visualAlt": "InkVerse tags artwork"
+    },
+    "topBooks": {
+      "title": "Top Books",
+      "subtitle": "The most-read stories across Original, AU, and Fan-Fiction.",
+      "cta": "Explore more →",
+      "browseShelf": "Browse shelf",
+      "verseTypes": {
+        "Original": "Original",
+        "AU": "AU",
+        "Fanfic": "Fan-Fiction"
+      }
+    },
+    "recentReviews": {
+      "title": "Recent Reviews",
+      "subtitle": "What readers are saying right now.",
+      "loading": "Loading recent reviews…",
+      "empty": "No reviews yet.",
+      "error": "Failed to load recent reviews."
+    }
+  },
+  "library": {
+    "filters": {
+      "All": "All shelf",
+      "Reading": "Reading",
+      "Completed": "Finished",
+      "Planned": "Planning",
+      "Dropped": "Dropped",
+      "History": "History"
+    },
+    "statusOptions": {
+      "Reading": "Reading",
+      "Completed": "Finished",
+      "Planned": "Planning",
+      "Dropped": "Dropped"
+    },
+    "sortOptions": {
+      "recent": "Recently opened",
+      "title": "Title A-Z",
+      "status": "Shelf status"
+    },
+    "statusCopy": {
+      "Reading": "Still in motion, with your next reading session waiting right where you left it.",
+      "Completed": "Finished, kept close, and ready for a revisit whenever the mood comes back.",
+      "Planned": "Queued on your shelf for the next time you want something new without searching again.",
+      "Dropped": "Set aside for now, but still close enough to return if the story pulls you back in."
+    },
+    "page": {
+      "loading": "Loading your library...",
+      "errorSubtitle": "Please try loading your shelf again.",
+      "searchTitle": "Search title",
+      "searchPlaceholder": "Search your shelf...",
+      "sortBy": "Sort by",
+      "historyEmptyTitle": "No reading trail yet.",
+      "filterEmptyTitle": "No books in {{filter}} yet.",
+      "searchEmptySubtitle": "Try a different title search or switch to another shelf lane.",
+      "emptySubtitle": "Move books between lanes, or come back after adding more stories."
+    }
+  },
+  "admin": {
+    "nav": {
+      "dashboard": "Dashboard",
+      "books": "Books",
+      "characters": "Characters",
+      "visualAssets": "Visual assets",
+      "trends": "Trends",
+      "tags": "Tags",
+      "genres": "Genres",
+      "users": "Users"
+    },
+    "routes": {
+      "dashboard": {
+        "title": "Dashboard",
+        "subtitle": "Catalog health, moderation, and publishing at a glance."
+      },
+      "books": {
+        "title": "Books",
+        "subtitle": "Manage titles, taxonomy, and chapter entry points."
+      },
+      "characters": {
+        "title": "Character Bank",
+        "subtitle": "Build reusable fandom character templates and connect them to matching books."
+      },
+      "newBook": {
+        "title": "New Book",
+        "subtitle": "Create a new title and prepare it for publishing."
+      },
+      "newChapter": {
+        "title": "New Chapter",
+        "subtitle": "Draft a chapter and place it in the right arc."
+      },
+      "editChapter": {
+        "title": "Edit Chapter",
+        "subtitle": "Update chapter content, numbering, and arc placement."
+      },
+      "chapters": {
+        "title": "Chapters",
+        "subtitle": "Organize arcs, import batches, and keep chapter order clean."
+      },
+      "editBook": {
+        "title": "Edit Book",
+        "subtitle": "Update metadata, cover art, and discovery settings."
+      },
+      "trends": {
+        "title": "Trends",
+        "subtitle": "Curate spotlight collections and connected books."
+      },
+      "tags": {
+        "title": "Tags",
+        "subtitle": "Keep reader-facing tags clean, searchable, and active."
+      },
+      "genres": {
+        "title": "Genres",
+        "subtitle": "Manage the shelf structure readers browse by."
+      },
+      "users": {
+        "title": "Users",
+        "subtitle": "Handle moderation and account restrictions."
+      },
+      "visualAssets": {
+        "title": "Visual assets",
+        "subtitle": "Control fixed page artwork slots and crop them inside their frames."
+      },
+      "fallback": {
+        "title": "Admin",
+        "subtitle": "Manage the platform workspace."
+      }
+    },
+    "layout": {
+      "pulseEyebrow": "Admin pulse",
+      "pulseTitle": "InkVerse control",
+      "sidebarKicker": "Admin workspace",
+      "sidebarTitle": "InkVerse",
+      "sidebarCopy": "Books, moderation, taxonomy, and trend curation in one place.",
+      "backHome": "Back to home",
+      "pageKicker": "Admin",
+      "metrics": {
+        "revenue": {
+          "label": "Revenue",
+          "meta": "Preview"
+        },
+        "users": {
+          "label": "Users",
+          "meta": "Accounts"
+        },
+        "chapters": {
+          "label": "Chapters",
+          "meta": "Live now"
+        },
+        "trends": {
+          "label": "Trends",
+          "meta": "Active rows"
+        }
+      }
+    }
+  },
+  "author": {
+    "routes": {
+      "dashboard": {
+        "label": "Dashboard",
+        "description": "Your overview"
+      },
+      "workspace": {
+        "label": "Workspace",
+        "description": "Books and chapters"
+      },
+      "income": {
+        "label": "Income",
+        "description": "Performance and earnings"
+      },
+      "storyStudio": {
+        "label": "Story Studio",
+        "description": "AI planning and book notebook"
+      },
+      "contract": {
+        "label": "Contract",
+        "description": "Program status"
+      }
+    },
+    "studio": {
+      "common": {
+        "profile": "Profile",
+        "setting": "Setting",
+        "language": "Language",
+        "signOut": "Sign out",
+        "assistance": "Assistance",
+        "backHome": "Back to home",
+        "lightTheme": "Light Theme",
+        "darkTheme": "Dark Theme",
+        "authorStudio": "Author Studio",
+        "sidebarTagline": "Write, organize, and grow your shelf.",
+        "back": "Back",
+        "cancel": "Cancel",
+        "close": "Close",
+        "confirm": "Confirm",
+        "save": "Save",
+        "saving": "Saving...",
+        "creating": "Creating...",
+        "loading": "Loading...",
+        "delete": "Delete",
+        "deleting": "Deleting...",
+        "edit": "Edit",
+        "settings": "Settings",
+        "unknownAuthor": "Unknown author",
+        "untitled": "Untitled",
+        "untitledDraft": "Untitled Draft",
+        "untitledArc": "Untitled Arc",
+        "notAvailable": "N/A",
+        "noDate": "No date",
+        "noSynopsis": "No synopsis yet.",
+        "noSynopsisDetail": "No synopsis yet. Add one from the story detail page.",
+        "bookCover": "Book cover",
+        "cover": "Cover",
+        "uploadImage": "Upload image",
+        "adjustCover": "Adjust cover",
+        "zoom": "Zoom",
+        "genre": "Genre",
+        "bookName": "Book name",
+        "synopsis": "Synopsis",
+        "tagsDefault": "Tags (default website tags)",
+        "noTrend": "No Trend",
+        "trendOptional": "Link to Trend (optional)",
+        "bookType": "Book Type",
+        "leadingGender": "Leading Gender",
+        "languagePrefix": "Language",
+        "male": "Male",
+        "female": "Female",
+        "mixed": "Mixed",
+        "unknown": "Unknown",
+        "other": "Other",
+        "english": "English",
+        "arabic": "Arabic",
+        "spanish": "Spanish",
+        "french": "French",
+        "turkish": "Turkish",
+        "original": "Original",
+        "fanfic": "Fanfic",
+        "au": "AU",
+        "ongoing": "Ongoing",
+        "published": "Published",
+        "draft": "Draft",
+        "trash": "Trash",
+        "chapters": "Chapters",
+        "words": "Words",
+        "views": "Views",
+        "rating": "Rating",
+        "collections": "Collections",
+        "stories": "Stories"
+      },
+      "onboarding": {
+        "eyebrow": "InkVerse Creator Program",
+        "title": "Open a calmer writing desk for your stories.",
+        "text": "Build your author space, then step into it in one clean move.",
+        "becomeAuthor": "Become an author",
+        "signInBecomeAuthor": "Sign in to become an author",
+        "previewFlow": "Preview the flow",
+        "visualAlt": "InkVerse author studio visual",
+        "workspaceLabel": "Workspace",
+        "workspaceText": "Drafts, arcs, covers, and books stay in one calm lane.",
+        "readerPulseLabel": "Reader pulse",
+        "readerPulseText": "Watch views, ratings, and return signals without noisy clutter.",
+        "publishingLabel": "Publishing",
+        "publishingText": "Move chapters from draft to release with a cleaner rhythm.",
+        "identityLabel": "Shelf identity",
+        "identityText": "Build a studio that feels made for your worlds, not for admin work."
+      },
+      "terms": {
+        "eyebrow": "Creator Agreement",
+        "title": "Activate your Author Studio access",
+        "text": "This temporary agreement confirms ownership, publishing rights, and platform standards before author tools are opened on your account.",
+        "chips": {
+          "step": "1 quick step",
+          "setup": "No extra setup",
+          "instant": "Studio opens instantly"
+        },
+        "ownershipTitle": "Content ownership",
+        "ownershipText": "You confirm that you own or can publish the stories you upload.",
+        "standardsTitle": "Community standards",
+        "standardsText": "You agree to platform rules, moderation, and quality expectations.",
+        "monetizationTitle": "Future monetization",
+        "monetizationText": "You accept that payout and program terms can be expanded later.",
+        "agree": "I agree to the current author terms and contract placeholder.",
+        "submit": "Enter Author Studio",
+        "submitting": "Please wait...",
+        "upgradeError": "Could not upgrade your account right now."
+      },
+      "dashboard": {
+        "loading": "Loading your author dashboard...",
+        "unavailable": "Dashboard unavailable",
+        "currentStory": "Current story",
+        "updated": "Updated {{date}}",
+        "openStory": "Open story",
+        "newChapter": "New chapter",
+        "viewBook": "View book",
+        "storyShelf": "Story shelf",
+        "yourBooks": "Your books",
+        "workspace": "Workspace",
+        "focus": "Focus",
+        "storyReadiness": "Story readiness",
+        "edit": "Edit",
+        "ready": "Ready",
+        "missing": "Missing",
+        "coverReady": "Your story has a cover.",
+        "coverMissing": "Add a cover so the shelf feels complete.",
+        "synopsisReady": "Synopsis is filled.",
+        "synopsisMissing": "Add a short promise for readers.",
+        "chaptersReady": "Chapters are connected to this story.",
+        "chaptersMissing": "Create the first chapter when you are ready.",
+        "lastUpdate": "Last update",
+        "hasSavedDate": "{{title}} has a saved update date.",
+        "noUpdateDate": "No update date was returned.",
+        "noStoriesTitle": "No stories yet",
+        "noStoriesSubtitle": "Create a story in Workspace and this dashboard will become your author home.",
+        "openWorkspace": "Open workspace",
+        "performanceTitle": "Performance history",
+        "performanceText": "No daily reader history is recorded yet. Current totals are shown above from your book records.",
+        "performance": "Performance",
+        "stats": {
+          "storiesNote": "In your author shelf",
+          "wordsNote": "Across all stories",
+          "viewsNote": "Returned by the API",
+          "ratingNote": "Average when available"
+        },
+        "units": {
+          "chapters": "{{value}} chapters",
+          "words": "{{value}} words",
+          "views": "{{value}} views"
+        },
+        "errors": {
+          "load": "Failed to load author dashboard."
+        }
+      },
+      "workspace": {
+        "loading": "Loading your workspace...",
+        "unavailable": "Workspace Unavailable",
+        "eyebrow": "Workspace",
+        "title": "Your story shelf",
+        "subtitle": "Search, open, and manage the books you are actively building.",
+        "createNewBook": "Create new book",
+        "searchPlaceholder": "Search by title or synopsis",
+        "count": "{{filtered}} of {{total}} {{label}}",
+        "storySingular": "story",
+        "storyPlural": "stories",
+        "statsLabel": "Workspace totals",
+        "storyShelf": "Story shelf",
+        "booksInProgress": "Books in progress",
+        "newBook": "New book",
+        "noBooksTitle": "No books found",
+        "noBooksSearch": "Try another search.",
+        "noBooksEmpty": "Create your first book to get started.",
+        "createBook": "Create book",
+        "noSynopsisRow": "No synopsis yet. Open this story to refine its details.",
+        "metricsLabel": "{{title}} metrics",
+        "openDesk": "Open desk",
+        "moreActions": "More actions for {{title}}",
+        "deleteBook": "Delete book",
+        "hideBook": "Hide book",
+        "deleteConfirm": "Delete this book? This action cannot be undone.",
+        "createTitle": "Create a new book",
+        "createSubtitle": "Set the main story details first, then shape the cover and discovery signals.",
+        "createBookSubmit": "Create Book",
+        "coverPreview": "Cover preview",
+        "coverEditor": "Cover editor",
+        "errors": {
+          "load": "Could not load workspace data.",
+          "image": "Could not load this image file.",
+          "title": "Book name is required.",
+          "genre": "Please select a genre.",
+          "language": "Please choose book language.",
+          "create": "Failed to create book.",
+          "delete": "Failed to delete book."
+        }
+      },
+      "book": {
+        "loading": "Loading book workspace...",
+        "unavailable": "Book Unavailable",
+        "storyDesk": "Story desk",
+        "bookDetails": "Book details",
+        "backToWorkspace": "Back to workspace",
+        "subtitle": "Manage the book profile, then move between drafts, published chapters, and trash.",
+        "editBook": "Edit book",
+        "createChapter": "Create Chapter",
+        "tabs": {
+          "details": "Details",
+          "chapters": "Chapters",
+          "bible": "Book Bible",
+          "world": "World",
+          "characters": "Characters",
+          "plot": "Plot & Timeline",
+          "notebook": "Notebook"
+        },
+        "byAuthor": "By",
+        "type": "Type",
+        "state": "State",
+        "contract": "Contract",
+        "approved": "Approved",
+        "notEligible": "Not eligible",
+        "contractReadiness": "Contract readiness",
+        "contractSubtitle": "Only approved contracted books can mark chapters as paid and earn royalties.",
+        "currentStatus": "Current status",
+        "required": "Required {{value}}",
+        "contractApprovedNote": "This book is approved for paid chapters.",
+        "contractReviewNote": "This book meets the contract standards and is waiting for admin review.",
+        "attestRights": "Attest AU rights",
+        "chapterBoard": "Chapter board",
+        "chapterBoardTitle": "Keep chapter progress easy to scan",
+        "chapterBoardDescription": "Switch between drafts, published chapters, and trash without leaving the book.",
+        "noTabChapters": "No {{tab}} chapters",
+        "chaptersAppear": "Chapters will appear here once available.",
+        "chapterTitle": "Chapter Title",
+        "createdTime": "Created Time",
+        "newVolume": "+ New Volume",
+        "noVolume": "No Volume",
+        "volumeNumber": "Volume #{{id}}",
+        "localDraft": "Local Draft",
+        "chapterNumber": "#{{number}}",
+        "paidCoins": "Paid 5 coins",
+        "makeFree": "Make free",
+        "makePaid": "Make paid",
+        "preContract": "Pre-contract",
+        "contractRequired": "Contract required",
+        "locked": "Locked",
+        "recover": "Recover",
+        "adjustSequence": "Adjust Sequence",
+        "newVolumeTitle": "New Volume",
+        "newVolumeSubtitle": "Create a new volume (arc) for this book.",
+        "editVolumeTitle": "Edit Volume",
+        "editVolumeSubtitle": "Update the volume name.",
+        "adjustVolumeTitle": "Adjust Volume Sequence",
+        "adjustVolumeSubtitle": "Drag and drop to reorder volumes.",
+        "volumeName": "Volume name",
+        "saveOrder": "Save Order",
+        "updateDetails": "Update all book details.",
+        "cancelEdit": "Cancel edit",
+        "errors": {
+          "contract": "Could not load contract status.",
+          "load": "Could not load book details.",
+          "image": "Could not load this image file.",
+          "locked": "Published chapters are locked after contract approval.",
+          "deleteChapter": "Failed to delete chapter.",
+          "contractNeeded": "This book needs an approved contract before chapters can be paid.",
+          "postContractOnly": "Only chapters created after contract approval can be paid.",
+          "paidNeedsContract": "Approved book contract required.",
+          "monetization": "Failed to update chapter monetization.",
+          "attestRights": "Failed to attest AU rights.",
+          "volumeName": "Volume name is required.",
+          "createVolume": "Failed to create volume.",
+          "deleteArcPartial": "Deleted arc, but {{count}} chapter(s) could not be moved to trash.",
+          "update": "Failed to update book details."
+        }
+      },
+      "chapterEditor": {
+        "loading": "Loading chapter editor...",
+        "unavailable": "Editor Unavailable",
+        "backToBook": "Back to book",
+        "eyebrow": "Chapter editor",
+        "newChapterTitle": "{{book}} / New Chapter",
+        "createChapter": "Create chapter",
+        "subtitle": "Draft calmly, save locally, and preview the reading flow before publishing.",
+        "saveDraft": "Save draft",
+        "publish": "Publish",
+        "publishing": "Publishing...",
+        "draftSaved": "Draft saved.",
+        "draftSaveFailed": "Failed to save draft on this browser.",
+        "titleRequired": "Chapter title is required.",
+        "contentRequired": "Chapter content is required.",
+        "publishFailed": "Failed to publish chapter.",
+        "volumeArc": "Volume / Arc",
+        "noArc": "No Arc",
+        "monetization": "Monetization",
+        "paidChapter": "Paid chapter · 5 coins",
+        "needsContract": "Approved contract required for paid chapters.",
+        "needsAgreement": "Accept monetization terms before paid chapters.",
+        "wordCount": "{{count}} words",
+        "previewChapter": "Preview chapter",
+        "editorToolbar": "Editor toolbar",
+        "bold": "Bold",
+        "italic": "Italic",
+        "authorThought": "Author thought",
+        "undo": "Undo",
+        "redo": "Redo",
+        "teaserPlaceholder": "Optional locked-chapter teaser. If empty, InkVerse will use the opening excerpt.",
+        "titlePlaceholder": "Title Here",
+        "contentPlaceholder": "Start writing your chapter content...",
+        "addThought": "+ Add Author's Thought",
+        "thoughtTitle": "Add Author's Thought",
+        "closeThought": "Close thought dialog",
+        "thoughtPlaceholder": "Leave author's thought here...",
+        "wishTemplates": "Wish templates",
+        "recommendation": "Add recommendation",
+        "addBookRecommendation": "Add Book Recommendation",
+        "searchBooks": "Search for all books",
+        "chooseFromWorks": "Or choose from my works",
+        "submit": "Submit",
+        "currentBook": "Current Book",
+        "me": "Me",
+        "recommendationText": "Book recommendation: {{title}}",
+        "untitledChapter": "Untitled Chapter",
+        "previewEmpty": "Chapter content preview will appear here.",
+        "wish": {
+          "giftTitle": "Wish to gift",
+          "giftText": "Your gift is the motivation for my creation. Give me more motivation!",
+          "voteTitle": "Wish to vote",
+          "voteText": "Creation is hard, cheer me up!",
+          "tagTitle": "Wish to tag",
+          "tagText": "I tagged this book, come and support me with a thumbs up!",
+          "likeTitle": "Wish to like",
+          "likeText": "Like it ? Add to library!",
+          "commentTitle": "Wish to comment",
+          "commentText": "Have some idea about my story? Comment it and let me know."
+        }
+      },
+      "income": {
+        "loading": "Loading income ledger...",
+        "unavailable": "Income Unavailable",
+        "eyebrow": "Income",
+        "title": "Your royalties, holds, and payout requests.",
+        "subtitle": "Paid chapter earnings enter a 14-day hold, then become available for withdrawal or future creator services.",
+        "available": "Available",
+        "withdrawable": "Withdrawable now",
+        "coinsAvailable": "{{count}} coins available.",
+        "pending": "Pending",
+        "hold": "In 14-day hold",
+        "pendingNote": "Pending royalties mature automatically when viewed.",
+        "lifetime": "Lifetime",
+        "allRoyalties": "All author royalties",
+        "beforeDeductions": "Before payout deductions.",
+        "withdrawn": "Withdrawn",
+        "requestedPayouts": "Requested payouts",
+        "payoutCount": "{{count}} payout request{{suffix}}.",
+        "payout": "Payout",
+        "requestAnytime": "Request payout anytime",
+        "payoutDescription": "The provider is still an adapter, so this records the request for later fulfillment.",
+        "amountUsd": "Amount in USD",
+        "requesting": "Requesting...",
+        "requestPayout": "Request payout",
+        "recentPayouts": "Recent payout requests",
+        "payoutHistory": "Payout history",
+        "payoutHistoryDescription": "Requests are held here until a provider adapter is connected.",
+        "noPayoutTitle": "No payout requests",
+        "noPayoutSubtitle": "Available earnings can be requested anytime.",
+        "royaltyLedger": "Royalty Ledger",
+        "bookRevenue": "Book revenue entries",
+        "bookRevenueDescription": "Paid chapter unlocks add author royalties here.",
+        "entryBook": "Book #{{bookId}}",
+        "entryChapter": " / Chapter #{{chapterId}}",
+        "entryAvailable": "available {{date}}",
+        "noRoyaltiesTitle": "No royalties yet",
+        "noRoyaltiesSubtitle": "Paid chapter unlocks will appear here.",
+        "errors": {
+          "load": "Failed to load income data.",
+          "amount": "Enter a payout amount.",
+          "request": "Failed to request payout."
+        }
+      },
+      "contract": {
+        "loading": "Loading agreement...",
+        "unavailable": "Contract unavailable",
+        "loadError": "Could not load monetization agreement.",
+        "acceptError": "Could not accept agreement.",
+        "eyebrow": "Agreement",
+        "title": "Activate monetization before earning royalties.",
+        "subtitle": "This v1 agreement records the economic rules the app now enforces: paid chapters, royalty holds, AI service rights, and payout requests.",
+        "status": "Status",
+        "currentState": "Current monetization state",
+        "stateDescription": "Authors must accept this before serious paid rollout.",
+        "accepted": "Accepted",
+        "notAccepted": "Not accepted yet",
+        "acceptedAt": "Accepted {{date}}.",
+        "accepting": "Accepting...",
+        "acceptAgreement": "Accept monetization agreement",
+        "versionFallback": "monetization-v1",
+        "agreementTitle": "InkVerse Monetization Agreement",
+        "legalReview": "Production legal text still needs lawyer review before launch.",
+        "royaltySplit": "Royalty split",
+        "royaltySplitText": "Authors earn 75% of net paid chapter revenue.",
+        "holdPeriod": "Hold period",
+        "holdPeriodText": "Royalties stay pending for 14 days before withdrawal.",
+        "readerAi": "Reader AI services",
+        "readerAiText": "Translation and TTS are platform services on admin-approved books."
+      },
+      "storyStudio": {
+        "loading": "Loading Story Studio...",
+        "unavailable": "Story Studio unavailable",
+        "loadError": "Could not load Story Studio.",
+        "notebookError": "Could not load notebook.",
+        "quoteError": "Could not quote this tool.",
+        "runError": "Could not run Story Studio tool.",
+        "proofreadError": "Could not create proofreading draft.",
+        "chooseChapter": "Choose one chapter before running proofreading.",
+        "eyebrow": "AI Story Studio",
+        "title": "Plan plots, analyze characters, and keep the book brain private.",
+        "subtitle": "Outputs save into a private Book Notebook. Nothing edits your chapters directly.",
+        "setup": "Setup",
+        "chooseContext": "Choose book and context",
+        "contextDescription": "Select only the chapters the tool should use so costs stay controlled.",
+        "book": "Book",
+        "noChapters": "No chapters yet.",
+        "promptLabel": "Prompt / focus",
+        "promptPlaceholder": "What should the AI focus on?",
+        "tools": "Tools",
+        "quoting": "Quoting...",
+        "getQuote": "Get quote",
+        "running": "Running...",
+        "runTool": "Run tool",
+        "proofreading": "Proofreading...",
+        "proofreadSelected": "Proofread selected",
+        "quoteSummary": "{{credits}} credits for {{words}} words",
+        "proofreadingCreated": "Proofreading draft #{{id}} created for chapter #{{chapterId}}.",
+        "bookNotebook": "Book Notebook",
+        "notebook": "Notebook",
+        "notebookDescription": "Private AI notes and manual notes for this book.",
+        "noNotebookTitle": "No notebook entries yet",
+        "noNotebookSubtitle": "Run a Story Studio tool to save the first note.",
+        "toolsData": {
+          "plotPlanner": {
+            "label": "Plot planner",
+            "text": "Structure promises, turns, crisis, and payoff."
+          },
+          "nextPlot": {
+            "label": "Next plot suggestions",
+            "text": "Find the next complication, reveal, or character choice."
+          },
+          "characterAnalysis": {
+            "label": "Character analysis",
+            "text": "Pressure-test motives, fear, contradiction, and arc."
+          },
+          "continuityCheck": {
+            "label": "Continuity checker",
+            "text": "Catch timeline, power-rule, and unresolved setup issues."
+          },
+          "worldbuildingNotes": {
+            "label": "Worldbuilding notes",
+            "text": "Organize rules, factions, locations, and contradictions."
+          }
+        }
+      },
+      "bookBible": {
+        "loading": "Loading Book Bible...",
+        "loadError": "Could not load Book Bible.",
+        "saveProfileError": "Could not save Book Bible profile.",
+        "saveWorldError": "Could not save world entry.",
+        "saveCharacterError": "Could not save character.",
+        "saveRelationshipError": "Could not save relationship.",
+        "savePlotError": "Could not save plot thread.",
+        "saveTimelineError": "Could not save timeline event.",
+        "deleteError": "Could not delete this item.",
+        "saveNoteError": "Could not save notebook entry.",
+        "quoteError": "Could not quote Book Bible Sync.",
+        "suggestionError": "Could not create Book Bible suggestions.",
+        "decisionError": "Could not update suggestion.",
+        "setup": "Setup",
+        "title": "Build the private canon map",
+        "description": "Keep the story brain structured before it turns into sticky notes everywhere.",
+        "setupComplete": "setup complete",
+        "done": "Done",
+        "open": "Open",
+        "corePremise": "Core premise",
+        "mainWorldRules": "Main world rules",
+        "firstCharacters": "First characters",
+        "firstPlotThreads": "First plot threads",
+        "earlyTimeline": "Early timeline",
+        "scanNote": "Chapters changed since the last scan. Run Book Bible Sync when you want AI suggestions.",
+        "core": "Core",
+        "premiseTitle": "Premise and promise",
+        "premiseDescription": "This is the high-level direction the rest of the bible can orbit around.",
+        "themes": "Themes",
+        "tone": "Tone",
+        "readerPromise": "Reader promise",
+        "authorNotes": "Private author notes",
+        "saveProfile": "Save profile",
+        "ai": "AI",
+        "sync": "Book Bible Sync",
+        "syncDescription": "Select context, get a quote, then save suggestions into the pending queue.",
+        "chapterContext": "Chapter context",
+        "focusPlaceholder": "Focus for this scan",
+        "selectedSummary": "{{count}} chapter(s), {{words}} known words selected",
+        "getQuote": "Get quote",
+        "quoting": "Quoting...",
+        "runSync": "Run sync",
+        "running": "Running...",
+        "quoteSummary": "{{credits}} credits for {{words}} words.",
+        "pendingSuggestions": "Pending suggestions",
+        "noPendingSuggestions": "No pending suggestions yet.",
+        "accept": "Accept",
+        "reject": "Reject",
+        "worldEntries": "World entries",
+        "worldDescription": "Locations, factions, rules, systems, cultures, history, and key objects.",
+        "location": "Location",
+        "faction": "Faction",
+        "ruleSystem": "Rule / system",
+        "culture": "Culture",
+        "history": "History",
+        "object": "Object",
+        "name": "Name",
+        "shortSummary": "Short summary",
+        "details": "Details, limits, costs, contradictions",
+        "tags": "Tags",
+        "updateEntry": "Update entry",
+        "addEntry": "Add entry",
+        "noWorldTitle": "No world entries yet",
+        "noWorldSubtitle": "Add the first rule, place, faction, or system.",
+        "characterProfiles": "Character profiles",
+        "characterDescription": "Track motive, fear, goal, secrets, and arc movement.",
+        "role": "Role",
+        "aliases": "Aliases",
+        "status": "Status",
+        "motivation": "Motivation",
+        "goal": "Goal",
+        "fear": "Fear",
+        "secrets": "Secrets",
+        "appearance": "Appearance",
+        "arcNotes": "Arc notes",
+        "updateCharacter": "Update character",
+        "addCharacter": "Add character",
+        "noCharactersTitle": "No characters yet",
+        "noCharactersSubtitle": "Add the first character to start the relationship map.",
+        "relationships": "Relationships",
+        "relationshipMap": "Relationship map",
+        "relationshipDescription": "A lightweight map of pressure, loyalty, rivalry, and change.",
+        "sourceCharacter": "Source character",
+        "targetCharacter": "Target character",
+        "relationshipType": "Relationship type",
+        "tension": "Tension",
+        "notes": "Notes",
+        "relationship": "Relationship",
+        "updateRelationship": "Update relationship",
+        "addRelationship": "Add relationship",
+        "noRelationships": "No relationships yet.",
+        "plotThreads": "Plot threads",
+        "plotDescription": "Track promises, conflicts, setup, and payoff.",
+        "threadTitle": "Thread title",
+        "promise": "Promise",
+        "setupField": "Setup",
+        "conflict": "Conflict",
+        "payoff": "Payoff / resolution",
+        "updateThread": "Update thread",
+        "addThread": "Add thread",
+        "noPlotTitle": "No plot threads yet",
+        "noPlotSubtitle": "Add the first promise, mystery, conflict, or payoff.",
+        "timeline": "Timeline",
+        "canonTimeline": "Canon timeline",
+        "timelineDescription": "Connect events to chapters and keep sequence clear.",
+        "eventTitle": "Event title",
+        "noChapterLink": "No chapter link",
+        "dateLabel": "Date label",
+        "order": "Order",
+        "eventDescription": "Event description",
+        "updateEvent": "Update event",
+        "addEvent": "Add event",
+        "chapterMeta": "Chapter: {{title}}",
+        "noTimeline": "No timeline events yet.",
+        "privateNotes": "Private notes",
+        "privateNotesDescription": "Free-form notes stay beside the structured bible.",
+        "noteTitle": "Note title",
+        "noteContent": "Note content",
+        "saveNote": "Save note",
+        "backToChapters": "Back to chapters",
+        "noNotebookTitle": "No notebook entries yet",
+        "noNotebookSubtitle": "Save a private note or run a Story Studio tool.",
+        "suggestionHistory": "Suggestion history",
+        "noPending": "No pending suggestions.",
+        "noSuggestionHistory": "No accepted or rejected suggestions yet.",
+        "noDetails": "No details yet."
+      }
+    }
+  },
+  "profile": {
+    "guest": "Please sign in to view your profile.",
+    "unknownDate": "Unknown date",
+    "unknownJoined": "Unknown",
+    "userFallback": "User",
+    "tabs": {
+      "overview": "Overview",
+      "reviews": "Reviews",
+      "settings": "Settings"
+    },
+    "hero": {
+      "kicker": "Reader profile",
+      "loadingBio": "Loading your profile...",
+      "emptyBio": "No bio yet. Add one to introduce yourself to the shelf.",
+      "showMore": "Show more",
+      "showLess": "Show less",
+      "joined": "Joined {{date}}",
+      "public": "Public profile",
+      "private": "Private profile",
+      "booksTracked": "{{count}} books tracked"
+    },
+    "errors": {
+      "uploadNoUrl": "Upload succeeded but no URL was returned.",
+      "avatarUploadFailed": "Avatar upload failed.",
+      "booksReadFailed": "Could not read your library history.",
+      "profileFailed": "Failed to load profile.",
+      "reviewsEndpointMissing": "Reviews endpoint not found.",
+      "reviewsFailed": "Failed to load reviews.",
+      "signInRequired": "Please sign in.",
+      "settingsFailed": "Failed to load settings.",
+      "saveProfileFailed": "Failed to save profile.",
+      "loadProfileTitle": "Could not load profile",
+      "loadReviewsTitle": "Could not load reviews"
+    },
+    "snapshot": {
+      "title": "Reader snapshot",
+      "subtitle": "The small set of stats that matter here.",
+      "booksTracked": {
+        "label": "Books tracked",
+        "hint": "Books you have actually progressed through."
+      },
+      "reviewsPosted": {
+        "label": "Reviews posted",
+        "hint": "Your public reading takes, all in one place."
+      },
+      "memberFor": {
+        "label": "Member for",
+        "hint": "Time spent building your InkVerse identity."
+      }
+    },
+    "essentials": {
+      "title": "Profile essentials",
+      "subtitle": "Only the account details that belong on this page.",
+      "username": "Username",
+      "email": "Email",
+      "preferredLanguage": "Preferred language",
+      "visibility": "Visibility",
+      "readingReminders": "Reading reminders",
+      "emailUpdates": "Email updates",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "notAvailable": "Not available"
+    },
+    "editor": {
+      "title": "Edit profile",
+      "subtitle": "Keep just the photo and bio current from here.",
+      "uploadAvatar": "Upload avatar",
+      "uploadingAvatar": "Uploading your new avatar...",
+      "avatarHint": "Square images work best for this space.",
+      "avatarUrl": "Avatar URL",
+      "avatarPlaceholder": "https://...",
+      "bio": "Bio",
+      "bioPlaceholder": "Write something short about yourself..."
+    },
+    "reviews": {
+      "title": "My reviews",
+      "subtitle": "Your reader notes, kept clean and easy to skim.",
+      "posted": "{{count}} posted",
+      "avgRating": "{{rating}} avg rating",
+      "loading": "Loading your reviews...",
+      "emptyTitle": "No reviews yet",
+      "emptySubtitle": "Write your first review and it will show up here.",
+      "emptySubtitleSecondary": "Once you review books, they will show up here.",
+      "untitledBook": "Untitled book"
+    },
+    "public": {
+      "title": "Reader profile",
+      "subtitle": "A public look at this reader's shelf presence.",
+      "authorBadge": "Author profile",
+      "memberSince": "Member since {{date}}",
+      "reviewCount": "{{count}} reviews",
+      "commentCount": "{{count}} comments",
+      "bookCount": "{{count}} books",
+      "libraryCount": "{{count}} library picks",
+      "overviewTitle": "Public snapshot",
+      "overviewSubtitle": "The shared parts of this reader's InkVerse activity.",
+      "privateTitle": "This profile is private",
+      "privateSubtitle": "{{user}} is only sharing basic profile details right now.",
+      "emptyBio": "No bio added yet.",
+      "commentsTab": "Comments",
+      "booksTab": "Books",
+      "libraryTab": "Library",
+      "commentsTitle": "Recent comments",
+      "commentsSubtitle": "Chapter notes this reader has left across the shelf.",
+      "commentsEmptyTitle": "No comments yet",
+      "commentsEmptySubtitle": "When this reader comments on chapters, they will appear here.",
+      "booksTitle": "Author shelf",
+      "booksSubtitle": "Books published under this profile.",
+      "booksEmptyTitle": "No books yet",
+      "booksEmptySubtitle": "Published books will appear here.",
+      "libraryTitle": "Public library",
+      "librarySubtitle": "Books this reader chose to share from their shelf.",
+      "libraryEmptyTitle": "No shared library books",
+      "libraryEmptySubtitle": "Shared library picks will appear here.",
+      "reviewsEmptyTitle": "No public reviews",
+      "reviewsEmptySubtitle": "Published reviews will appear here.",
+      "reviewTargetFallback": "Untitled book",
+      "chapterFallback": "Chapter {{chapter}}",
+      "openChapter": "Open chapter"
+    },
+    "settings": {
+      "title": "Settings",
+      "subtitle": "Control privacy, notifications, and reading preferences.",
+      "sections": {
+        "general": "General",
+        "privacy": "Privacy"
+      },
+      "publicProfile": "Public profile",
+      "publicProfileHint": "Allow other readers to view your profile details.",
+      "showReviews": "Show reviews",
+      "showReviewsHint": "Let other readers see the reviews posted from your profile.",
+      "showComments": "Show comments",
+      "showCommentsHint": "Allow readers to browse your public chapter comments.",
+      "showAuthorBooks": "Show author books",
+      "showAuthorBooksHint": "Display books you published if this profile is an author.",
+      "showLibrary": "Show library",
+      "showLibraryHint": "Share your saved shelf with other readers.",
+      "emailUpdates": "Email notifications",
+      "emailUpdatesHint": "Receive account and activity updates by email.",
+      "readingReminders": "Reading reminders",
+      "readingRemindersHint": "Get nudges to continue where you left off.",
+      "language": "Language",
+      "languageLabel": "Preferred language",
+      "languageHint": "Pick the interface language you want InkVerse to use.",
+      "loading": "Loading settings...",
+      "loadErrorTitle": "Could not load settings",
+      "saved": "Saved {{time}}",
+      "save": "Save settings",
+      "saving": "Saving settings..."
+    }
+  },
+  "browse": {
+    "page": {
+      "loadError": "Failed to load books (check API).",
+      "resultsSubtitle": "Showing {{start}}-{{end}} of {{total}} stories matched to your current shelf.",
+      "emptyResultsSubtitle": "Use the filters to shape a shelf around the exact vibe you want.",
+      "bookmarkFailed": "Bookmark failed{{status}}.{{url}}",
+      "shapeTitle": "Shape Your Shelf",
+      "shapeSubtitle": "Use quick tabs for broad lanes, then open the advanced controls when you want something more exact.",
+      "filtersActive": "{{count}} filters active",
+      "readyToExplore": "Ready to explore",
+      "resultsTitle": "Shelf Results",
+      "showingNow": "{{count}} showing now",
+      "loading": "Loading books...",
+      "emptyTitle": "No books match your filters",
+      "emptySubtitle": "Try removing some filters, searching a different keyword, or exploring other tags."
+    },
+    "filters": {
+      "hideFilters": "Hide filters",
+      "showMoreFilters": "Show more filters",
+      "moreFilters": "More filters",
+      "search": "Search",
+      "searchPlaceholder": "Search title, author, summary...",
+      "sortBy": "Sort by",
+      "sortByPrefix": "Sort by: {{label}}",
+      "direction": "Direction",
+      "ascending": "Ascending",
+      "descending": "Descending",
+      "toggleDirection": "Toggle ascending or descending sort",
+      "status": "Status",
+      "statusLabel": "Status: {{status}}",
+      "originType": "Origin type",
+      "allOriginTypes": "All origin types",
+      "minimumRating": "Minimum rating",
+      "ratingPlaceholder": "0 to 5",
+      "minimumReviews": "Minimum reviews",
+      "reviewsPlaceholder": "Review count",
+      "guide": "Tap once to include a chip, twice to exclude it, and a third time to clear it.",
+      "genres": "Genres",
+      "genresHint": "Build the shelf tone.",
+      "tags": "Tags",
+      "tagsHint": "Fine-tune the exact reading energy.",
+      "included": "Included",
+      "excluded": "Excluded",
+      "notSelected": "Not selected",
+      "activeFilters": "Active filters",
+      "activeFiltersHint": "Tap any chip to remove it.",
+      "clickToRemove": "Click to remove"
+    },
+    "card": {
+      "verseFallback": "Verse",
+      "bookmarkAdd": "Add to bookmarks",
+      "bookmarkRemove": "Remove from bookmarks",
+      "by": "by",
+      "reviews": "{{count}} reviews",
+      "chapters": "{{count}} chapters"
+    }
+  },
+  "ranking": {
+    "tabs": {
+      "topRated": "Top Rated",
+      "mostViewed": "Most Viewed",
+      "mostReviewed": "Most Reviewed",
+      "new": "New"
+    },
+    "timeRanges": {
+      "All": "All Time",
+      "Week": "This Week",
+      "Month": "This Month",
+      "HalfYear": "6 Months",
+      "Year": "This Year"
+    },
+    "statuses": {
+      "all": "All Status",
+      "ongoing": "Ongoing",
+      "completed": "Completed"
+    },
+    "page": {
+      "freshArrival": "Fresh arrival",
+      "viewMomentum": "View momentum · {{timeLabel}}",
+      "conversation": "Conversation · {{timeLabel}}",
+      "recentlyAdded": "Recently added",
+      "readerScore": "Reader score · {{timeLabel}}",
+      "views": "{{count}} views",
+      "reviews": "{{count}} reviews",
+      "average": "{{rating}} average",
+      "loadError": "Failed to load ranking.",
+      "laneLabel": "Leaderboard lane",
+      "timeLabel": "Time window",
+      "verseType": "Verse type",
+      "origin": "Origin",
+      "status": "Status",
+      "statusPlaceholder": "All Status",
+      "currentBoard": "Current board",
+      "onThisPage": "{{count}} on this page",
+      "pages": "{{current}}/{{total}} pages",
+      "loading": "Loading ranking...",
+      "emptyTitle": "No ranked stories yet",
+      "emptySubtitle": "Try changing filters.",
+      "boardSubtitle": "Showing ranks {{start}}-{{end}} out of {{total}} stories in the current board.",
+      "emptyBoardSubtitle": "Switch lanes, narrow the shelf, or open a different time window to populate the board."
+    },
+    "entry": {
+      "inkverseOriginal": "InkVerse Original",
+      "spotlight": "Spotlight",
+      "rank": "Rank",
+      "leaderSignal": "Leader signal",
+      "rating": "{{rating}} rating"
+    }
+  },
+  "trends": {
+    "sortOptions": {
+      "sortOrder": "Default (Sort Order)",
+      "newest": "Newest",
+      "az": "A → Z"
+    },
+    "cards": {
+      "spotlight": "Spotlight",
+      "viewTrend": "View trend",
+      "openCollection": "Open collection",
+      "trendingConcept": "Trending concept",
+      "exploreTrend": "Explore trend",
+      "curatedTrend": "Curated trend",
+      "openTrend": "Open trend"
+    },
+    "page": {
+      "loadError": "Failed to load trends.",
+      "headKicker": "Trend shelf",
+      "headTitle": "Explore the concepts readers are chasing.",
+      "headText": "Move through themed lanes, spotlighted moods, and curated story worlds shaping what readers open next.",
+      "activeConcepts": "Active concepts",
+      "sortBy": "Sort by",
+      "sortPlaceholder": "Sort trends",
+      "loading": "Loading trends...",
+      "emptyTitle": "No trends yet",
+      "emptySubtitle": "Curated concepts will appear here once the shelf is ready.",
+      "allConcepts": "All concepts",
+      "libraryTitle": "Keep exploring the shelf.",
+      "libraryText": "Showing {{pageCount}} of {{total}} curated trend{{suffix}} on the current shelf."
+    },
+    "details": {
+      "sortOptions": {
+        "newest": "Newest",
+        "rating": "Top Rated",
+        "views": "Most Viewed",
+        "az": "A → Z"
+      },
+      "loadBooksError": "Failed to load trend books.",
+      "invalidId": "Invalid trend id.",
+      "trendFallback": "Trend",
+      "descriptionFallback": "Explore this curated collection of stories.",
+      "badgeFallback": "Curated trend",
+      "currentSortFallback": "Newest",
+      "heroBadge": "Trend spotlight",
+      "linkedBooks": "Linked books",
+      "currentSort": "Current sort",
+      "toolbarKicker": "Shelf controls",
+      "toolbarTitle": "Browse linked books",
+      "toolbarText": "Switch the sort lane, then jump into any book connected to this concept.",
+      "sortPlaceholder": "Sort books",
+      "backToTrends": "Back to trends",
+      "loadingBooks": "Loading linked books...",
+      "errorTitle": "Cannot load this trend",
+      "emptyTitle": "No books linked yet.",
+      "emptySubtitle": "This trend does not have any connected books right now.",
+      "backToAllTrends": "Back to all trends",
+      "linkedShelf": "Linked shelf",
+      "resultsText": "Showing {{shown}} of {{total}} books connected to this trend."
+    }
+  },
+  "bookPage": {
+    "cover": {
+      "alt": "Book cover",
+      "noCover": "No cover"
+    },
+    "synopsis": {
+      "title": "Synopsis",
+      "subtitle": "The core premise, mood, and promise of the story.",
+      "empty": "No synopsis available."
+    },
+    "meta": {
+      "status": "Status",
+      "verse": "Verse",
+      "origin": "Origin",
+      "genres": "Genres",
+      "tags": "Tags",
+      "openSource": "Open source",
+      "browseGenre": "Browse genre: {{genre}}",
+      "browseTag": "Browse tag: {{tag}}",
+      "noGenres": "No genres",
+      "noTags": "No tags"
+    },
+    "rating": {
+      "title": "Ratings",
+      "subtitle": "A quick read on the overall score and how readers break it down.",
+      "averageLabel": "Average rating",
+      "reviewCount": "{{count}} review",
+      "reviewCount_other": "{{count}} reviews",
+      "liveCopy": "Updated live as new reviews come in.",
+      "writeReview": "Write a review",
+      "editReview": "Edit your review",
+      "deleteReview": "Delete your review",
+      "breakdownTitle": "Category breakdown",
+      "breakdownSubtitle": "What reviewers are scoring most closely.",
+      "empty": "No detailed ratings yet.",
+      "damageHelper": "Lower stars = higher damage 😈",
+      "damageLevels": {
+        "High": "High",
+        "Heavy": "Heavy",
+        "Medium": "Medium",
+        "Light": "Light",
+        "Safe": "Safe"
+      },
+      "categories": {
+        "characterAccuracy": "Character Accuracy",
+        "chemistryRelationships": "Chemistry & Relationships",
+        "plotCreativity": "Plot & Creativity",
+        "canonIntegration": "Canon Integration",
+        "emotionalDamage": "Emotional Damage"
+      }
+    },
+    "reviews": {
+      "title": "Reader Reviews",
+      "subtitle": "Honest reactions, detailed notes, and quick takes from readers.",
+      "count": "{{count}} review",
+      "count_other": "{{count}} reviews",
+      "sortLabel": "Sort",
+      "sortAria": "Sort reviews: currently {{mode}}",
+      "newestFirst": "Newest first",
+      "oldestFirst": "Oldest first",
+      "empty": "No reviews yet. Be the first!",
+      "loading": "Loading reviews...",
+      "edited": "Edited"
+    },
+    "reviewCard": {
+      "loginToReact": "You must be logged in to react.",
+      "noWrittenReview": "No written review yet.",
+      "detailedRatings": "Detailed ratings",
+      "helpful": "Helpful",
+      "notForMe": "Not for me",
+      "replies": "Replies",
+      "hideReplies": "Hide replies",
+      "metrics": {
+        "characters": "Characters",
+        "chemistry": "Chemistry",
+        "plot": "Plot",
+        "canon": "Canon",
+        "impact": "Impact"
+      }
+    },
+    "reviewReplies": {
+      "title": "Replies",
+      "loadingShort": "Loading…",
+      "loadError": "Failed to load replies.",
+      "empty": "No replies yet.",
+      "loginRequired": "You must be logged in to reply.",
+      "postError": "Failed to post reply.",
+      "placeholder": "Write a reply…",
+      "loginPlaceholder": "Login to reply…",
+      "saving": "Saving…",
+      "reply": "Reply"
+    }
+  },
+  "reader": {
+    "chapters": "Chapters",
+    "backToBook": "Back to book",
+    "chapterNumber": "Chapter {{number}}",
+    "storySpotlight": "Story spotlight",
+    "untitledStory": "Untitled story",
+    "untitledChapter": "Untitled chapter",
+    "byAuthor": "By {{author}}",
+    "byInkVerse": "By InkVerse",
+    "openingSummary": "This chapter opens the shelf and sets the tone for what comes next.",
+    "openingFootnote": "The opening chapter starts with the story itself, while the side rail keeps navigation and settings close without pulling you out of the page.",
+    "openingSubtitle": "Start at the first page and let the world settle in.",
+    "normalSubtitle": "A cleaner reading flow that keeps the chapter doing the work.",
+    "readingTitle": "Reading {{title}}",
+    "chapterReader": "Chapter reader",
+    "original": "Original",
+    "ongoing": "Ongoing",
+    "wordCount": "{{count}} words",
+    "readTime": "{{count}} min read",
+    "savingProgress": "Saving progress…",
+    "openCommentsForParagraph": "Open {{count}} comments for this paragraph",
+    "commentOnParagraph": "Comment on this paragraph",
+    "comment": "Comment",
+    "jumpToChapter": "Jump to chapter",
+    "previous": "Previous",
+    "bookPage": "Book page",
+    "next": "Next",
+    "drawerCopy": "Move through the book without leaving your reading position.",
+    "noChapters": "No chapters available yet.",
+    "paragraphComments": "Paragraph comments",
+    "facts": {
+      "type": "Type",
+      "started": "Started",
+      "status": "Status",
+      "chapters": "Chapters"
+    },
+    "settings": {
+      "button": "Settings",
+      "title": "Reader settings",
+      "textSize": "Text size",
+      "lineSpacing": "Line spacing",
+      "font": "Font",
+      "background": "Background",
+      "reset": "Reset to default",
+      "fonts": {
+        "system": "System",
+        "serif": "Serif",
+        "sans": "Sans",
+        "mono": "Mono"
+      },
+      "backgrounds": {
+        "mist": "Cool mist",
+        "paper": "Warm paper"
+      }
+    },
+    "comments": {
+      "title": "Comments",
+      "kicker": "Reader conversation",
+      "passageTitle": "Comments on this passage",
+      "subtitle": "Talk about the chapter without leaving the reading flow.",
+      "passageSubtitle": "Stay on the exact paragraph and react without losing your place.",
+      "showAll": "Show all",
+      "refresh": "Refresh",
+      "selectedParagraph": "Selected paragraph",
+      "highlightedFallback": "Commenting on the highlighted paragraph.",
+      "replyingTo": "Replying to {{user}}",
+      "commentingAs": "Commenting as {{user}}.",
+      "signInPrompt": "Sign in to join the conversation.",
+      "post": "Post comment",
+      "loading": "Loading comments...",
+      "emptyParagraph": "No comments on this paragraph yet. Be the first to leave one.",
+      "emptyChapter": "No comments yet. Be the first to leave one.",
+      "reply": "Reply",
+      "edited": "edited",
+      "reader": "reader",
+      "unknownReader": "Unknown reader",
+      "editComment": "Edit comment",
+      "deleteComment": "Delete comment",
+      "confirmDelete": "Delete this comment?",
+      "placeholders": {
+        "paragraph": "Leave a note on this paragraph...",
+        "chapter": "Leave a thought about this chapter..."
+      },
+      "errors": {
+        "load": "Failed to load comments.",
+        "signInComment": "Please sign in to comment.",
+        "signInReact": "Please sign in to react.",
+        "signIn": "Please sign in.",
+        "post": "Failed to post comment.",
+        "react": "Failed to react.",
+        "delete": "Failed to delete comment.",
+        "edit": "Failed to edit comment."
+      }
+    }
+  }
+}

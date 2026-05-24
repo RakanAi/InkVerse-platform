@@ -1,0 +1,251 @@
+.monetization-page {
+  width: min(1180px, calc(100% - 32px));
+  margin: 110px auto 48px;
+  color: var(--iv-text, #172033);
+}
+
+.monetization-hero {
+  margin-bottom: 22px;
+}
+
+.monetization-hero h1 {
+  max-width: 760px;
+  margin: 8px 0;
+  font-size: clamp(2rem, 5vw, 4.5rem);
+  line-height: 0.95;
+  letter-spacing: 0;
+}
+
+.monetization-hero p {
+  max-width: 680px;
+  margin: 0;
+  color: var(--iv-muted, #667085);
+}
+
+.monetization-eyebrow {
+  display: inline-flex;
+  color: #6d5dfc;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.monetization-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.8fr) minmax(320px, 1.4fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.monetization-panel {
+  padding: 20px;
+}
+
+.monetization-panel--wide {
+  min-width: 0;
+}
+
+.monetization-balance {
+  display: block;
+  margin-top: 10px;
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.monetization-panel p,
+.monetization-muted {
+  color: var(--iv-muted, #667085);
+}
+
+.monetization-alert {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border: 1px solid #ffd0d0;
+  background: #fff4f4;
+  color: #a41212;
+}
+
+.monetization-pack-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.monetization-pack {
+  min-height: 118px;
+  border: 1px solid rgba(109, 93, 252, 0.18);
+  background: #fff;
+  padding: 16px;
+  text-align: left;
+  border-radius: 8px;
+  display: grid;
+  align-content: space-between;
+  color: inherit;
+}
+
+.monetization-pack strong {
+  font-size: 1.2rem;
+}
+
+.monetization-pack span {
+  color: var(--iv-muted, #667085);
+}
+
+.monetization-pack em {
+  font-style: normal;
+  color: #6d5dfc;
+  font-weight: 800;
+}
+
+.monetization-panel-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.monetization-panel-head h2 {
+  margin: 4px 0 0;
+  font-size: 1.2rem;
+}
+
+.monetization-ledger {
+  display: grid;
+  gap: 8px;
+}
+
+.monetization-ledger-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.monetization-ledger-row div {
+  display: grid;
+  gap: 2px;
+}
+
+.monetization-ledger-row span {
+  color: var(--iv-muted, #667085);
+  font-size: 0.85rem;
+}
+
+.monetization-ledger-row em {
+  font-style: normal;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.monetization-ledger-row .is-positive {
+  color: #087f5b;
+}
+
+.monetization-ledger-row .is-negative {
+  color: #c2410c;
+}
+
+.monetization-tool-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+}
+
+.monetization-tool {
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: #fff;
+  border-radius: 8px;
+  padding: 14px;
+  text-align: left;
+  display: grid;
+  gap: 8px;
+}
+
+.monetization-tool strong {
+  font-size: 1rem;
+}
+
+.monetization-tool span {
+  color: var(--iv-muted, #667085);
+  font-size: 0.9rem;
+}
+
+.monetization-tool.is-active {
+  border-color: #6d5dfc;
+  background: #f5f3ff;
+}
+
+.authorx-native-select,
+.authorx-textarea {
+  width: 100%;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  background: #fff;
+  color: inherit;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.authorx-field-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--iv-muted, #667085);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.authorx-mini-list {
+  display: grid;
+  max-height: 260px;
+  overflow: auto;
+  gap: 6px;
+}
+
+.authorx-check-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.authorx-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+html[data-theme="dark"] .monetization-tool,
+html[data-theme="dark"] .authorx-native-select,
+html[data-theme="dark"] .authorx-textarea {
+  border-color: rgba(148, 163, 184, 0.18);
+  background: rgba(21, 31, 59, 0.78);
+  color: var(--author-studio-text, #eef3ff);
+}
+
+html[data-theme="dark"] .monetization-tool.is-active {
+  border-color: rgba(129, 140, 248, 0.42);
+  background: rgba(91, 107, 255, 0.16);
+}
+
+html[data-theme="dark"] .monetization-tool span,
+html[data-theme="dark"] .monetization-muted,
+html[data-theme="dark"] .authorx-field-label {
+  color: var(--author-studio-text-soft, #a7b6dc);
+}
+
+html[data-theme="dark"] .authorx-check-row {
+  border-bottom-color: rgba(148, 163, 184, 0.12);
+}
+
+@media (max-width: 760px) {
+  .monetization-grid,
+  .monetization-pack-grid {
+    grid-template-columns: 1fr;
+  }
+}

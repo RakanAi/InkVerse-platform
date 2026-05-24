@@ -1,4 +1,3 @@
-import Accordion from "react-bootstrap/Accordion";
 import { Link, useParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import api from "../../../Api/api";
@@ -35,51 +34,69 @@ function toRoman(num) {
 }
 
 const pick = (obj, ...keys) => {
-  for (const k of keys) {
-    const v = obj?.[k];
-    if (v !== undefined && v !== null) return v;
+  for (const key of keys) {
+    const value = obj?.[key];
+    if (value !== undefined && value !== null) return value;
   }
   return null;
 };
 
-const getChapterNumber = (c) =>
-  Number(pick(c, "chapterNumber", "ChapterNumber", "number", "Number") ?? 0) ||
-  0;
+const getChapterNumber = (chapter) =>
+  Number(
+    pick(chapter, "chapterNumber", "ChapterNumber", "number", "Number") ?? 0,
+  ) || 0;
 
-const getChapterId = (c) => pick(c, "id", "Id", "ID");
+const getChapterId = (chapter) => pick(chapter, "id", "Id", "ID");
 
 const normalizeChapters = (chapters) =>
   (Array.isArray(chapters) ? chapters : [])
     .slice()
-    .sort((a, b) => getChapterNumber(a) - getChapterNumber(b));
+    .sort((first, second) => getChapterNumber(first) - getChapterNumber(second));
+
+const getSectionRangeLabel = (chapters) => {
+  const list = normalizeChapters(chapters);
+  if (!list.length) return null;
+
+  const first = getChapterNumber(list[0]);
+  const last = getChapterNumber(list[list.length - 1]);
+  if (!first || !last) return null;
+  if (first === last) return `Ch. ${first}`;
+  return `Ch. ${first}-${last}`;
+};
+
+const getSectionDisplayName = (name) => {
+  const raw = (name ?? "").trim();
+  if (!raw) return "Loose chapters";
+  if (raw.toLowerCase() === "no arc") return "Loose chapters";
+  return raw;
+};
 
 function chunkByRange(chapters, step = 100) {
   const list = normalizeChapters(chapters);
   if (!list.length) return [];
 
-  const maxNum = Math.max(...list.map((c) => getChapterNumber(c) || 0), 0);
+  const maxNum = Math.max(...list.map((chapter) => getChapterNumber(chapter) || 0), 0);
   const usedStep = maxNum > 500 ? 250 : step;
-
   const map = new Map();
 
-  for (const c of list) {
-    const n = getChapterNumber(c) || 0;
-    const safeN = Math.max(n, 1);
-    const start = Math.floor((safeN - 1) / usedStep) * usedStep + 1;
+  for (const chapter of list) {
+    const number = getChapterNumber(chapter) || 0;
+    const safeNumber = Math.max(number, 1);
+    const start = Math.floor((safeNumber - 1) / usedStep) * usedStep + 1;
     const end = start + usedStep - 1;
     const key = `${start}–${end}`;
 
     if (!map.has(key)) map.set(key, []);
-    map.get(key).push(c);
+    map.get(key).push(chapter);
   }
 
   const parseStart = (label) => Number(label.split("–")[0]) || 0;
 
   return Array.from(map.entries())
-    .sort((a, b) => parseStart(a[0]) - parseStart(b[0]))
-    .map(([rangeLabel, chs]) => ({
+    .sort((first, second) => parseStart(first[0]) - parseStart(second[0]))
+    .map(([rangeLabel, groupedChapters]) => ({
       name: `Chapters: ${rangeLabel}`,
-      chapters: normalizeChapters(chs),
+      chapters: normalizeChapters(groupedChapters),
     }));
 }
 
@@ -94,18 +111,18 @@ function splitArcIntoParts(arcName, chapters, limit = 100) {
   const parts = [];
   const totalParts = Math.ceil(list.length / limit);
 
-  for (let i = 0; i < totalParts; i++) {
-    const startIndex = i * limit;
+  for (let index = 0; index < totalParts; index += 1) {
+    const startIndex = index * limit;
     const endIndex = Math.min(startIndex + limit, list.length);
     const slice = list.slice(startIndex, endIndex);
 
     const firstNum = getChapterNumber(slice[0]) || startIndex + 1;
     const lastNum = getChapterNumber(slice[slice.length - 1]) || endIndex;
 
-    const partLabel = `Part ${toRoman(i + 1)}`;
     parts.push({
-      name: `${arcName} — ${partLabel} (${firstNum}–${lastNum})`,
+      name: `${arcName} — Part ${toRoman(index + 1)}`,
       chapters: slice,
+      rangeLabel: `${firstNum}–${lastNum}`,
     });
   }
 
@@ -117,36 +134,31 @@ function Toc() {
   const [arcs, setArcs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // ✅ NEW: last read chapter number (used to mute)
   const [lastReadNumber, setLastReadNumber] = useState(0);
+  const [openSections, setOpenSections] = useState(["0"]);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) return undefined;
 
     const fetchAll = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        // 1) chapters grouped
         const response = await api.get(`/chapters/book/${id}/grouped`);
-        setArcs(Array.isArray(response.data) ? response.data : []);
+        const groupedChapters = Array.isArray(response.data) ? response.data : [];
+        setArcs(groupedChapters);
 
-        // 2) reading progress (optional)
-        // 2) reading progress (optional)
         try {
-          const progRes = await api.get(`/books/${id}/reading-progress`);
-          const data = progRes.data || {};
+          const progressRes = await api.get(`/books/${id}/reading-progress`);
+          const data = progressRes.data || {};
 
-          // Case A: API returns lastReadChapterNumber
-          let n =
+          let chapterNumber =
             Number(
               data?.lastReadChapterNumber ?? data?.LastReadChapterNumber ?? 0,
             ) || 0;
 
-          // Case B: API returns lastReadChapterId (convert to number using chapters list)
-          if (!n) {
+          if (!chapterNumber) {
             const lastId =
               data?.lastReadChapterId ??
               data?.LastReadChapterId ??
@@ -155,30 +167,30 @@ function Toc() {
               null;
 
             if (lastId != null) {
-              // Build a flat list of all chapters we already fetched
-              const allChapters = (
-                Array.isArray(response.data) ? response.data : []
-              ).flatMap((a) => (Array.isArray(a?.chapters) ? a.chapters : []));
-
-              const found = allChapters.find(
-                (c) => String(getChapterId(c)) === String(lastId),
+              const allChapters = groupedChapters.flatMap((group) =>
+                Array.isArray(group?.chapters) ? group.chapters : [],
               );
-              n = found ? getChapterNumber(found) : 0;
+              const found = allChapters.find(
+                (chapter) => String(getChapterId(chapter)) === String(lastId),
+              );
+              chapterNumber = found ? getChapterNumber(found) : 0;
             }
           }
 
-          setLastReadNumber(n);
-        } catch (e) {
-          // IMPORTANT: log why it failed so you can see if it's 401/404
+          setLastReadNumber(chapterNumber);
+        } catch (progressError) {
           console.warn(
             "Reading progress not available:",
-            e?.response?.status,
-            e?.response?.data || e?.message,
+            progressError?.response?.status,
+            progressError?.response?.data || progressError?.message,
           );
           setLastReadNumber(0);
         }
-      } catch (err) {
-        console.error("Failed to fetch chapters:", err.response || err.message);
+      } catch (fetchError) {
+        console.error(
+          "Failed to fetch chapters:",
+          fetchError.response || fetchError.message,
+        );
         setError("Failed to load chapters.");
       } finally {
         setLoading(false);
@@ -186,6 +198,7 @@ function Toc() {
     };
 
     fetchAll();
+    return undefined;
   }, [id]);
 
   const sections = useMemo(() => {
@@ -193,101 +206,165 @@ function Toc() {
     if (!list.length) return [];
 
     const hasRealArc = list
-      .filter((a) => (a?.arcName ?? "").trim())
-      .some((a) => {
-        const n = (a.arcName ?? "").trim().toLowerCase();
-        return n && n !== "no arc" && n !== "null";
+      .filter((group) => (group?.arcName ?? "").trim())
+      .some((group) => {
+        const name = (group.arcName ?? "").trim().toLowerCase();
+        return name && name !== "no arc" && name !== "null";
       });
 
     if (!hasRealArc) {
-      const allChapters = list.flatMap((a) =>
-        Array.isArray(a?.chapters) ? a.chapters : [],
+      const allChapters = list.flatMap((group) =>
+        Array.isArray(group?.chapters) ? group.chapters : [],
       );
       return chunkByRange(allChapters, 100);
     }
 
-    const out = [];
-    for (const a of list) {
-      const rawName = (a?.arcName ?? "").trim();
+    const output = [];
+    for (const group of list) {
+      const rawName = (group?.arcName ?? "").trim();
       const arcName =
         rawName && rawName.toLowerCase() !== "null" ? rawName : "No Arc";
-
-      const chs = Array.isArray(a?.chapters) ? a.chapters : [];
+      const chapters = Array.isArray(group?.chapters) ? group.chapters : [];
 
       if (arcName.toLowerCase() === "no arc") {
-        out.push(...chunkByRange(chs, 100));
+        output.push(...chunkByRange(chapters, 100));
       } else {
-        out.push(...splitArcIntoParts(arcName, chs, 100));
+        output.push(...splitArcIntoParts(arcName, chapters, 100));
       }
     }
-    return out;
+
+    return output;
   }, [arcs]);
 
-  if (loading) return <p>Loading Table of Contents...</p>;
-  if (error) return <p className="text-danger">{error}</p>;
+  useEffect(() => {
+    setOpenSections(sections.length ? ["0"] : []);
+  }, [sections.length]);
+
+  const toggleSection = (sectionKey) => {
+    setOpenSections((current) =>
+      current.includes(sectionKey)
+        ? current.filter((item) => item !== sectionKey)
+        : [...current, sectionKey],
+    );
+  };
+
+  if (loading) {
+    return <p className="iv-book-status">Loading Table of Contents...</p>;
+  }
+
+  if (error) {
+    return <p className="iv-book-status iv-book-status--error">{error}</p>;
+  }
 
   return (
-    <div className="row mx-0 mt-2 col-12">
-      <div className="d-flex ">
-        <h2 className="borderStart "></h2>
-        <h3 className="">Table Of Contents</h3>
+    <section className="iv-book-section iv-book-section--plain iv-book-toc">
+      <div className="iv-book-section__head">
+        <div className="iv-book-section__title-wrap">
+          <span className="borderStart" />
+          <div>
+            <h3 className="iv-book-section__title">Table of Contents</h3>
+            <p className="iv-book-section__subtitle mb-0">
+              Jump into the next chapter or revisit what you already read.
+            </p>
+          </div>
+        </div>
       </div>
 
-      <Accordion defaultActiveKey={["0"]} alwaysOpen>
+      <div className="iv-book-toc__groups">
         {sections.length > 0 ? (
-          sections.map((sec, index) => (
-            <Accordion.Item
-              className="border-0 bg-none "
-              eventKey={index.toString()}
-              key={`${sec.name}-${index}`}
-            >
-              <Accordion.Header>
-                {toRoman(index + 1)}. {sec.name}
-              </Accordion.Header>
+          sections.map((section, index) => {
+            const sectionKey = String(index);
+            const isOpen = openSections.includes(sectionKey);
+            const rangeLabel =
+              section.rangeLabel ?? getSectionRangeLabel(section.chapters);
+            const displayName = getSectionDisplayName(section.name);
+            const sectionKind =
+              displayName === "Loose chapters" ? "Chapter run" : "Story arc";
 
-              <Accordion.Body>
-                <div className="row gap-2">
-                  {sec.chapters.map((chapter) => {
-                    const chNum = getChapterNumber(chapter);
-                    const isRead =
-                      lastReadNumber > 0 &&
-                      chNum > 0 &&
-                      chNum <= lastReadNumber;
+            return (
+              <div
+                className={`iv-book-toc__group ${isOpen ? "is-open" : ""}`}
+                key={`${section.name}-${sectionKey}`}
+              >
+                <button
+                  className="iv-book-toc__group-toggle"
+                  type="button"
+                  onClick={() => toggleSection(sectionKey)}
+                  aria-expanded={isOpen}
+                >
+                  <span className="iv-book-toc__group-label">
+                    <small>{toRoman(index + 1)}</small>
+                    <span className="iv-book-toc__group-copy">
+                      <span className="iv-book-toc__group-kicker">
+                        {sectionKind}
+                      </span>
+                      <strong>{displayName}</strong>
+                      <em>
+                        {section.chapters.length} chapter
+                        {section.chapters.length === 1 ? "" : "s"}
+                      </em>
+                    </span>
+                  </span>
 
-                    return (
-                      <div
-                        className={`col-12 d-flex pt-2 border contentHover rounded text-start text-decoration-none ${
-                          isRead ? "opacity-75" : ""
-                        }`}
-                        key={chapter.id}
-                      >
-                        <h2
-                          className={
-                            isRead ? "borderStart-read" : "borderStart"
-                          }
-                        ></h2>
+                  <span className="iv-book-toc__group-meta">
+                    {rangeLabel ? (
+                      <span className="iv-book-toc__group-range">
+                        {rangeLabel}
+                      </span>
+                    ) : null}
 
-                        <Link
-                          to={`/book/${id}/chapter/${chapter.id}`}
-                          className={isRead ? "text-muted" : ""}
-                          style={{ textDecoration: "none" }}
-                        >
-                          {chapter.title}
-                        </Link>
-                      </div>
-                    );
-                  })}
+                    <i
+                      className={`bi bi-chevron-down iv-book-toc__group-chevron ${
+                        isOpen ? "is-open" : ""
+                      }`}
+                      aria-hidden="true"
+                    />
+                  </span>
+                </button>
+
+                <div
+                  className={`iv-book-toc__collapse ${isOpen ? "is-open" : ""}`}
+                  aria-hidden={!isOpen}
+                >
+                  <div className="iv-book-toc__body">
+                    <div className="iv-book-toc__rows">
+                      {section.chapters.map((chapter) => {
+                        const chapterId = getChapterId(chapter);
+                        const chapterNumber = getChapterNumber(chapter);
+                        const isRead =
+                          lastReadNumber > 0 &&
+                          chapterNumber > 0 &&
+                          chapterNumber <= lastReadNumber;
+
+                        return (
+                          <Link
+                            className={`iv-book-toc__row ${isRead ? "is-read" : ""}`}
+                            key={chapterId}
+                            to={`/book/${id}/chapter/${chapterId}`}
+                          >
+                            <span className="iv-book-toc__index">
+                              {String(chapterNumber || 0).padStart(2, "0")}
+                            </span>
+                            <span className="iv-book-toc__title">
+                              {chapter.title || "Untitled chapter"}
+                            </span>
+                            <span className="iv-book-toc__state">
+                              {chapter.isPaid || chapter.IsPaid ? "5 coins" : isRead ? "Read" : "Open"}
+                            </span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
-              </Accordion.Body>
-            </Accordion.Item>
-          ))
+              </div>
+            );
+          })
         ) : (
-          <p className="text-center text-muted my-3">
-            No arcs or chapters available.
-          </p>
+          <p className="iv-book-empty">No arcs or chapters available.</p>
         )}
-      </Accordion>
-    </div>
+      </div>
+    </section>
   );
 }
 

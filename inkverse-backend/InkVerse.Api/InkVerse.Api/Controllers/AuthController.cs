@@ -67,6 +67,7 @@ namespace InkVerse.Api.Controllers
                 id = userId,
                 userName = result.User?.UserName,
                 email = result.User?.Email,
+                avatarUrl = result.User?.AvatarUrl,
                 roles = result.User?.Roles ?? new List<string>()
             });
         }

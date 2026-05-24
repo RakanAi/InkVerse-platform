@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
 import { FaStar } from "react-icons/fa";
 import "./ReviewCard.css";
-
-const FALLBACK_USER_IMG = "https://ui-avatars.com/api/?name=User";
+import UserAvatar from "../../user/UserAvatar";
+import { canOpenPublicProfile, getPublicProfilePath } from "@/domain/users/public-profile";
 
 export default function ReviewCard({
   userName = "Unknown",
@@ -15,32 +15,50 @@ export default function ReviewCard({
 }) {
   const safeRating =
     typeof rating === "number" && Number.isFinite(rating) ? rating : null;
-
-  const avatarSrc = userAvatarUrl || FALLBACK_USER_IMG;
+  const canViewProfile = canOpenPublicProfile(userName);
+  const profilePath = canViewProfile ? getPublicProfilePath(userName) : null;
 
   return (
     <div className="iv-review-card" style={{ height }}>
-      <div className="iv-review-head">
-        <img
-          src={avatarSrc}
-          alt={userName}
-          className="iv-review-avatar"
-          onError={(e) => {
-            e.currentTarget.src = FALLBACK_USER_IMG;
-          }}
-        />
+      {profilePath ? (
+        <Link to={profilePath} className="iv-review-head iv-review-headLink" title={`View ${userName}`}>
+          <UserAvatar
+            src={userAvatarUrl}
+            name={userName}
+            className="iv-review-avatar"
+          />
 
-        <div className="iv-review-user">
-          <div className="iv-review-name" title={userName}>
-            {userName}
+          <div className="iv-review-user">
+            <div className="iv-review-name" title={userName}>
+              {userName}
+            </div>
+
+            <div className="iv-review-rating">
+              <FaStar className="iv-review-star" />
+              <span>{safeRating !== null ? safeRating.toFixed(1) : "N/A"}</span>
+            </div>
           </div>
+        </Link>
+      ) : (
+        <div className="iv-review-head">
+          <UserAvatar
+            src={userAvatarUrl}
+            name={userName}
+            className="iv-review-avatar"
+          />
 
-          <div className="iv-review-rating">
-            <FaStar className="iv-review-star" />
-            <span>{safeRating !== null ? safeRating.toFixed(1) : "N/A"}</span>
+          <div className="iv-review-user">
+            <div className="iv-review-name" title={userName}>
+              {userName}
+            </div>
+
+            <div className="iv-review-rating">
+              <FaStar className="iv-review-star" />
+              <span>{safeRating !== null ? safeRating.toFixed(1) : "N/A"}</span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div className="iv-review-body">
         {bookId ? (

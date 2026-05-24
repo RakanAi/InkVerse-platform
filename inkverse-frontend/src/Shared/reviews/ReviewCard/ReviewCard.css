@@ -20,6 +20,15 @@
   margin-bottom: 12px;
 }
 
+.iv-review-headLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.iv-review-headLink:hover .iv-review-name {
+  color: #5664ff;
+}
+
 .iv-review-avatar {
   width: 56px;
   height: 56px;
@@ -28,6 +37,12 @@
   background: #e9ecef;
   flex: 0 0 auto;
   border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.iv-review-avatar.iv-user-avatar-fallback {
+  color: #31416e;
+  font-size: 0.96rem;
+  font-weight: 800;
 }
 
 .iv-review-user {

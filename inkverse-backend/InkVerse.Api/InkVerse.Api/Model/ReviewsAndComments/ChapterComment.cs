@@ -8,6 +8,7 @@ public class ChapterComment
     public int ID { get; set; }
 
     public string Content { get; set; } = string.Empty;
+    public string? ParagraphId { get; set; }
 
 
     public string UserId { get; set; } = null!;
@@ -31,5 +32,4 @@ public class ChapterComment
 
     public ICollection<ChapterCommentReaction> Reactions { get; set; } = new List<ChapterCommentReaction>();
 }
-
 

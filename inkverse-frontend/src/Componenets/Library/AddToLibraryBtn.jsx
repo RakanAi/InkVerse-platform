@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../../Api/api";
 import "./AddToLibraryBtn.css";
 
-export default function LibraryButton({ bookId }) {
+export default function LibraryButton({ bookId, className = "" }) {
   const [inLibrary, setInLibrary] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -38,12 +38,22 @@ export default function LibraryButton({ bookId }) {
 
   return (
     <button
-      className={"btn border-0 align-self-center bi" + (inLibrary ? " bi-bookmark-fill text-primary " : " bi bi-bookmark text-light ")}
+      className={`iv-book-hero__cta iv-book-hero__cta--secondary iv-library-btn ${inLibrary ? "is-active" : ""} ${className}`.trim()}
       type="button"
       onClick={toggle}
       disabled={loading}
     >
-    {inLibrary ? " In Library ✓" : " Add to Library"}
+      <i
+        className={`bi ${inLibrary ? "bi-bookmark-check-fill" : "bi-bookmark-plus"}`}
+        aria-hidden="true"
+      />
+      <span>
+        {loading
+          ? "Updating..."
+          : inLibrary
+            ? "Saved to Library"
+            : "Save to Library"}
+      </span>
     </button>
   );
 }

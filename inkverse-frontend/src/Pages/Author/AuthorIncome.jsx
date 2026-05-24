@@ -1,23 +1,37 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import Surface from "../../Shared/ui/Surface";
+import Button from "../../Shared/ui/Button";
 import LoadingState from "../../Shared/ui/LoadingState";
 import ErrorState from "../../Shared/ui/ErrorState";
 import EmptyState from "../../Shared/ui/EmptyState";
-import { fetchMyBooks } from "./authorApi";
+import AuthorMetricCard from "../../features/author/components/AuthorMetricCard";
+import AuthorSectionHeading from "../../features/author/components/AuthorSectionHeading";
+import {
+  fetchAuthorEarnings,
+  requestAuthorPayout,
+} from "../../Api/monetization.api";
+import "../../features/monetization/monetization.css";
+
+function formatCoins(coins = 0) {
+  return `$${(Number(coins || 0) / 100).toFixed(2)}`;
+}
 
 export default function AuthorIncome() {
-  const [books, setBooks] = useState([]);
+  const { t } = useTranslation();
+  const [earnings, setEarnings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [payoutAmount, setPayoutAmount] = useState("");
+  const [requesting, setRequesting] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const data = await fetchMyBooks();
-      setBooks(Array.isArray(data) ? data : []);
-    } catch (e) {
-      setError(e?.response?.data?.message || "Failed to load income data.");
+      setEarnings(await fetchAuthorEarnings());
+    } catch (requestError) {
+      setError(requestError?.response?.data?.message || t("author.studio.income.errors.load"));
     } finally {
       setLoading(false);
     }
@@ -27,57 +41,146 @@ export default function AuthorIncome() {
     load();
   }, [load]);
 
-  const analytics = useMemo(() => {
-    const totalViews = books.reduce((sum, b) => sum + (b.totalViews || 0), 0);
-    const totalWords = books.reduce((sum, b) => sum + (b.wordCount || 0), 0);
-    const totalBooks = books.length;
-    const estRevenue = totalViews * 0.0025;
+  const submitPayout = async (event) => {
+    event.preventDefault();
+    const amountCoins = Math.round(Number(payoutAmount || 0) * 100);
+    if (!amountCoins) {
+      setError(t("author.studio.income.errors.amount"));
+      return;
+    }
 
-    const best = [...books]
-      .sort((a, b) => (b.totalViews || 0) - (a.totalViews || 0))
-      .slice(0, 5);
+    setRequesting(true);
+    setError("");
+    try {
+      await requestAuthorPayout(amountCoins);
+      setPayoutAmount("");
+      await load();
+    } catch (requestError) {
+      setError(requestError?.response?.data?.message || t("author.studio.income.errors.request"));
+    } finally {
+      setRequesting(false);
+    }
+  };
 
-    return { totalViews, totalWords, totalBooks, estRevenue, best };
-  }, [books]);
+  if (loading) return <LoadingState text={t("author.studio.income.loading")} />;
+  if (error && !earnings) {
+    return <ErrorState title={t("author.studio.income.unavailable")} subtitle={error} onRetry={load} />;
+  }
 
-  if (loading) return <LoadingState text="Loading income analytics..." />;
-  if (error) return <ErrorState title="Income Unavailable" subtitle={error} onRetry={load} />;
+  const royalties = Array.isArray(earnings?.royalties) ? earnings.royalties : [];
+  const payouts = Array.isArray(earnings?.payoutRequests) ? earnings.payoutRequests : [];
 
   return (
     <div className="authorx-page">
-      <section className="authorx-hero">
-        <div>
-          <h1>Income & Performance</h1>
-          <p>Real-time overview based on your current books and traffic.</p>
+      <section className="authorx-hero authorx-hero--compact">
+        <div className="authorx-hero__copy">
+          <span className="author-studio-eyebrow">{t("author.studio.income.eyebrow")}</span>
+          <h1>{t("author.studio.income.title")}</h1>
+          <p>{t("author.studio.income.subtitle")}</p>
         </div>
       </section>
 
+      {error ? <div className="authorx-form-error mb-3">{error}</div> : null}
+
       <section className="authorx-kpi-grid">
-        <Surface className="authorx-kpi-card"><span>Estimated Revenue</span><strong>${analytics.estRevenue.toFixed(2)}</strong></Surface>
-        <Surface className="authorx-kpi-card"><span>Total Views</span><strong>{analytics.totalViews.toLocaleString()}</strong></Surface>
-        <Surface className="authorx-kpi-card"><span>Total Words</span><strong>{analytics.totalWords.toLocaleString()}</strong></Surface>
-        <Surface className="authorx-kpi-card"><span>Published Books</span><strong>{analytics.totalBooks}</strong></Surface>
+        <AuthorMetricCard
+          eyebrow={t("author.studio.income.available")}
+          value={formatCoins(earnings?.availableCoins)}
+          label={t("author.studio.income.withdrawable")}
+          note={t("author.studio.income.coinsAvailable", { count: earnings?.availableCoins ?? 0 })}
+        />
+        <AuthorMetricCard
+          eyebrow={t("author.studio.income.pending")}
+          value={formatCoins(earnings?.pendingCoins)}
+          label={t("author.studio.income.hold")}
+          note={t("author.studio.income.pendingNote")}
+        />
+        <AuthorMetricCard
+          eyebrow={t("author.studio.income.lifetime")}
+          value={formatCoins(earnings?.lifetimeCoins)}
+          label={t("author.studio.income.allRoyalties")}
+          note={t("author.studio.income.beforeDeductions")}
+        />
+        <AuthorMetricCard
+          eyebrow={t("author.studio.income.withdrawn")}
+          value={formatCoins(earnings?.withdrawnCoins)}
+          label={t("author.studio.income.requestedPayouts")}
+          note={t("author.studio.income.payoutCount", { count: payouts.length, suffix: payouts.length === 1 ? "" : "s" })}
+        />
       </section>
 
-      <Surface>
-        <div className="authorx-section-head"><h3>Top Earning Potential Stories</h3></div>
-        {analytics.best.length === 0 ? (
-          <EmptyState title="No books yet" subtitle="Publish books to unlock analytics." />
-        ) : (
-          <div className="authorx-list">
-            {analytics.best.map((book, idx) => (
-              <div key={book.id} className="authorx-row">
-                <div className="authorx-row-main">
-                  <span className="authorx-rank">#{idx + 1}</span>
+      <div className="authorx-grid-2">
+        <Surface className="authorx-panel">
+          <AuthorSectionHeading
+            eyebrow={t("author.studio.income.payout")}
+            title={t("author.studio.income.requestAnytime")}
+            description={t("author.studio.income.payoutDescription")}
+          />
+          <form className="authorx-form" onSubmit={submitPayout}>
+            <input
+              className="authorx-native-select"
+              type="number"
+              min="0"
+              step="0.01"
+              value={payoutAmount}
+              onChange={(event) => setPayoutAmount(event.target.value)}
+              placeholder={t("author.studio.income.amountUsd")}
+            />
+            <Button type="submit" variant="primary" size="md" disabled={requesting}>
+              {requesting ? t("author.studio.income.requesting") : t("author.studio.income.requestPayout")}
+            </Button>
+          </form>
+        </Surface>
+
+        <Surface className="authorx-panel">
+          <AuthorSectionHeading
+            eyebrow={t("author.studio.income.recentPayouts")}
+            title={t("author.studio.income.payoutHistory")}
+            description={t("author.studio.income.payoutHistoryDescription")}
+          />
+          {payouts.length ? (
+            <div className="authorx-list">
+              {payouts.map((payout) => (
+                <div className="authorx-row" key={payout.id}>
                   <div>
-                    <div className="authorx-row-title">{book.title || "Untitled"}</div>
-                    <div className="authorx-row-sub">{(book.totalViews || 0).toLocaleString()} views</div>
+                    <div className="authorx-row-title">{formatCoins(payout.amountCoins)}</div>
+                    <div className="authorx-row-sub">{new Date(payout.requestedAt).toLocaleString()}</div>
+                  </div>
+                  <div className="authorx-row-metric">{payout.status}</div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState title={t("author.studio.income.noPayoutTitle")} subtitle={t("author.studio.income.noPayoutSubtitle")} />
+          )}
+        </Surface>
+      </div>
+
+      <Surface className="authorx-panel mt-3">
+        <AuthorSectionHeading
+          eyebrow={t("author.studio.income.royaltyLedger")}
+          title={t("author.studio.income.bookRevenue")}
+          description={t("author.studio.income.bookRevenueDescription")}
+        />
+        {royalties.length ? (
+          <div className="authorx-list">
+            {royalties.map((entry) => (
+              <div className="authorx-row" key={entry.id}>
+                <div>
+                  <div className="authorx-row-title">{entry.entryType.replaceAll("_", " ")}</div>
+                  <div className="authorx-row-sub">
+                    {t("author.studio.income.entryBook", { bookId: entry.bookId })}
+                    {entry.chapterId ? t("author.studio.income.entryChapter", { chapterId: entry.chapterId }) : ""} · {t("author.studio.income.entryAvailable", { date: new Date(entry.availableAt).toLocaleDateString() })}
                   </div>
                 </div>
-                <div className="authorx-row-metric">${((book.totalViews || 0) * 0.0025).toFixed(2)}</div>
+                <div className="authorx-row-metric">
+                  {formatCoins(entry.authorCoins)} · {entry.status}
+                </div>
               </div>
             ))}
           </div>
+        ) : (
+          <EmptyState title={t("author.studio.income.noRoyaltiesTitle")} subtitle={t("author.studio.income.noRoyaltiesSubtitle")} />
         )}
       </Surface>
     </div>

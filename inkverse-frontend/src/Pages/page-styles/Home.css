@@ -1,6 +1,6 @@
 .iv-home {
   width: 100%;
-  overflow-x: clip;
+  overflow: visible;
   padding: 28px 0 72px;
 }
 
@@ -12,7 +12,7 @@
   margin: 0 auto;
   display: grid;
   gap: var(--iv-home-gap);
-  overflow-x: clip;
+  overflow: visible;
 }
 
 .iv-home-grid {

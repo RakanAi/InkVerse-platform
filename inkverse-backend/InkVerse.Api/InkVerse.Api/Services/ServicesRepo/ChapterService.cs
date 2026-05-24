@@ -4,6 +4,7 @@ using InkVerse.Api.Data;
 using InkVerse.Api.DTOs.Chapter;
 using InkVerse.Api.Entities;
 using InkVerse.Api.Entities.Identity;
+using InkVerse.Api.Entities.Notifications;
 using InkVerse.Api.Services.InterFace;
 
 namespace InkVerse.Api.Services.ServicesRepo
@@ -11,10 +12,16 @@ namespace InkVerse.Api.Services.ServicesRepo
     public class ChapterService : IChapterService
     {
         private readonly InkVerseDB _inkVerseDB;
+        private readonly IBookBibleService _bookBible;
+        private readonly IMonetizationService _monetization;
+        private readonly INotificationService _notifications;
 
-        public ChapterService(InkVerseDB inkVerseDB)
+        public ChapterService(InkVerseDB inkVerseDB, IBookBibleService bookBible, IMonetizationService monetization, INotificationService notifications)
         {
             _inkVerseDB = inkVerseDB;
+            _bookBible = bookBible;
+            _monetization = monetization;
+            _notifications = notifications;
         }
 
         // List chapters for a given book (no content)
@@ -37,7 +44,7 @@ namespace InkVerse.Api.Services.ServicesRepo
 
         public async Task<List<ChapterReadDto>> GetByBookAsync(int bookId)
         {
-            return await _inkVerseDB.Chapters
+            var chapters = await _inkVerseDB.Chapters
                 .Where(c => c.BookId == bookId)
                 .Include(c => c.Arc)
                 .OrderBy(c => c.ChapterNumber)
@@ -45,7 +52,7 @@ namespace InkVerse.Api.Services.ServicesRepo
                 {
                     Id = c.ID,
                     Title = c.Title,
-                    Content = c.Content,
+                    Content = string.Empty,
                     ChapterNumber = c.ChapterNumber,
                     WordCount = c.WordCount,
                     BookId = c.BookId,
@@ -54,13 +61,20 @@ namespace InkVerse.Api.Services.ServicesRepo
                     CreatedAt = c.CreatedAt
                 })
                 .ToListAsync();
+
+            await ApplyMonetizationSummariesAsync(chapters);
+            return chapters;
         }
 
-        public async Task<ChapterReadDto> CreateAsync(ChapterCreateDto dto)
+        public async Task<ChapterReadDto> CreateAsync(ChapterCreateDto dto, string? userId = null, bool isAdmin = false)
         {
-            var bookExists = await _inkVerseDB.Books.AnyAsync(b => b.ID == dto.BookId);
-            if (!bookExists)
+            var book = await _inkVerseDB.Books.FirstOrDefaultAsync(b => b.ID == dto.BookId);
+            if (book == null)
                 throw new ArgumentException("Invalid book ID");
+            if (!isAdmin && !string.Equals(book.AuthorId, userId, StringComparison.Ordinal))
+                throw new UnauthorizedAccessException("You are not allowed to add chapters to this book.");
+            if (dto.IsPaid && !await _monetization.CanChargeChapterAsync(0, book.ID, book.AuthorId))
+                throw new InvalidOperationException("This book needs an approved contract and accepted monetization agreement before chapters can be paid.");
 
             var wordCount = dto.Content.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
 
@@ -81,7 +95,40 @@ namespace InkVerse.Api.Services.ServicesRepo
 
             _inkVerseDB.Chapters.Add(chapter);
             await _inkVerseDB.SaveChangesAsync();
+            if (dto.IsPaid)
+            {
+                _inkVerseDB.ChapterMonetizations.Add(new InkVerse.Api.Entities.Monetization.ChapterMonetization
+                {
+                    ChapterId = chapter.ID,
+                    IsPaid = true,
+                    PriceCoins = 5,
+                    Teaser = string.IsNullOrWhiteSpace(dto.Teaser)
+                        ? StripHtml(chapter.Content).Trim()[..Math.Min(260, StripHtml(chapter.Content).Trim().Length)]
+                        : dto.Teaser.Trim(),
+                    CreatedAt = DateTime.UtcNow,
+                });
+                await _inkVerseDB.SaveChangesAsync();
+            }
             await RecalcBookWordCountAsync(dto.BookId);
+            await _bookBible.MarkNeedsScanAsync(dto.BookId);
+
+            var libraryRecipients = await _inkVerseDB.UserLibraries
+                .AsNoTracking()
+                .Where(item => item.BookId == book.ID && item.IsInLibrary && item.UserId != null && item.UserId != book.AuthorId)
+                .Select(item => item.UserId!)
+                .ToListAsync();
+
+            await _notifications.NotifyManyAsync(libraryRecipients, new NotificationCreateRequest(
+                RecipientId: "",
+                ActorId: book.AuthorId,
+                Category: NotificationCategories.BookUpdates,
+                Type: NotificationTypes.NewChapter,
+                Title: "New chapter available",
+                Body: $"{book.Title} added chapter {chapter.ChapterNumber}: {chapter.Title}.",
+                LinkUrl: $"/book/{book.ID}/chapter/{chapter.ID}",
+                TargetType: "chapter",
+                TargetId: chapter.ID.ToString(),
+                DedupeKey: $"new-chapter:{chapter.ID}"));
 
 
             return new ChapterReadDto
@@ -98,10 +145,16 @@ namespace InkVerse.Api.Services.ServicesRepo
 
 
 
-        public async Task<ChapterReadDto?> UpdateAsync(int id, ChapterUpdateDto dto)
+        public async Task<ChapterReadDto?> UpdateAsync(int id, ChapterUpdateDto dto, string? userId = null, bool isAdmin = false)
         {
-            var chapter = await _inkVerseDB.Chapters.FindAsync(id);
+            var chapter = await _inkVerseDB.Chapters
+                .Include(item => item.Book)
+                .FirstOrDefaultAsync(item => item.ID == id);
             if (chapter == null) return null;
+            if (!isAdmin && !string.Equals(chapter.Book?.AuthorId, userId, StringComparison.Ordinal))
+                throw new UnauthorizedAccessException("You are not allowed to edit this chapter.");
+            if (!await _monetization.CanAuthorMutateChapterAsync(id, userId, isAdmin))
+                throw new InvalidOperationException("Published chapters are locked after contract approval.");
 
             var exists = await _inkVerseDB.Chapters.AnyAsync(c =>
                 c.BookId == chapter.BookId &&
@@ -120,6 +173,7 @@ namespace InkVerse.Api.Services.ServicesRepo
 
             await _inkVerseDB.SaveChangesAsync();
             await RecalcBookWordCountAsync(chapter.BookId);
+            await _bookBible.MarkNeedsScanAsync(chapter.BookId);
 
 
             return new ChapterReadDto
@@ -135,10 +189,16 @@ namespace InkVerse.Api.Services.ServicesRepo
         }
 
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id, string? userId = null, bool isAdmin = false)
         {
-            var chapter = await _inkVerseDB.Chapters.FindAsync(id);
+            var chapter = await _inkVerseDB.Chapters
+                .Include(item => item.Book)
+                .FirstOrDefaultAsync(item => item.ID == id);
             if (chapter == null) return false;
+            if (!isAdmin && !string.Equals(chapter.Book?.AuthorId, userId, StringComparison.Ordinal))
+                throw new UnauthorizedAccessException("You are not allowed to delete this chapter.");
+            if (!await _monetization.CanAuthorMutateChapterAsync(id, userId, isAdmin))
+                throw new InvalidOperationException("Published chapters are locked after contract approval.");
 
             var bookId = chapter.BookId;
 
@@ -159,18 +219,17 @@ namespace InkVerse.Api.Services.ServicesRepo
                 {
                     Id = c.ID,
                     Title = c.Title,
-                    Content = c.Content,
+                    Content = string.Empty,
                     ChapterNumber = c.ChapterNumber,
                     WordCount = c.WordCount,
                     BookId = c.BookId,
                     ArcId = c.ArcId,
-                    ArcName = c.Arc != null ? c.Arc.Name : null
-
-
-
-
+                    ArcName = c.Arc != null ? c.Arc.Name : null,
+                    CreatedAt = c.CreatedAt
                 })
                 .ToListAsync();
+
+            await ApplyMonetizationSummariesAsync(chapters);
 
             return chapters
                 .GroupBy(c => c.ArcName ?? "No Arc")
@@ -207,6 +266,71 @@ namespace InkVerse.Api.Services.ServicesRepo
             book.UpdatedAt = DateTime.UtcNow;
 
             await _inkVerseDB.SaveChangesAsync();
+        }
+
+        private async Task ApplyMonetizationSummariesAsync(List<ChapterReadDto> chapters)
+        {
+            if (!chapters.Any()) return;
+
+            var chapterIds = chapters.Select(item => item.Id).ToList();
+            var monetization = await _inkVerseDB.ChapterMonetizations
+                .Where(item => chapterIds.Contains(item.ChapterId))
+                .ToDictionaryAsync(item => item.ChapterId);
+
+            foreach (var chapter in chapters)
+            {
+                if (!monetization.TryGetValue(chapter.Id, out var item) || !item.IsPaid)
+                {
+                    chapter.IsPaid = false;
+                    chapter.IsLocked = false;
+                    chapter.IsUnlocked = true;
+                    continue;
+                }
+
+                var book = await _inkVerseDB.Books
+                    .Where(item => item.ID == chapter.BookId)
+                    .Select(item => new { item.AuthorId })
+                    .FirstOrDefaultAsync();
+
+                if (!await _monetization.CanChargeChapterAsync(chapter.Id, chapter.BookId, book?.AuthorId))
+                {
+                    chapter.IsPaid = false;
+                    chapter.IsLocked = false;
+                    chapter.IsUnlocked = true;
+                    chapter.PriceCoins = 0;
+                    chapter.Teaser = null;
+                    continue;
+                }
+
+                chapter.IsPaid = true;
+                chapter.IsLocked = true;
+                chapter.IsUnlocked = false;
+                chapter.PriceCoins = item.PriceCoins;
+                chapter.Teaser = item.Teaser;
+            }
+        }
+
+        private static string StripHtml(string value)
+        {
+            var chars = new List<char>(value.Length);
+            var insideTag = false;
+            foreach (var character in value)
+            {
+                if (character == '<')
+                {
+                    insideTag = true;
+                    continue;
+                }
+                if (character == '>')
+                {
+                    insideTag = false;
+                    chars.Add(' ');
+                    continue;
+                }
+                if (!insideTag) chars.Add(character);
+            }
+
+            return new string(chars.ToArray()).Replace("&nbsp;", " ");
         }
 
     }

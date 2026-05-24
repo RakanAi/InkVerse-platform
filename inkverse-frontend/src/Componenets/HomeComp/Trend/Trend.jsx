@@ -1,84 +1,90 @@
-import Carousel from "react-bootstrap/Carousel";
-import "./Trend.css";
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import { Autoplay, Navigation, Pagination } from "swiper/modules";
+import { useTranslation } from "react-i18next";
 
-import { absUrl } from "../../../Utils/absUrl";
+import "./Trend.css";
+import "@/features/trends/components/TrendCards.css";
+
 import LinkButton from "@/Shared/ui/LinkButton";
 import LoadingState from "@/Shared/ui/LoadingState";
 import EmptyState from "@/Shared/ui/EmptyState";
 import ErrorState from "@/Shared/ui/ErrorState";
 import HomeSection from "@/features/home/shared/HomeSection";
 import useHomeCollection from "@/features/home/shared/useHomeCollection";
+import TrendSpotlightCard from "@/features/trends/components/TrendSpotlightCard";
 import {
-  TRENDS_LABELS,
   TRENDS_QUERY,
+  getTrendsLabels,
 } from "@/features/home/trends/trends.presets";
 import {
   getCollectionItems,
   normalizeHomeTrendPreview,
-  shuffleItems,
 } from "@/features/home/shared/home.models";
 
 function selectTrendingItems(data) {
-  return shuffleItems(getCollectionItems(data))
+  return getCollectionItems(data)
     .slice(0, TRENDS_QUERY.take)
     .map(normalizeHomeTrendPreview);
 }
 
 export default function TrendCora() {
+  const { t } = useTranslation();
+  const labels = getTrendsLabels(t);
   const { items: trends, loading, error } = useHomeCollection({
     endpoint: "/trends",
-    errorMessage: TRENDS_LABELS.error,
+    errorMessage: labels.error,
     selectItems: selectTrendingItems,
   });
 
   return (
     <HomeSection
       className="iv-trends"
-      title={TRENDS_LABELS.title}
-      subtitle={TRENDS_LABELS.subtitle}
+      title={labels.title}
+      subtitle={labels.subtitle}
       actions={
         <LinkButton to="/trend" variant="outline" size="sm">
-          {TRENDS_LABELS.cta}
+          {labels.cta}
         </LinkButton>
       }
     >
       {loading ? (
-        <LoadingState text={TRENDS_LABELS.loading} />
+        <LoadingState text={labels.loading} />
       ) : error ? (
         <ErrorState title={error} />
       ) : trends.length === 0 ? (
-        <EmptyState title={TRENDS_LABELS.empty} />
+        <EmptyState title={labels.empty} />
       ) : (
-        <Carousel className="iv-trends__carousel" interval={5000} pause="hover">
+        <Swiper
+          className="iv-trends__swiper"
+          modules={[Autoplay, Navigation, Pagination]}
+          slidesPerView={1}
+          spaceBetween={18}
+          loop={trends.length > 1}
+          navigation={trends.length > 1}
+          pagination={trends.length > 1 ? { clickable: true } : false}
+          autoplay={
+            trends.length > 1
+              ? {
+                  delay: 5200,
+                  disableOnInteraction: false,
+                  pauseOnMouseEnter: true,
+                }
+              : false
+          }
+        >
           {trends.map((trend) => (
-            <Carousel.Item key={trend.id}>
-              <img
-                className="iv-trends__img"
-                src={absUrl(trend.imageUrl)}
-                alt={trend.name}
-                onError={(event) => {
-                  event.currentTarget.style.display = "none";
-                }}
+            <SwiperSlide key={trend.id}>
+              <TrendSpotlightCard
+                trend={trend}
+                badge={labels.badge}
+                ctaLabel={labels.action}
               />
-              <div className="iv-trends__overlay" />
-              <div className="iv-trends__caption text-white">
-                <div className="iv-trends__badge">{TRENDS_LABELS.badge}</div>
-                <p className="iv-trends__title text-white">{trend.name}</p>
-                {trend.description ? (
-                  <p className="iv-trends__desc">{trend.description}</p>
-                ) : null}
-                <LinkButton
-                  to={`/trend/${trend.id}`}
-                  variant="ghost"
-                  size="sm"
-                  className="iv-trends__cta"
-                >
-                  {TRENDS_LABELS.action}
-                </LinkButton>
-              </div>
-            </Carousel.Item>
+            </SwiperSlide>
           ))}
-        </Carousel>
+        </Swiper>
       )}
     </HomeSection>
   );

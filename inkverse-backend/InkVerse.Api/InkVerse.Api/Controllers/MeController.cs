@@ -4,16 +4,19 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using InkVerse.Api.DTOs.User;
 using InkVerse.Api.Entities.Identity;
+using InkVerse.Api.Services.InterFace;
 
 [ApiController]
 [Route("api/me")]
 public class MeController : ControllerBase
 {
     private readonly UserManager<AppUser> _userManager;
+    private readonly IAchievementService _achievements;
 
-    public MeController(UserManager<AppUser> userManager)
+    public MeController(UserManager<AppUser> userManager, IAchievementService achievements)
     {
         _userManager = userManager;
+        _achievements = achievements;
     }
 
     [Authorize]
@@ -23,14 +26,7 @@ public class MeController : ControllerBase
         var user = await GetCurrentUserAsync();
         if (user == null) return NotFound();
 
-        return Ok(new ProfileDto
-        {
-            UserName = user.UserName ?? "",
-            Email = user.Email ?? "",
-            Bio = user.Bio,
-            AvatarUrl = user.AvatarUrl,
-            CreatedAt = user.CreatedAt
-        });
+        return Ok(await ToProfileDtoAsync(user));
     }
 
     [Authorize]
@@ -46,14 +42,7 @@ public class MeController : ControllerBase
         var result = await _userManager.UpdateAsync(user);
         if (!result.Succeeded) return BadRequest(result.Errors);
 
-        return Ok(new ProfileDto
-        {
-            UserName = user.UserName ?? "",
-            Email = user.Email ?? "",
-            Bio = user.Bio,
-            AvatarUrl = user.AvatarUrl,
-            CreatedAt = user.CreatedAt
-        });
+        return Ok(await ToProfileDtoAsync(user));
     }
 
     [Authorize]
@@ -80,9 +69,14 @@ public class MeController : ControllerBase
         }
 
         user.IsProfilePublic = dto.IsProfilePublic;
+        user.ShowReviewsOnProfile = dto.ShowReviewsOnProfile;
+        user.ShowCommentsOnProfile = dto.ShowCommentsOnProfile;
+        user.ShowLibraryOnProfile = dto.ShowLibraryOnProfile;
+        user.ShowAuthorBooksOnProfile = dto.ShowAuthorBooksOnProfile;
         user.EmailNotificationsEnabled = dto.EmailNotificationsEnabled;
         user.ReadingRemindersEnabled = dto.ReadingRemindersEnabled;
         user.PreferredLanguage = string.IsNullOrWhiteSpace(language) ? "en" : language;
+        user.Timezone = NormalizeTimezone(dto.Timezone);
 
         var result = await _userManager.UpdateAsync(user);
         if (!result.Succeeded) return BadRequest(result.Errors);
@@ -102,9 +96,36 @@ public class MeController : ControllerBase
         return new UserSettingsDto
         {
             IsProfilePublic = user.IsProfilePublic,
+            ShowReviewsOnProfile = user.ShowReviewsOnProfile,
+            ShowCommentsOnProfile = user.ShowCommentsOnProfile,
+            ShowLibraryOnProfile = user.ShowLibraryOnProfile,
+            ShowAuthorBooksOnProfile = user.ShowAuthorBooksOnProfile,
             EmailNotificationsEnabled = user.EmailNotificationsEnabled,
             ReadingRemindersEnabled = user.ReadingRemindersEnabled,
-            PreferredLanguage = string.IsNullOrWhiteSpace(user.PreferredLanguage) ? "en" : user.PreferredLanguage
+            PreferredLanguage = string.IsNullOrWhiteSpace(user.PreferredLanguage) ? "en" : user.PreferredLanguage,
+            Timezone = string.IsNullOrWhiteSpace(user.Timezone) ? "UTC" : user.Timezone
         };
+    }
+
+    private async Task<ProfileDto> ToProfileDtoAsync(AppUser user)
+    {
+        var progress = await _achievements.GetProgressionAsync(user.Id, user.Timezone);
+        return new ProfileDto
+        {
+            UserName = user.UserName ?? "",
+            Email = user.Email ?? "",
+            Bio = user.Bio,
+            AvatarUrl = user.AvatarUrl,
+            CreatedAt = user.CreatedAt,
+            ReaderLevel = progress.Level,
+            TotalChaptersRead = progress.TotalUniqueChaptersRead,
+            FeaturedAchievements = progress.FeaturedAchievements
+        };
+    }
+
+    private static string NormalizeTimezone(string? timezone)
+    {
+        var value = string.IsNullOrWhiteSpace(timezone) ? "UTC" : timezone.Trim();
+        return value[..Math.Min(value.Length, 80)];
     }
 }

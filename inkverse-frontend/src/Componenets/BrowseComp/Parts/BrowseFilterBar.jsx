@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import "./BrowseFilter.css";
 import {
   VERSE_TYPES,
@@ -53,6 +54,7 @@ function FilterToggleIcon({ open }) {
 }
 
 export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
+  const { t } = useTranslation();
   const [showMore, setShowMore] = useState(false);
   const [searchLocal, setSearchLocal] = useState(query.search || "");
 
@@ -89,9 +91,9 @@ export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
 
   const statusLabel = useMemo(() => {
     const statuses = query.statuses || [];
-    if (statuses.length === 0) return "Status";
-    return `Status: ${statuses[0]}`;
-  }, [query.statuses]);
+    if (statuses.length === 0) return t("browse.filters.status");
+    return t("browse.filters.statusLabel", { status: statuses[0] });
+  }, [query.statuses, t]);
 
   return (
     <div className="iv-browse-filters">
@@ -116,12 +118,12 @@ export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
             size="md"
             className="iv-browse-filters__topButton iv-browse-filters__topButton--toggle"
             onClick={() => setShowMore((prev) => !prev)}
-            aria-label={showMore ? "Hide filters" : "Show more filters"}
-            title={showMore ? "Hide filters" : "Show more filters"}
+            aria-label={showMore ? t("browse.filters.hideFilters") : t("browse.filters.showMoreFilters")}
+            title={showMore ? t("browse.filters.hideFilters") : t("browse.filters.showMoreFilters")}
           >
             <FilterToggleIcon open={showMore} />
             <span className="iv-browse-filters__topButtonText">
-              {showMore ? "Hide filters" : "More filters"}
+              {showMore ? t("browse.filters.hideFilters") : t("browse.filters.moreFilters")}
             </span>
           </Button>
 
@@ -138,16 +140,16 @@ export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
 
       <div className="iv-browse-filters__searchRow">
         <div className="iv-browse-filters__field iv-browse-filters__field--search">
-          <span className="iv-browse-filters__label">Search</span>
+          <span className="iv-browse-filters__label">{t("browse.filters.search")}</span>
           <TextField
-            placeholder="Search title, author, summary..."
+            placeholder={t("browse.filters.searchPlaceholder")}
             value={searchLocal}
             onChange={setSearchLocal}
           />
         </div>
 
         <div className="iv-browse-filters__field">
-          <span className="iv-browse-filters__label">Sort by</span>
+          <span className="iv-browse-filters__label">{t("browse.filters.sortBy")}</span>
           <DropdownSelect
             value={query.sortBy}
             onChange={(sortBy) =>
@@ -158,12 +160,12 @@ export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
               }))
             }
             options={SORT_OPTIONS}
-            renderLabel={(option) => `Sort by: ${option.label}`}
+            renderLabel={(option) => t("browse.filters.sortByPrefix", { label: option.label })}
           />
         </div>
 
         <div className="iv-browse-filters__field">
-          <span className="iv-browse-filters__label">Direction</span>
+          <span className="iv-browse-filters__label">{t("browse.filters.direction")}</span>
           <Button
             variant="outline"
             className="iv-browse-filters__direction"
@@ -174,14 +176,14 @@ export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
                 pageNumber: 1,
               }))
             }
-            title="Toggle ascending or descending sort"
+            title={t("browse.filters.toggleDirection")}
           >
-            {query.isAscending ? "Ascending" : "Descending"}
+            {query.isAscending ? t("browse.filters.ascending") : t("browse.filters.descending")}
           </Button>
         </div>
 
         <div className="iv-browse-filters__field">
-          <span className="iv-browse-filters__label">Status</span>
+          <span className="iv-browse-filters__label">{t("browse.filters.status")}</span>
           <MultiSelectDropdown
             label={statusLabel}
             values={query.statuses || []}
@@ -204,7 +206,7 @@ export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
         <div className="iv-browse-filters__advanced">
           <div className="iv-browse-filters__grid">
             <div className="iv-browse-filters__field">
-              <span className="iv-browse-filters__label">Origin type</span>
+              <span className="iv-browse-filters__label">{t("browse.filters.originType")}</span>
               <DropdownSelect
                 value={query.originType}
                 onChange={(originType) =>
@@ -214,7 +216,7 @@ export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
                     pageNumber: 1,
                   }))
                 }
-                placeholder="All origin types"
+                placeholder={t("browse.filters.allOriginTypes")}
                 options={ORIGIN_TYPES.map((originType) => ({
                   value: originType,
                   label: originType,
@@ -224,13 +226,13 @@ export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
             </div>
 
             <div className="iv-browse-filters__field">
-              <span className="iv-browse-filters__label">Minimum rating</span>
+              <span className="iv-browse-filters__label">{t("browse.filters.minimumRating")}</span>
               <TextField
                 type="number"
                 min="0"
                 max="5"
                 step="0.1"
-                placeholder="0 to 5"
+                placeholder={t("browse.filters.ratingPlaceholder")}
                 value={query.minRating}
                 onChange={(minRating) =>
                   setQuery((prev) => ({
@@ -243,12 +245,12 @@ export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
             </div>
 
             <div className="iv-browse-filters__field">
-              <span className="iv-browse-filters__label">Minimum reviews</span>
+              <span className="iv-browse-filters__label">{t("browse.filters.minimumReviews")}</span>
               <TextField
                 type="number"
                 min="0"
                 step="1"
-                placeholder="Review count"
+                placeholder={t("browse.filters.reviewsPlaceholder")}
                 value={query.minReviewCount}
                 onChange={(minReviewCount) =>
                   setQuery((prev) => ({
@@ -262,14 +264,14 @@ export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
           </div>
 
           <div className="iv-browse-filters__guide">
-            Tap once to include a chip, twice to exclude it, and a third time to clear it.
+            {t("browse.filters.guide")}
           </div>
 
           <div className="iv-browse-filters__group">
             <div className="iv-browse-filters__groupHead">
-              <span className="iv-browse-filters__groupTitle">Genres</span>
+              <span className="iv-browse-filters__groupTitle">{t("browse.filters.genres")}</span>
               <span className="iv-browse-filters__groupHint">
-                Build the shelf tone.
+                {t("browse.filters.genresHint")}
               </span>
             </div>
 
@@ -285,10 +287,10 @@ export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
                     ? "exclude"
                     : "neutral";
                 const title = isIncluded
-                  ? "Included"
+                  ? t("browse.filters.included")
                   : isExcluded
-                    ? "Excluded"
-                    : "Not selected";
+                    ? t("browse.filters.excluded")
+                    : t("browse.filters.notSelected");
 
                 return (
                   <Chip
@@ -319,9 +321,9 @@ export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
 
           <div className="iv-browse-filters__group">
             <div className="iv-browse-filters__groupHead">
-              <span className="iv-browse-filters__groupTitle">Tags</span>
+              <span className="iv-browse-filters__groupTitle">{t("browse.filters.tags")}</span>
               <span className="iv-browse-filters__groupHint">
-                Fine-tune the exact reading energy.
+                {t("browse.filters.tagsHint")}
               </span>
             </div>
 
@@ -337,10 +339,10 @@ export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
                     ? "exclude"
                     : "neutral";
                 const title = isIncluded
-                  ? "Included"
+                  ? t("browse.filters.included")
                   : isExcluded
-                    ? "Excluded"
-                    : "Not selected";
+                    ? t("browse.filters.excluded")
+                    : t("browse.filters.notSelected");
 
                 return (
                   <Chip
@@ -374,8 +376,8 @@ export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
       {selectedGenreChips.length > 0 || selectedTagChips.length > 0 ? (
         <div className="iv-browse-filters__selected">
           <div className="iv-browse-filters__selectedHead">
-            <span className="iv-browse-filters__groupTitle">Active filters</span>
-            <span className="iv-browse-filters__groupHint">Tap any chip to remove it.</span>
+            <span className="iv-browse-filters__groupTitle">{t("browse.filters.activeFilters")}</span>
+            <span className="iv-browse-filters__groupHint">{t("browse.filters.activeFiltersHint")}</span>
           </div>
 
           <div className="iv-browse-filters__selectedChips">
@@ -383,7 +385,7 @@ export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
               <Chip
                 key={`g-${item.type}-${item.id}`}
                 tone={item.type === "exclude" ? "exclude" : "include"}
-                title="Click to remove"
+                title={t("browse.filters.clickToRemove")}
                 onClick={() => {
                   setQuery((prev) => ({
                     ...prev,
@@ -403,7 +405,7 @@ export default function BrowseFilterBar({ query, setQuery, genres, tags }) {
               <Chip
                 key={`t-${item.type}-${item.id}`}
                 tone={item.type === "exclude" ? "exclude" : "include"}
-                title="Click to remove"
+                title={t("browse.filters.clickToRemove")}
                 onClick={() => {
                   setQuery((prev) => ({
                     ...prev,

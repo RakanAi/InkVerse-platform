@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import api from "../../Api/api";
 import BrowseFilterBar from "./Parts/BrowseFilterBar";
@@ -68,6 +69,7 @@ function countActiveFilters(q) {
 }
 
 export default function Browse() {
+  const { t } = useTranslation();
   /** @type {[BrowseQuery, Function]} */
   const [query, setQuery] = useState(() => ({ ...DEFAULT_BROWSE_QUERY }));
 
@@ -200,7 +202,7 @@ export default function Browse() {
         }
       } catch (fetchError) {
         console.error(fetchError);
-        if (!cancelled) setError("Failed to load books (check API).");
+        if (!cancelled) setError(t("browse.page.loadError"));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -220,8 +222,12 @@ export default function Browse() {
   const resultEnd = totalCount === 0 ? 0 : resultStart + items.length - 1;
   const resultsSubtitle =
     totalCount > 0
-      ? `Showing ${resultStart}-${resultEnd} of ${totalCount} stories matched to your current shelf.`
-      : "Use the filters to shape a shelf around the exact vibe you want.";
+      ? t("browse.page.resultsSubtitle", {
+          start: resultStart,
+          end: resultEnd,
+          total: totalCount,
+        })
+      : t("browse.page.emptyResultsSubtitle");
 
   const toggleBookmark = async (book) => {
     const id = book.id ?? book.Id;
@@ -250,9 +256,10 @@ export default function Browse() {
       const status = requestError?.response?.status;
       const url = requestError?.config?.url;
       setBookmarkError(
-        `Bookmark failed${status ? ` (HTTP ${status})` : ""}. ${
-          url ? `URL: ${url}` : ""
-        }`,
+        t("browse.page.bookmarkFailed", {
+          status: status ? ` (HTTP ${status})` : "",
+          url: url ? ` URL: ${url}` : "",
+        }),
       );
       console.error(requestError);
     }
@@ -263,13 +270,13 @@ export default function Browse() {
       <div className="iv-browse-shell">
         <section className="iv-browse-panel iv-browse-panel--filters">
           <PageHeader
-            title="Shape Your Shelf"
-            subtitle="Use quick tabs for broad lanes, then open the advanced controls when you want something more exact."
+            title={t("browse.page.shapeTitle")}
+            subtitle={t("browse.page.shapeSubtitle")}
             actions={
               <div className="iv-browse-head-badge">
                 {activeFilterCount > 0
-                  ? `${activeFilterCount} filters active`
-                  : "Ready to explore"}
+                  ? t("browse.page.filtersActive", { count: activeFilterCount })
+                  : t("browse.page.readyToExplore")}
               </div>
             }
           />
@@ -290,20 +297,20 @@ export default function Browse() {
 
         <section className="iv-browse-panel iv-browse-panel--results">
           <PageHeader
-            title="Shelf Results"
+            title={t("browse.page.resultsTitle")}
             subtitle={resultsSubtitle}
             actions={
               <div className="iv-browse-resultsMeta">
                 <span className="iv-browse-resultsMeta__pill">{query.verseType}</span>
                 <span className="iv-browse-resultsMeta__pill">
-                  {items.length} showing now
+                  {t("browse.page.showingNow", { count: items.length })}
                 </span>
               </div>
             }
           />
 
           {loading ? (
-            <LoadingState text="Loading books..." />
+            <LoadingState text={t("browse.page.loading")} />
           ) : error ? (
             <ErrorState
               subtitle={error}
@@ -311,8 +318,8 @@ export default function Browse() {
             />
           ) : items.length === 0 ? (
             <EmptyState
-              title="No books match your filters"
-              subtitle="Try removing some filters, searching a different keyword, or exploring other tags."
+              title={t("browse.page.emptyTitle")}
+              subtitle={t("browse.page.emptySubtitle")}
             />
           ) : (
             <>

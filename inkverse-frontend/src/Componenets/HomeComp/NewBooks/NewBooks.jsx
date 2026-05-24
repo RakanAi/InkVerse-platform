@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import "./NewBooks.css";
 
 import LoadingState from "@/Shared/ui/LoadingState";
@@ -13,18 +14,20 @@ import NewBookTile from "@/features/home/newbooks/components/NewBookTile";
 import {
   NEWBOOKS_QUERY,
   NEWBOOKS_VISIBLE_BY_WIDTH,
-  NEWBOOKS_LABELS,
+  getNewBooksLabels,
 } from "@/features/home/newbooks/newbooks.presets";
 import { getVisibleCount } from "@/features/home/newbooks/getVisibleCount";
 import { buildBooksQuery } from "@/features/home/newbooks/utils/buildBooksQuery";
 import { getCollectionItems } from "@/features/home/shared/home.models";
 
 export default function NewBooks() {
+  const { t } = useTranslation();
+  const labels = getNewBooksLabels(t);
   const [visibleBooks, setVisibleBooks] = useState(6);
   const endpoint = buildBooksQuery(NEWBOOKS_QUERY);
   const { items: books, loading, error, refetch } = useHomeCollection({
     endpoint,
-    errorMessage: NEWBOOKS_LABELS.error,
+    errorMessage: labels.error,
     selectItems: getCollectionItems,
   });
 
@@ -42,27 +45,27 @@ export default function NewBooks() {
   return (
     <HomeSection
       className="iv-home-latest"
-      title={NEWBOOKS_LABELS.title}
-      subtitle={NEWBOOKS_LABELS.subtitle}
+      title={labels.title}
+      subtitle={labels.subtitle}
       actions={
         <LinkButton to="/Browser" variant="primary" size="sm">
-          {NEWBOOKS_LABELS.cta}
+          {labels.cta}
         </LinkButton>
       }
     >
       {loading ? (
-        <LoadingState text={NEWBOOKS_LABELS.loading} />
+        <LoadingState text={labels.loading} />
       ) : error ? (
         <div className="d-flex flex-column gap-2">
           <ErrorState title={error} />
           <div>
             <Button variant="outline" onClick={refetch}>
-              Retry
+              {t("common.actions.retry")}
             </Button>
           </div>
         </div>
       ) : books.length === 0 ? (
-        <EmptyState title={NEWBOOKS_LABELS.empty} />
+        <EmptyState title={labels.empty} />
       ) : (
         <div className="iv-books-row">
           {books.slice(0, visibleBooks).map((book) => (

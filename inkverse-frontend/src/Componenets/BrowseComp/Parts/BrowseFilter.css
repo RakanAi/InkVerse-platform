@@ -143,6 +143,28 @@
   border-top: 1px solid rgba(103, 121, 181, 0.14);
 }
 
+html[data-theme="dark"] .iv-browse-filters__label {
+  color: #8b9bcc;
+}
+
+html[data-theme="dark"] .iv-browse-filters__advanced,
+html[data-theme="dark"] .iv-browse-filters__selected {
+  border-top-color: rgba(127, 145, 214, 0.12);
+}
+
+html[data-theme="dark"] .iv-browse-filters__guide {
+  background: rgba(20, 31, 60, 0.78);
+  color: #a6b5da;
+}
+
+html[data-theme="dark"] .iv-browse-filters__groupTitle {
+  color: #eef3ff;
+}
+
+html[data-theme="dark"] .iv-browse-filters__groupHint {
+  color: #90a0cb;
+}
+
 @media (min-width: 900px) {
   .iv-browse-filters__top {
     grid-template-columns: minmax(0, 1fr) auto;

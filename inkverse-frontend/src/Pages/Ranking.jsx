@@ -1,4 +1,5 @@
 import { useContext, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import api from "../Api/api";
 import AuthContext from "../Context/AuthProvider";
 import "./page-styles/Ranking.css";
@@ -17,9 +18,9 @@ import {
 import { DEFAULT_RANKING_STATE } from "@/features/ranking/ranking.defaults.jsx";
 import { buildRankingParams } from "@/features/ranking/utils/buildRankingParams.jsx";
 import {
-  RANKING_TABS,
-  RANKING_TIME_RANGES,
-  RANKING_STATUS_OPTIONS,
+  getRankingTabs,
+  getRankingTimeRanges,
+  getRankingStatusOptions,
 } from "@/features/ranking/ranking.presets.jsx";
 
 function formatNumber(value) {
@@ -37,10 +38,10 @@ function formatNumber(value) {
 }
 
 function formatDate(value) {
-  if (!value) return "Fresh arrival";
+  if (!value) return null;
 
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Fresh arrival";
+  if (Number.isNaN(date.getTime())) return null;
 
   return new Intl.DateTimeFormat("en", {
     month: "short",
@@ -49,7 +50,7 @@ function formatDate(value) {
   }).format(date);
 }
 
-function buildMetric(book, preset, timeLabel) {
+function buildMetric(t, book, preset, timeLabel) {
   const rating = Number(
     book.averageRating ?? book.rating ?? book.AverageRating ?? book.Rating ?? 0,
   ).toFixed(2);
@@ -60,29 +61,30 @@ function buildMetric(book, preset, timeLabel) {
   switch (preset.key) {
     case "mostViewed":
       return {
-        label: `View momentum · ${timeLabel}`,
-        value: `${totalViews} views`,
+        label: t("ranking.page.viewMomentum", { timeLabel }),
+        value: t("ranking.page.views", { count: totalViews }),
       };
     case "mostReviewed":
       return {
-        label: `Conversation · ${timeLabel}`,
-        value: `${reviewsCount} reviews`,
+        label: t("ranking.page.conversation", { timeLabel }),
+        value: t("ranking.page.reviews", { count: reviewsCount }),
       };
     case "new":
       return {
-        label: "Recently added",
-        value: formatDate(createdAt),
+        label: t("ranking.page.recentlyAdded"),
+        value: formatDate(createdAt) || t("ranking.page.freshArrival"),
       };
     case "topRated":
     default:
       return {
-        label: `Reader score · ${timeLabel}`,
-        value: `${rating} average`,
+        label: t("ranking.page.readerScore", { timeLabel }),
+        value: t("ranking.page.average", { rating }),
       };
   }
 }
 
 export default function Ranking() {
+  const { t } = useTranslation();
   /** @type {import("@/features/ranking/ranking.types").RankingQuery} */
   const [query, setQuery] = useState(DEFAULT_RANKING_STATE);
   const [loading, setLoading] = useState(false);
@@ -140,7 +142,7 @@ export default function Ranking() {
       });
     } catch (requestError) {
       console.error(requestError);
-      setError("Failed to load ranking.");
+      setError(t("ranking.page.loadError"));
       setData((prev) => ({ ...prev, items: [], totalCount: 0, totalPages: 0 }));
     } finally {
       setLoading(false);
@@ -167,22 +169,25 @@ export default function Ranking() {
     }
   };
 
+  const rankingTabs = useMemo(() => getRankingTabs(t), [t]);
+  const rankingTimeRanges = useMemo(() => getRankingTimeRanges(t), [t]);
+  const rankingStatusOptions = useMemo(() => getRankingStatusOptions(t), [t]);
   const tabOptions = useMemo(
-    () => RANKING_TABS.map((tab) => ({ value: tab.key, label: tab.label })),
-    [],
+    () => rankingTabs.map((tab) => ({ value: tab.key, label: tab.label })),
+    [rankingTabs],
   );
 
   const timeOptions = useMemo(
-    () => RANKING_TIME_RANGES.map((timeRange) => ({
+    () => rankingTimeRanges.map((timeRange) => ({
       value: timeRange.key,
       label: timeRange.label,
     })),
-    [],
+    [rankingTimeRanges],
   );
 
   const timeLabel =
-    RANKING_TIME_RANGES.find((timeRange) => timeRange.key === query.timeRange)?.label ??
-    "All Time";
+    rankingTimeRanges.find((timeRange) => timeRange.key === query.timeRange)?.label ??
+    t("ranking.timeRanges.All");
 
   const items = data.items || [];
   const totalCount = Number(data.totalCount || 0);
@@ -198,15 +203,19 @@ export default function Ranking() {
 
   const boardSubtitle =
     totalCount > 0
-      ? `Showing ranks ${resultStart}-${resultEnd} out of ${totalCount} stories in the current board.`
-      : "Switch lanes, narrow the shelf, or open a different time window to populate the board.";
+      ? t("ranking.page.boardSubtitle", {
+          start: resultStart,
+          end: resultEnd,
+          total: totalCount,
+        })
+      : t("ranking.page.emptyBoardSubtitle");
 
   return (
     <section className="iv-ranking-page">
       <div className="iv-ranking-shell">
         <section className="iv-ranking-deck">
           <div className="iv-ranking-deck__band">
-            <span className="iv-ranking-controlLabel">Leaderboard lane</span>
+            <span className="iv-ranking-controlLabel">{t("ranking.page.laneLabel")}</span>
             <Segmented
               value={query.tab}
               onChange={(value) => setQuery((prev) => ({ ...prev, tab: value, pageNumber: 1 }))}
@@ -215,7 +224,7 @@ export default function Ranking() {
           </div>
 
           <div className="iv-ranking-deck__band">
-            <span className="iv-ranking-controlLabel">Time window</span>
+            <span className="iv-ranking-controlLabel">{t("ranking.page.timeLabel")}</span>
             <Segmented
               value={query.timeRange}
               onChange={(value) =>
@@ -227,7 +236,7 @@ export default function Ranking() {
 
           <div className="iv-ranking-deck__filters">
             <div className="iv-ranking-field">
-              <span className="iv-ranking-controlLabel">Verse type</span>
+              <span className="iv-ranking-controlLabel">{t("ranking.page.verseType")}</span>
               <DropdownSelect
                 value={query.verseType}
                 onChange={(value) =>
@@ -238,31 +247,31 @@ export default function Ranking() {
                   }))
                 }
                 options={VERSE_TYPES}
-                placeholder="All Verse Types"
+                placeholder={t("ranking.page.verseType")}
               />
             </div>
 
             <div className="iv-ranking-field">
-              <span className="iv-ranking-controlLabel">Origin</span>
+              <span className="iv-ranking-controlLabel">{t("ranking.page.origin")}</span>
               <DropdownSelect
                 value={query.originType}
                 onChange={(value) =>
                   setQuery((prev) => ({ ...prev, originType: value, pageNumber: 1 }))
                 }
                 options={ORIGIN_TYPES}
-                placeholder="All Origins"
+                placeholder={t("ranking.page.origin")}
               />
             </div>
 
             <div className="iv-ranking-field">
-              <span className="iv-ranking-controlLabel">Status</span>
+              <span className="iv-ranking-controlLabel">{t("ranking.page.status")}</span>
               <DropdownSelect
                 value={query.status}
                 onChange={(value) =>
                   setQuery((prev) => ({ ...prev, status: value, pageNumber: 1 }))
                 }
-                options={RANKING_STATUS_OPTIONS}
-                placeholder="All Status"
+                options={rankingStatusOptions}
+                placeholder={t("ranking.page.statusPlaceholder")}
               />
             </div>
           </div>
@@ -271,7 +280,7 @@ export default function Ranking() {
         <section className="iv-ranking-results">
           <div className="iv-ranking-results__head">
             <div>
-              <span className="iv-ranking-sectionKicker">Current board</span>
+              <span className="iv-ranking-sectionKicker">{t("ranking.page.currentBoard")}</span>
               <h2 className="iv-ranking-sectionTitle">
                 {preset.label} · {timeLabel}
               </h2>
@@ -279,17 +288,27 @@ export default function Ranking() {
             </div>
 
             <div className="iv-ranking-results__meta">
-              <span className="iv-ranking-chip">{items.length} on this page</span>
-              <span className="iv-ranking-chip">{currentPage}/{Math.max(totalPages, 1)} pages</span>
+              <span className="iv-ranking-chip">
+                {t("ranking.page.onThisPage", { count: items.length })}
+              </span>
+              <span className="iv-ranking-chip">
+                {t("ranking.page.pages", {
+                  current: currentPage,
+                  total: Math.max(totalPages, 1),
+                })}
+              </span>
             </div>
           </div>
 
           {loading ? (
-            <LoadingState text="Loading ranking..." />
+            <LoadingState text={t("ranking.page.loading")} />
           ) : error ? (
             <ErrorState subtitle={error} onRetry={loadRanked} />
           ) : items.length === 0 ? (
-            <EmptyState title="No ranked stories yet" subtitle="Try changing filters." />
+            <EmptyState
+              title={t("ranking.page.emptyTitle")}
+              subtitle={t("ranking.page.emptySubtitle")}
+            />
           ) : (
             <>
               {spotlightItems.length > 0 ? (
@@ -299,7 +318,7 @@ export default function Ranking() {
                       key={book.id ?? book.Id}
                       book={book}
                       rank={rankOffset + index + 1}
-                      metric={buildMetric(book, preset, timeLabel)}
+                      metric={buildMetric(t, book, preset, timeLabel)}
                       featured
                       isBookmarked={inLib(book.id ?? book.Id)}
                       onToggleBookmark={toggleLibrary}
@@ -315,7 +334,7 @@ export default function Ranking() {
                       key={book.id ?? book.Id}
                       book={book}
                       rank={rankOffset + spotlightItems.length + index + 1}
-                      metric={buildMetric(book, preset, timeLabel)}
+                      metric={buildMetric(t, book, preset, timeLabel)}
                       isBookmarked={inLib(book.id ?? book.Id)}
                       onToggleBookmark={toggleLibrary}
                     />

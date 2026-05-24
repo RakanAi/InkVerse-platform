@@ -2,6 +2,7 @@
 using InkVerse.Api.Data;
 using InkVerse.Api.DTOs.Review;
 using InkVerse.Api.Entities;
+using InkVerse.Api.Entities.Notifications;
 using InkVerse.Api.Services.InterFace;
 
 namespace InkVerse.Api.Services.ServicesRepo
@@ -9,10 +10,14 @@ namespace InkVerse.Api.Services.ServicesRepo
     public class ReviewService : IReviewService
     {
         private readonly InkVerseDB _db;
+        private readonly IAchievementService _achievements;
+        private readonly INotificationService _notifications;
 
-        public ReviewService(InkVerseDB db)
+        public ReviewService(InkVerseDB db, IAchievementService achievements, INotificationService notifications)
         {
             _db = db;
+            _achievements = achievements;
+            _notifications = notifications;
         }
 
         private static double Clamp(double v, double min, double max)
@@ -39,7 +44,7 @@ namespace InkVerse.Api.Services.ServicesRepo
         public async Task<List<ReviewReadDto>> GetReviewsForBookAsync(int bookId, string? currentUserId)
         {
             return await _db.Reviews
-                .Where(r => r.BookId == bookId)
+                .Where(r => r.BookId == bookId && !r.IsDeleted)
                 .Include(r => r.User)
                 .Include(r => r.Reactions)
                 .Include(r => r.Book)
@@ -88,9 +93,11 @@ namespace InkVerse.Api.Services.ServicesRepo
             var existing = await _db.Reviews
                 .Include(r => r.Reactions)
                 .Include(r => r.User)
-                .FirstOrDefaultAsync(r => r.BookId == bookId && r.UserId == userId);
+                .FirstOrDefaultAsync(r => r.BookId == bookId && r.UserId == userId && !r.IsDeleted);
 
             var overallRating = ComputeOverallRating(dto);
+
+            var isNewReview = existing == null;
 
             if (existing != null)
             {
@@ -126,6 +133,29 @@ namespace InkVerse.Api.Services.ServicesRepo
 
             await _db.SaveChangesAsync();
             await RecalcBookAverageRatingAsync(bookId);
+            await _achievements.RefreshAchievementsAsync(userId);
+
+            if (isNewReview)
+            {
+                var book = await _db.Books
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(item => item.ID == bookId);
+
+                if (!string.IsNullOrWhiteSpace(book?.AuthorId))
+                {
+                    await _notifications.NotifyAsync(new NotificationCreateRequest(
+                        RecipientId: book.AuthorId,
+                        ActorId: userId,
+                        Category: NotificationCategories.AuthorActivity,
+                        Type: NotificationTypes.NewBookReview,
+                        Title: "New review on your book",
+                        Body: $"{book.Title} received a new reader review.",
+                        LinkUrl: $"/book/{book.ID}",
+                        TargetType: "review",
+                        TargetId: existing.ID.ToString(),
+                        DedupeKey: $"review-created:{existing.ID}"));
+                }
+            }
 
             return new ReviewReadDto
             {
@@ -155,7 +185,7 @@ namespace InkVerse.Api.Services.ServicesRepo
     var review = await _db.Reviews
         .Include(r => r.User)
         .Include(r => r.Reactions)
-        .FirstOrDefaultAsync(r => r.ID == reviewId && r.UserId == userId);
+        .FirstOrDefaultAsync(r => r.ID == reviewId && r.UserId == userId && !r.IsDeleted);
 
     if (review == null) return null;
 
@@ -233,10 +263,15 @@ namespace InkVerse.Api.Services.ServicesRepo
         {
             if (reactionType != "like" && reactionType != "dislike") return false;
 
-            var review = await _db.Reviews.Include(r => r.Reactions).FirstOrDefaultAsync(r => r.ID == reviewId);
+            var review = await _db.Reviews
+                .Include(r => r.Reactions)
+                .Include(r => r.Book)
+                .FirstOrDefaultAsync(r => r.ID == reviewId && !r.IsDeleted);
             if (review == null) return false;
 
             var existing = review.Reactions.FirstOrDefault(r => r.UserId == userId);
+            var shouldNotifyLike = reactionType == "like" &&
+                (existing == null || existing.ReactionType != "like");
             if (existing != null)
             {
                 // ✅ If user clicks same reaction again => remove it (undo)
@@ -262,6 +297,20 @@ namespace InkVerse.Api.Services.ServicesRepo
             }
 
             await _db.SaveChangesAsync();
+            if (shouldNotifyLike && !string.IsNullOrWhiteSpace(review.UserId))
+            {
+                await _notifications.NotifyAsync(new NotificationCreateRequest(
+                    RecipientId: review.UserId,
+                    ActorId: userId,
+                    Category: NotificationCategories.Interactions,
+                    Type: NotificationTypes.ReviewLike,
+                    Title: "Someone liked your review",
+                    Body: $"Your review on {review.Book?.Title ?? "a book"} got a helpful reaction.",
+                    LinkUrl: $"/book/{review.BookId}",
+                    TargetType: "review",
+                    TargetId: review.ID.ToString(),
+                    DedupeKey: $"review-like:{review.ID}:{userId}"));
+            }
             return true;
 
         }
@@ -274,6 +323,7 @@ namespace InkVerse.Api.Services.ServicesRepo
 
             return await _db.Reviews
                 .AsNoTracking()
+                .Where(r => !r.IsDeleted)
                 .OrderByDescending(r => r.CreatedAt)
                 .Take(take)
                 .Select(r => new ReviewReadDto
@@ -307,7 +357,7 @@ namespace InkVerse.Api.Services.ServicesRepo
         private async Task RecalcBookAverageRatingAsync(int bookId)
         {
             var avg = await _db.Reviews
-                .Where(r => r.BookId == bookId)
+                .Where(r => r.BookId == bookId && !r.IsDeleted)
                 .Select(r => (double?)r.Rating)
                 .AverageAsync() ?? 0;
 
@@ -325,6 +375,7 @@ namespace InkVerse.Api.Services.ServicesRepo
 
             return await _db.Reviews
                 .AsNoTracking()
+                .Where(r => !r.IsDeleted)
                 .Include(r => r.Book)
                 .Include(r => r.User)
                 .OrderByDescending(r => r.CreatedAt)
@@ -345,7 +396,7 @@ namespace InkVerse.Api.Services.ServicesRepo
 
         public async Task<bool> SaveAiAnalysisAsync(int reviewId, ReviewAnalysisDto dto)
         {
-            var review = await _db.Reviews.FirstOrDefaultAsync(r => r.ID == reviewId);
+            var review = await _db.Reviews.FirstOrDefaultAsync(r => r.ID == reviewId && !r.IsDeleted);
             if (review == null) return false;
 
             review.AiClassification = dto.Classification?.Trim();

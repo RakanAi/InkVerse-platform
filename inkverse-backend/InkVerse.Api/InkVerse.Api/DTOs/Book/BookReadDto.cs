@@ -1,4 +1,6 @@
-﻿namespace InkVerse.Api.DTOs.Book
+﻿using System.Text.Json.Serialization;
+
+namespace InkVerse.Api.DTOs.Book
 {
     public class BookReadDto
     {
@@ -31,5 +33,17 @@
         public string OriginType { get; set; } = "PlatformOriginal";
 
         public string? SourceUrl { get; set; }
+        public bool TranslationAiEnabled { get; set; }
+        public bool TtsAiEnabled { get; set; }
+        public bool IsContracted { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? ContractStatus { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+        public bool ContractEligible { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public List<string>? ContractMissingRequirements { get; set; }
     }
 }

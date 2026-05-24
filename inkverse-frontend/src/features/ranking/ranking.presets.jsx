@@ -1,20 +1,31 @@
 export const RANKING_TABS = [
-  { key: "topRated", label: "Top Rated", sortBy: "AverageRating", isAscending: false, minReviewCount: 3 },
-  { key: "mostViewed", label: "Most Viewed", sortBy: "TotalViews", isAscending: false },
-  { key: "mostReviewed", label: "Most Reviewed", sortBy: "ReviewsCount", isAscending: false },
-  { key: "new", label: "New", sortBy: "CreatedAt", isAscending: false },
+  { key: "topRated", sortBy: "AverageRating", isAscending: false, minReviewCount: 3 },
+  { key: "mostViewed", sortBy: "TotalViews", isAscending: false },
+  { key: "mostReviewed", sortBy: "ReviewsCount", isAscending: false },
+  { key: "new", sortBy: "CreatedAt", isAscending: false },
 ];
 
-export const RANKING_TIME_RANGES = [
-  { key: "All", label: "All Time" },
-  { key: "Week", label: "This Week" },
-  { key: "Month", label: "This Month" },
-  { key: "HalfYear", label: "6 Months" },
-  { key: "Year", label: "This Year" },
-];
+export function getRankingTabs(t) {
+  return RANKING_TABS.map((tab) => ({
+    ...tab,
+    label: t(`ranking.tabs.${tab.key}`),
+  }));
+}
 
-export const RANKING_STATUS_OPTIONS = [
-  { value: "", label: "All Status" },
-  { value: "Ongoing", label: "Ongoing" },
-  { value: "Completed", label: "Completed" },
-];
+export function getRankingTimeRanges(t) {
+  return [
+    { key: "All", label: t("ranking.timeRanges.All") },
+    { key: "Week", label: t("ranking.timeRanges.Week") },
+    { key: "Month", label: t("ranking.timeRanges.Month") },
+    { key: "HalfYear", label: t("ranking.timeRanges.HalfYear") },
+    { key: "Year", label: t("ranking.timeRanges.Year") },
+  ];
+}
+
+export function getRankingStatusOptions(t) {
+  return [
+    { value: "", label: t("ranking.statuses.all") },
+    { value: "Ongoing", label: t("ranking.statuses.ongoing") },
+    { value: "Completed", label: t("ranking.statuses.completed") },
+  ];
+}

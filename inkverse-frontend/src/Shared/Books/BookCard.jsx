@@ -1,5 +1,7 @@
 import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
+import BookCover from "@/Shared/Books/BookCover/BookCover";
+import { getBookCoverSrc } from "@/domain/books/book-cover";
 
 function clampText(s, max = 180) {
   const t = String(s ?? "");
@@ -26,12 +28,11 @@ export default function BookCard({
   const id = book?.id;
   const title = book?.title ?? "Untitled";
   const author = book?.authorName ?? book?.author?.userName ?? book?.author ?? "";
-  const cover = book?.coverImageUrl || book?.cover || book?.imageUrl || "";
   const desc = book?.description ?? book?.summary ?? "";
   const rating = book?.averageRating ?? book?.rating ?? null;
-  const reviews = book?.reviewCount ?? null;
+  const reviews = book?.reviewCount ?? book?.reviewsCount ?? book?.ReviewsCount ?? null;
   const views = book?.totalViews ?? null;
-  const chapters = book?.chapterCount ?? null;
+  const chapters = book?.chapterCount ?? book?.chaptersCount ?? book?.ChaptersCount ?? null;
   const status = book?.status ?? "";
   const verseType = book?.verseType ?? "";
   const originType = book?.originType ?? "";
@@ -58,11 +59,7 @@ export default function BookCard({
       )}
 
       <Link to={href} className="iv-book-cover">
-        {cover ? (
-          <img src={cover} alt={title} loading="lazy" />
-        ) : (
-          <div className="iv-book-cover-fallback">INK</div>
-        )}
+        <BookCover variant={variant === "compact" ? "mini" : "fill"} src={getBookCoverSrc(book)} alt={title} />
       </Link>
 
       <div className="iv-book-body">

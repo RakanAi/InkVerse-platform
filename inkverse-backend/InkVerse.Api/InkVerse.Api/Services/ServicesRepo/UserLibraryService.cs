@@ -9,10 +9,12 @@ namespace InkVerse.Api.Services.ServicesRepo
     public class UserLibraryService : IUserLibraryService
     {
         private readonly InkVerseDB _inkVerse;
+        private readonly IAchievementService _achievements;
 
-        public UserLibraryService(InkVerseDB inkVerse)
+        public UserLibraryService(InkVerseDB inkVerse, IAchievementService achievements)
         {
             _inkVerse = inkVerse;
+            _achievements = achievements;
         }
 
         public async Task<List<UserLibraryDto>> GetUserLibraryAsync(string userId)
@@ -49,6 +51,7 @@ namespace InkVerse.Api.Services.ServicesRepo
                 entry.Status = entry.Status ?? "Reading";
                 entry.UpdatedAt = DateTime.UtcNow;
                 await _inkVerse.SaveChangesAsync();
+                await _achievements.RefreshAchievementsAsync(userId);
                 return true;
             }
 
@@ -62,6 +65,7 @@ namespace InkVerse.Api.Services.ServicesRepo
                 CreatedAt = DateTime.UtcNow
             });
             await _inkVerse.SaveChangesAsync();
+            await _achievements.RefreshAchievementsAsync(userId);
             return true;
         }
 

@@ -62,6 +62,21 @@ export default function AdminDashboard() {
         value: data.booksWithNoTags,
         meta: "Titles still absent from tag-led discovery.",
       },
+      {
+        label: "Open reports",
+        value: data.openReports,
+        meta: "User reports waiting for moderator review.",
+      },
+      {
+        label: "Moderation queue",
+        value: data.openModerationCases,
+        meta: `Clawbot handled ${Number(data.clawbotAutoHandledToday ?? 0).toLocaleString()} today.`,
+      },
+      {
+        label: "Contract candidates",
+        value: data.contractCandidates,
+        meta: "Books that meet contract standards and need review.",
+      },
     ];
   }, [data]);
 

@@ -2,23 +2,44 @@
 using System.Security.Claims;
 using InkVerse.Api.Data; // your DbContext namespace
 using InkVerse.Api.DTOs.Comment;
+using InkVerse.Api.Entities.Notifications;
 using InkVerse.Api.Services.InterFace;
 
 public class ChapterCommentService : IChapterCommentService
 {
     private readonly InkVerseDB _db;
+    private readonly IAchievementService _achievements;
+    private readonly INotificationService _notifications;
 
-    public ChapterCommentService(InkVerseDB db)
+    public ChapterCommentService(InkVerseDB db, IAchievementService achievements, INotificationService notifications)
     {
         _db = db;
+        _achievements = achievements;
+        _notifications = notifications;
     }
 
-    public async Task<List<ChapterCommentDto>> GetChapterCommentsAsync(int chapterId, string? userId)
+    public async Task<List<ChapterCommentDto>> GetChapterCommentsAsync(
+        int chapterId,
+        string? userId,
+        string? paragraphId = null,
+        bool includeAll = false)
     {
-        // Load all comments for chapter + reactions (1 query-ish)
-        var comments = await _db.ChapterComments
+        var normalizedParagraphId = string.IsNullOrWhiteSpace(paragraphId)
+            ? null
+            : paragraphId.Trim();
+
+        var commentsQuery = _db.ChapterComments
             .AsNoTracking()
-            .Where(c => c.ChapterId == chapterId && !c.IsDeleted)
+            .Where(c => c.ChapterId == chapterId && !c.IsDeleted);
+
+        if (!includeAll)
+        {
+            commentsQuery = normalizedParagraphId == null
+                ? commentsQuery.Where(c => c.ParagraphId == null || c.ParagraphId == "")
+                : commentsQuery.Where(c => c.ParagraphId == normalizedParagraphId);
+        }
+
+        var comments = await commentsQuery
             .Include(c => c.User)
             .Include(c => c.Reactions)
             .OrderBy(c => c.CreatedAt)
@@ -26,9 +47,11 @@ public class ChapterCommentService : IChapterCommentService
             {
                 Id = c.ID,
                 ChapterId = c.ChapterId,
+                ParagraphId = c.ParagraphId,
                 ParentCommentId = c.ParentCommentId,
                 UserId = c.UserId ?? "",
                 UserName = c.IsDeleted ? "Deleted" : (c.User != null ? c.User.UserName! : "Unknown"),
+                UserAvatarUrl = c.IsDeleted ? null : c.User != null ? c.User.AvatarUrl : null,
                 Content = c.IsDeleted ? "[deleted]" : c.Content,
                 CreatedAt = c.CreatedAt,
                 UpdatedAt = c.UpdatedAt ?? c.CreatedAt,
@@ -59,18 +82,38 @@ public class ChapterCommentService : IChapterCommentService
 
     public async Task<ChapterCommentDto> AddCommentAsync(int chapterId, string userId, CommentCreateDto dto)
     {
-        // NOTE: your CommentCreateDto currently has no ParentCommentId
-        // Add it if you want replies:
-        // public int? ParentCommentId {get; set;}
-
         var parentId = dto.ParentCommentId;
         if (parentId == 0) parentId = null;
+
+        var normalizedParagraphId = string.IsNullOrWhiteSpace(dto.ParagraphId)
+            ? null
+            : dto.ParagraphId.Trim();
+
+        if (parentId.HasValue)
+        {
+            var parent = await _db.ChapterComments
+                .AsNoTracking()
+                .Where(c => c.ID == parentId.Value && !c.IsDeleted)
+                .Select(c => new { c.ChapterId, c.ParagraphId })
+                .FirstOrDefaultAsync();
+
+            if (parent == null)
+                throw new ArgumentException("Parent comment was not found.");
+
+            if (parent.ChapterId != chapterId)
+                throw new InvalidOperationException("Replies must stay in the same chapter.");
+
+            normalizedParagraphId = string.IsNullOrWhiteSpace(parent.ParagraphId)
+                ? null
+                : parent.ParagraphId.Trim();
+        }
 
         var comment = new ChapterComment
         {
             ChapterId = chapterId,
             UserId = userId,
             Content = dto.Content,
+            ParagraphId = normalizedParagraphId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = null,
             ParentCommentId = parentId // <-- update to use parentId for replies support in DTO
@@ -78,20 +121,70 @@ public class ChapterCommentService : IChapterCommentService
 
         _db.ChapterComments.Add(comment);
         await _db.SaveChangesAsync();
+        await _achievements.RefreshAchievementsAsync(userId);
+
+        var chapter = await _db.Chapters
+            .AsNoTracking()
+            .Include(item => item.Book)
+            .FirstOrDefaultAsync(item => item.ID == chapterId);
+
+        if (parentId.HasValue)
+        {
+            var parentOwnerId = await _db.ChapterComments
+                .AsNoTracking()
+                .Where(item => item.ID == parentId.Value)
+                .Select(item => item.UserId)
+                .FirstOrDefaultAsync();
+
+            if (!string.IsNullOrWhiteSpace(parentOwnerId))
+            {
+                await _notifications.NotifyAsync(new NotificationCreateRequest(
+                    RecipientId: parentOwnerId,
+                    ActorId: userId,
+                    Category: NotificationCategories.Interactions,
+                    Type: NotificationTypes.CommentReply,
+                    Title: "New reply to your comment",
+                    Body: $"Someone replied to your comment on {chapter?.Book?.Title ?? "a chapter"}.",
+                    LinkUrl: chapter == null ? null : $"/book/{chapter.BookId}/chapter/{chapter.ID}",
+                    TargetType: "chapter_comment",
+                    TargetId: comment.ID.ToString(),
+                    DedupeKey: $"comment-reply:{comment.ID}"));
+            }
+        }
+        else if (!string.IsNullOrWhiteSpace(chapter?.Book?.AuthorId))
+        {
+            await _notifications.NotifyAsync(new NotificationCreateRequest(
+                RecipientId: chapter.Book.AuthorId,
+                ActorId: userId,
+                Category: NotificationCategories.AuthorActivity,
+                Type: NotificationTypes.NewChapterComment,
+                Title: "New comment on your book",
+                Body: $"{chapter.Book.Title} received a new chapter comment.",
+                LinkUrl: $"/book/{chapter.BookId}/chapter/{chapter.ID}",
+                TargetType: "chapter_comment",
+                TargetId: comment.ID.ToString(),
+                DedupeKey: $"chapter-comment:{comment.ID}"));
+        }
 
         // Return the created comment as DTO
-        var userName = await _db.Users
+        var userProfile = await _db.Users
             .Where(u => u.Id == userId)
-            .Select(u => u.UserName)
-            .FirstOrDefaultAsync() ?? "Unknown";
+            .Select(u => new
+            {
+                u.UserName,
+                u.AvatarUrl,
+            })
+            .FirstOrDefaultAsync();
 
         return new ChapterCommentDto
         {
             Id = comment.ID,
             ChapterId = chapterId,
+            ParagraphId = comment.ParagraphId,
             ParentCommentId = comment.ParentCommentId,
             UserId = userId,
-            UserName = userName,
+            UserName = userProfile?.UserName ?? "Unknown",
+            UserAvatarUrl = userProfile?.AvatarUrl,
             Content = comment.Content,
             CreatedAt = comment.CreatedAt,
             Likes = 0,
@@ -108,6 +201,7 @@ public class ChapterCommentService : IChapterCommentService
 
         var existing = await _db.ChapterCommentReaction
             .SingleOrDefaultAsync(r => r.CommentId == commentId && r.UserId == userId);
+        var shouldNotifyLike = value == 1 && (existing == null || existing.Value != 1);
 
         if (existing == null)
         {
@@ -131,6 +225,30 @@ public class ChapterCommentService : IChapterCommentService
         }
 
         await _db.SaveChangesAsync();
+
+        if (shouldNotifyLike)
+        {
+            var comment = await _db.ChapterComments
+                .AsNoTracking()
+                .Include(item => item.Chapter)
+                    .ThenInclude(chapter => chapter!.Book)
+                .FirstOrDefaultAsync(item => item.ID == commentId && !item.IsDeleted);
+
+            if (comment != null)
+            {
+                await _notifications.NotifyAsync(new NotificationCreateRequest(
+                    RecipientId: comment.UserId,
+                    ActorId: userId,
+                    Category: NotificationCategories.Interactions,
+                    Type: NotificationTypes.CommentLike,
+                    Title: "Someone liked your comment",
+                    Body: $"Your comment on {comment.Chapter?.Book?.Title ?? "a chapter"} got a helpful reaction.",
+                    LinkUrl: comment.Chapter == null ? null : $"/book/{comment.Chapter.BookId}/chapter/{comment.Chapter.ID}",
+                    TargetType: "chapter_comment",
+                    TargetId: comment.ID.ToString(),
+                    DedupeKey: $"comment-like:{comment.ID}:{userId}"));
+            }
+        }
     }
 
     public async Task DeleteCommentAsync(int commentId, string userId)
@@ -206,9 +324,11 @@ public class ChapterCommentService : IChapterCommentService
         {
             Id = comment.ID,
             ChapterId = comment.ChapterId,
+            ParagraphId = comment.ParagraphId,
             ParentCommentId = comment.ParentCommentId,
             UserId = comment.UserId,
             UserName = comment.User?.UserName ?? "Unknown",
+            UserAvatarUrl = comment.User?.AvatarUrl,
             Content = comment.Content,
             CreatedAt = comment.CreatedAt,
             UpdatedAt = (DateTime)comment.UpdatedAt,

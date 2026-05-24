@@ -1,4 +1,5 @@
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import AuthContext from "../../Context/AuthProvider";
 import SignUpForm from "../Registration/SignUp/SingUp";
 import Form from "../Registration/SignIn/SignIn";
@@ -7,6 +8,7 @@ import "@/features/auth/auth.css";
 
 export default function LoginModal() {
   const { isLoginOpen, closeLogin } = useContext(AuthContext);
+  const { t } = useTranslation();
   const [mode, setMode] = useState("login");
   const [frameHeight, setFrameHeight] = useState(null);
   const contentRef = useRef(null);
@@ -85,10 +87,14 @@ export default function LoginModal() {
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-label={mode === "login" ? "Sign in to InkVerse" : "Create an InkVerse account"}
+        aria-label={
+          mode === "login"
+            ? t("auth.modal.loginLabel")
+            : t("auth.modal.registerLabel")
+        }
       >
         <div className="iv-auth-topbar">
-          <div className="iv-auth-tabs" role="tablist" aria-label="Authentication mode">
+          <div className="iv-auth-tabs" role="tablist" aria-label={t("auth.modal.loginLabel")}>
             <button
               type="button"
               role="tab"
@@ -96,7 +102,7 @@ export default function LoginModal() {
               className={`iv-auth-tab ${mode === "login" ? "is-active" : ""}`}
               onClick={() => setMode("login")}
             >
-              Sign in
+              {t("auth.modal.signIn")}
             </button>
             <button
               type="button"
@@ -105,7 +111,7 @@ export default function LoginModal() {
               className={`iv-auth-tab ${mode === "register" ? "is-active" : ""}`}
               onClick={() => setMode("register")}
             >
-              Create account
+              {t("auth.modal.createAccount")}
             </button>
           </div>
 
@@ -113,7 +119,7 @@ export default function LoginModal() {
             type="button"
             className="iv-auth-close"
             onClick={closeLogin}
-            aria-label="Close auth dialog"
+            aria-label={t("auth.modal.close")}
           >
             ×
           </button>

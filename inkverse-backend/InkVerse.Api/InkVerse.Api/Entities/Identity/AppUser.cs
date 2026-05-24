@@ -14,9 +14,14 @@ namespace InkVerse.Api.Entities.Identity
         public string? Bio { get; set; }
 
         public bool IsProfilePublic { get; set; } = true;
+        public bool ShowReviewsOnProfile { get; set; } = true;
+        public bool ShowCommentsOnProfile { get; set; } = true;
+        public bool ShowLibraryOnProfile { get; set; } = false;
+        public bool ShowAuthorBooksOnProfile { get; set; } = true;
         public bool EmailNotificationsEnabled { get; set; } = true;
         public bool ReadingRemindersEnabled { get; set; } = false;
         public string PreferredLanguage { get; set; } = "en";
+        public string Timezone { get; set; } = "UTC";
 
         public bool IsCommentBanned { get; set; } = false;
         public bool IsBlocked { get; set; } = false;

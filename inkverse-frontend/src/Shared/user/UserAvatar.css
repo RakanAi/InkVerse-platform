@@ -1,0 +1,9 @@
+.iv-user-avatar-fallback {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  user-select: none;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}

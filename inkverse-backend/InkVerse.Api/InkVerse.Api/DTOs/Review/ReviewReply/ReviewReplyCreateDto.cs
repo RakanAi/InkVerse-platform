@@ -8,5 +8,7 @@ namespace InkVerse.Api.DTOs.ReviewReply
         [MinLength(1)]
         [MaxLength(2000)]
         public string Content { get; set; } = string.Empty;
+
+        public int? ParentReplyId { get; set; }
     }
 }

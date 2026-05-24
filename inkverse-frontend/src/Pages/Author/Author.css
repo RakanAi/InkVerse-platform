@@ -430,7 +430,7 @@
 
 .authorx-story-cover {
   width: 46px;
-  height: 64px;
+  aspect-ratio: 2 / 3;
   border-radius: 8px;
   overflow: hidden;
   background: #0f172a;
@@ -716,7 +716,7 @@
 
 .authorx-cover-preview-frame {
   width: 220px;
-  height: 330px;
+  aspect-ratio: 2 / 3;
   border-radius: 12px;
   border: 1px solid #cbd5e1;
   background: #0f172a;
@@ -799,7 +799,7 @@
 
 .authorx-cover-editor-frame {
   width: 280px;
-  height: 420px;
+  aspect-ratio: 2 / 3;
   margin: 0 auto;
   border-radius: 12px;
   border: 1px solid #cbd5e1;
@@ -945,7 +945,7 @@
 
 .authorx-book-detail-cover {
   width: 120px;
-  height: 170px;
+  aspect-ratio: 2 / 3;
   border-radius: 12px;
   border: 1px solid #cbd5e1;
   overflow: hidden;
@@ -1959,7 +1959,7 @@
 
 .authorx-recommend-cover {
   width: 42px;
-  height: 56px;
+  aspect-ratio: 2 / 3;
   border-radius: 4px;
   overflow: hidden;
   background: #0f172a;

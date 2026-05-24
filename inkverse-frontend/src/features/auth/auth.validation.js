@@ -26,32 +26,32 @@ export function isUsernameValid(username) {
   return /^[A-Za-z][A-Za-z0-9_]{2,19}$/.test(trimmed);
 }
 
-export function getPasswordChecks(password) {
+export function getPasswordChecks(t, password) {
   return [
     {
-      label: "At least 8 characters",
+      label: t("auth.register.checklist.rules.passwordLength"),
       passed: password.length >= 8,
     },
     {
-      label: "One uppercase letter",
+      label: t("auth.register.checklist.rules.passwordUpper"),
       passed: /[A-Z]/.test(password),
     },
     {
-      label: "One lowercase letter",
+      label: t("auth.register.checklist.rules.passwordLower"),
       passed: /[a-z]/.test(password),
     },
     {
-      label: "One number",
+      label: t("auth.register.checklist.rules.passwordNumber"),
       passed: /[0-9]/.test(password),
     },
     {
-      label: "One special character",
+      label: t("auth.register.checklist.rules.passwordSpecial"),
       passed: /[^A-Za-z0-9]/.test(password),
     },
   ];
 }
 
-export function getRegistrationState(formData) {
+export function getRegistrationState(t, formData) {
   const firstName = formData.firstName.trim();
   const lastName = formData.lastName.trim();
   const username = formData.username.trim();
@@ -61,45 +61,45 @@ export function getRegistrationState(formData) {
 
   const sections = [
     {
-      title: "Identity",
+      title: t("auth.register.checklist.sections.identity"),
       items: [
         {
-          label: "First name has at least 2 characters",
+          label: t("auth.register.checklist.rules.firstNameLength"),
           passed: firstName.length >= 2,
         },
         {
-          label: "Last name has at least 2 characters",
+          label: t("auth.register.checklist.rules.lastNameLength"),
           passed: lastName.length >= 2,
         },
         {
-          label: "Username is 3 to 20 characters",
+          label: t("auth.register.checklist.rules.usernameLength"),
           passed: username.length >= 3 && username.length <= 20,
         },
         {
-          label: "Username starts with a letter",
+          label: t("auth.register.checklist.rules.usernameLetter"),
           passed: username.length > 0 && /^[A-Za-z]/.test(username),
         },
         {
-          label: "Username uses letters, numbers, or underscores",
+          label: t("auth.register.checklist.rules.usernameCharset"),
           passed: username.length > 0 && /^[A-Za-z][A-Za-z0-9_]*$/.test(username),
         },
       ],
     },
     {
-      title: "Credentials",
+      title: t("auth.register.checklist.sections.credentials"),
       items: [
         {
-          label: "Email looks valid",
+          label: t("auth.register.checklist.rules.emailValid"),
           passed: isEmailValid(email),
         },
-        ...getPasswordChecks(password),
+        ...getPasswordChecks(t, password),
       ],
     },
     {
-      title: "Confirmation",
+      title: t("auth.register.checklist.sections.confirmation"),
       items: [
         {
-          label: "Passwords match",
+          label: t("auth.register.checklist.rules.passwordsMatch"),
           passed:
             confirmPassword.length > 0 && password.length > 0 && password === confirmPassword,
         },
@@ -123,102 +123,102 @@ export function getRegistrationState(formData) {
       lastName.length >= 2 &&
       isUsernameValid(username) &&
       isEmailValid(email) &&
-      getPasswordChecks(password).every((item) => item.passed) &&
+      getPasswordChecks(t, password).every((item) => item.passed) &&
       confirmPassword.length > 0 &&
       password === confirmPassword,
   };
 }
 
-export function getLoginErrorMessage(err) {
+export function getLoginErrorMessage(t, err) {
   if (err?.response) {
     const status = err.response.status;
     const message = extractApiMessage(err);
 
     if (status === 401) {
-      return "Invalid username, email, or password. Please try again.";
+      return t("auth.login.errors.invalidCredentials");
     }
 
     if (status === 400) {
       if (message.includes("username") || message.includes("email")) {
-        return "Enter a valid username or email address.";
+        return t("auth.login.errors.validLoginInput");
       }
 
       if (message.includes("password")) {
-        return "Enter your password to continue.";
+        return t("auth.login.errors.passwordRequired");
       }
 
       return (
         err.response.data?.message ||
         err.response.data?.errors ||
-        "Login failed. Please check your information."
+        t("auth.login.errors.generic400")
       );
     }
 
     if (status === 422) {
-      return "Please review the fields and try again.";
+      return t("auth.login.errors.reviewFields");
     }
 
     if (status >= 500) {
-      return "Server error. Please try again in a moment.";
+      return t("auth.login.errors.server");
     }
 
     return (
       err.response.data?.message ||
       err.response.data?.errors ||
-      "Login failed. Please try again."
+      t("auth.login.errors.generic")
     );
   }
 
   if (err?.request) {
-    return "Network error. Check your connection and try again.";
+    return t("auth.login.errors.network");
   }
 
-  return "An unexpected error occurred. Please try again.";
+  return t("auth.login.errors.unexpected");
 }
 
-export function getRegisterErrorMessage(err) {
+export function getRegisterErrorMessage(t, err) {
   if (err?.response) {
     const status = err.response.status;
     const message = extractApiMessage(err);
 
     if (status === 409 || status === 400) {
       if (message.includes("username") && (message.includes("already") || message.includes("taken"))) {
-        return "That username is already taken. Try another one.";
+        return t("auth.register.errors.usernameTaken");
       }
 
       if (message.includes("email") && (message.includes("already") || message.includes("taken"))) {
-        return "That email is already registered. Try signing in instead.";
+        return t("auth.register.errors.emailTaken");
       }
 
       if (message.includes("username") && message.includes("email")) {
-        return "Both the username and email are already in use.";
+        return t("auth.register.errors.bothTaken");
       }
 
       return (
         err.response.data?.message ||
         err.response.data?.errors ||
-        "Registration failed. Please check your information."
+        t("auth.register.errors.generic400")
       );
     }
 
     if (status === 422) {
-      return "Please review the form details and make sure every requirement is met.";
+      return t("auth.register.errors.reviewFields");
     }
 
     if (status >= 500) {
-      return "Server error. Please try again later.";
+      return t("auth.register.errors.server");
     }
 
     return (
       err.response.data?.message ||
       err.response.data?.errors ||
-      "Registration failed. Please try again."
+      t("auth.register.errors.generic")
     );
   }
 
   if (err?.request) {
-    return "Network error. Check your connection and try again.";
+    return t("auth.register.errors.network");
   }
 
-  return "An unexpected error occurred. Please try again.";
+  return t("auth.register.errors.unexpected");
 }

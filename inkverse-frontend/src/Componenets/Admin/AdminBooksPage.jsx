@@ -9,13 +9,6 @@ import TextField from "../../Shared/ui/TextField";
 import AdminSection from "../../features/admin/components/AdminSection";
 import AdminTable from "../../features/admin/components/AdminTable";
 
-function formatList(values) {
-  if (!Array.isArray(values) || !values.length) return "—";
-  const visible = values.slice(0, 2).join(", ");
-  const hiddenCount = values.length - 2;
-  return hiddenCount > 0 ? `${visible} +${hiddenCount}` : visible;
-}
-
 function CoverThumb({ src, alt }) {
   const [failed, setFailed] = useState(false);
   const resolved = src ? absUrl(src) : "";
@@ -25,6 +18,13 @@ function CoverThumb({ src, alt }) {
   }
 
   return <img src={resolved} alt={alt} onError={() => setFailed(true)} />;
+}
+
+function formatOriginType(value) {
+  if (!value) return "Unknown origin";
+  return String(value)
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/^./, (char) => char.toUpperCase());
 }
 
 export default function AdminBooksPage() {
@@ -94,54 +94,51 @@ export default function AdminBooksPage() {
   return (
     <AdminSection flat>
       <div className="admin-books-toolbar">
-        <div className="admin-books-toolbar__primary">
-          <TextField
-            className="admin-search-field admin-books-toolbar__search"
-            value={search}
-            onChange={(value) => {
-              setSearch(value);
+        <TextField
+          className="admin-search-field admin-books-toolbar__search"
+          value={search}
+          onChange={(value) => {
+            setSearch(value);
+            setPageNumber(1);
+          }}
+          placeholder="Search title or description..."
+        />
+
+        <div className="admin-books-toolbar__controls">
+          <span className="admin-books-toolbar__eyebrow">Sort by</span>
+          <select
+            className="admin-select admin-books-toolbar__select"
+            value={sortBy}
+            onChange={(event) => {
+              setSortBy(event.target.value);
               setPageNumber(1);
             }}
-            placeholder="Search title or description..."
-          />
-          <LinkButton to="/admin/books/new" className="admin-books-toolbar__create">
-            New book
-          </LinkButton>
+          >
+            <option value="Title">Title</option>
+            <option value="CreatedAt">Created at</option>
+            <option value="UpdatedAt">Updated at</option>
+            <option value="AverageRating">Average rating</option>
+            <option value="TotalViews">Total views</option>
+          </select>
+
+          <Button
+            variant="outline"
+            className="admin-books-toolbar__direction"
+            onClick={() => {
+              setIsAscending((value) => !value);
+              setPageNumber(1);
+            }}
+          >
+            <i className={`bi ${isAscending ? "bi-sort-up" : "bi-sort-down"}`} />
+            <span>{sortDirectionLabel}</span>
+          </Button>
         </div>
 
-        <div className="admin-books-toolbar__secondary">
-          <div className="admin-books-toolbar__filters">
-            <span className="admin-books-toolbar__eyebrow">Sort by</span>
-            <select
-              className="admin-select admin-books-toolbar__select"
-              value={sortBy}
-              onChange={(event) => {
-                setSortBy(event.target.value);
-                setPageNumber(1);
-              }}
-            >
-              <option value="Title">Title</option>
-              <option value="CreatedAt">Created at</option>
-              <option value="UpdatedAt">Updated at</option>
-              <option value="AverageRating">Average rating</option>
-              <option value="TotalViews">Total views</option>
-            </select>
-            <Button
-              variant="outline"
-              className="admin-books-toolbar__direction"
-              onClick={() => {
-                setIsAscending((value) => !value);
-                setPageNumber(1);
-              }}
-            >
-              {sortDirectionLabel}
-            </Button>
-          </div>
+        <span className="admin-books-toolbar__summary-pill">{pageCountLabel}</span>
 
-          <div className="admin-books-toolbar__summary">
-            <span className="admin-books-toolbar__summary-pill">{pageCountLabel}</span>
-          </div>
-        </div>
+        <LinkButton to="/admin/books/new" className="admin-books-toolbar__create">
+          New book
+        </LinkButton>
       </div>
 
       <AdminTable
@@ -178,30 +175,22 @@ export default function AdminBooksPage() {
           {
             key: "details",
             label: "Details",
-            width: "28%",
-            render: (book) => (
-              <div className="admin-book-details">
-                <div className="admin-book-details__head">
+            width: "22%",
+            render: (book) => {
+              const verseType = book.verseType ?? book.VerseType ?? "";
+              const rawOriginType = book.originType ?? book.OriginType ?? "";
+              const originType = rawOriginType ? formatOriginType(rawOriginType) : "";
+              const detailLabel = [verseType, originType].filter(Boolean).join(" / ");
+
+              return (
+                <div className="admin-book-details admin-book-details--inline">
                   <span className="admin-pill admin-pill--neutral">
                     {book.status ?? book.Status ?? "Unknown"}
                   </span>
-                  <span className="admin-book-details__meta">
-                    {book.verseType ?? book.VerseType ?? "—"} ·{" "}
-                    {book.originType ?? book.OriginType ?? "—"}
-                  </span>
+                  <span className="admin-book-details__meta-pill">{detailLabel || "Unknown"}</span>
                 </div>
-                <div className="admin-book-details__stack">
-                  <p className="admin-book-details__line">
-                    <span>Genres</span>
-                    <strong>{formatList(book.genres ?? book.Genres ?? [])}</strong>
-                  </p>
-                  <p className="admin-book-details__line">
-                    <span>Tags</span>
-                    <strong>{formatList(book.tags ?? book.Tags ?? [])}</strong>
-                  </p>
-                </div>
-              </div>
-            ),
+              );
+            },
           },
           {
             key: "wordCount",
@@ -209,7 +198,7 @@ export default function AdminBooksPage() {
             align: "right",
             width: "10%",
             render: (book) => (
-              <div className="admin-book-metric">
+              <div className="admin-book-metric admin-book-metric--inline">
                 <strong>{(book.wordCount ?? book.WordCount ?? 0).toLocaleString()}</strong>
                 <span>words</span>
               </div>
@@ -224,20 +213,36 @@ export default function AdminBooksPage() {
               const id = book.id ?? book.ID;
 
               return (
-                <div className="admin-book-actions">
+                <div className="admin-book-actions admin-book-actions--inline">
                   <LinkButton
                     to={`/admin/books/${id}/chapters`}
                     variant="outline"
                     size="sm"
-                    className="admin-book-actions__primary"
+                    className="admin-book-action-icon"
+                    aria-label="Chapters"
+                    title="Chapters"
                   >
-                    Chapters
+                    <i className="bi bi-journals" />
                   </LinkButton>
-                  <LinkButton to={`/admin/books/${id}`} variant="outline" size="sm">
-                    Edit
+                  <LinkButton
+                    to={`/admin/books/${id}`}
+                    variant="outline"
+                    size="sm"
+                    className="admin-book-action-icon"
+                    aria-label="Edit"
+                    title="Edit"
+                  >
+                    <i className="bi bi-pencil-square" />
                   </LinkButton>
-                  <Button variant="danger" size="sm" onClick={() => remove(id)}>
-                    Delete
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    className="admin-book-action-icon"
+                    onClick={() => remove(id)}
+                    aria-label="Delete"
+                    title="Delete"
+                  >
+                    <i className="bi bi-trash3" />
                   </Button>
                 </div>
               );

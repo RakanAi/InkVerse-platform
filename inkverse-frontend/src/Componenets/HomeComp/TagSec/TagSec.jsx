@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import "./TagSec.css";
 import tagArt from "../../../assets/Diamond.jpeg";
 
@@ -9,12 +10,14 @@ import LinkButton from "@/Shared/ui/LinkButton";
 import HomeSection from "@/features/home/shared/HomeSection";
 import useHomeCollection from "@/features/home/shared/useHomeCollection";
 
-import { TOPTAGS_QUERY, TOPTAGS_LABELS } from "@/features/home/toptags/toptags.presets";
+import { TOPTAGS_QUERY, getTopTagsLabels } from "@/features/home/toptags/toptags.presets";
 import { buildPopularTagsEndpoint } from "@/features/home/toptags/utils/buildPopularTagsEndpoint";
 import { getTagName } from "@/features/home/toptags/utils/getTagName";
 import { getCollectionItems } from "@/features/home/shared/home.models";
 
 export default function TopTags() {
+  const { t } = useTranslation();
+  const labels = getTopTagsLabels(t);
   const endpoint = buildPopularTagsEndpoint(TOPTAGS_QUERY);
   const {
     items: bookTags,
@@ -23,43 +26,43 @@ export default function TopTags() {
     refetch,
   } = useHomeCollection({
     endpoint,
-    errorMessage: TOPTAGS_LABELS.error,
+    errorMessage: labels.error,
     selectItems: getCollectionItems,
   });
 
   return (
     <HomeSection
       className="iv-home-tags"
-      title={TOPTAGS_LABELS.title}
-      subtitle={TOPTAGS_LABELS.subtitle}
+      title={labels.title}
+      subtitle={labels.subtitle}
       actions={
         <LinkButton to="/Browser" variant="outline" size="sm">
-          {TOPTAGS_LABELS.cta}
+          {labels.cta}
         </LinkButton>
       }
     >
       <div className="iv-home-tags__body">
         <div className="iv-home-tags__visual">
-          <img src={tagArt} alt="InkVerse tags artwork" className="iv-home-tags__visualImg" />
+          <img src={tagArt} alt={labels.visualAlt} className="iv-home-tags__visualImg" />
           <div className="iv-home-tags__visualOverlay" />
           <div className="iv-home-tags__visualCard">
-            <span className="iv-home-tags__badge">{TOPTAGS_LABELS.badge}</span>
-            <p className="iv-home-tags__hint">{TOPTAGS_LABELS.visualHint}</p>
+            <span className="iv-home-tags__badge">{labels.badge}</span>
+            <p className="iv-home-tags__hint">{labels.visualHint}</p>
           </div>
         </div>
 
         <div className="iv-home-tags__content">
           <div className="iv-home-tags__contentHead">
-            <p className="iv-home-tags__contentKicker">{TOPTAGS_LABELS.directoryKicker}</p>
-            <p className="iv-home-tags__contentText">{TOPTAGS_LABELS.directoryText}</p>
+            <p className="iv-home-tags__contentKicker">{labels.directoryKicker}</p>
+            <p className="iv-home-tags__contentText">{labels.directoryText}</p>
           </div>
 
           {loading ? (
-            <LoadingState text={TOPTAGS_LABELS.loading} />
+            <LoadingState text={labels.loading} />
           ) : error ? (
-            <ErrorState title={error} subtitle="Please try again." onRetry={refetch} />
+            <ErrorState title={error} subtitle={labels.errorSubtitle} onRetry={refetch} />
           ) : !bookTags?.length ? (
-            <EmptyState title={TOPTAGS_LABELS.empty} subtitle={null} />
+            <EmptyState title={labels.empty} subtitle={null} />
           ) : (
             <div className="iv-home-tags__cloud">
               {bookTags.map((tag, index) => {

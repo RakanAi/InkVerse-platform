@@ -1,26 +1,101 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../../Api/api";
 import { absUrl } from "../../Utils/absUrl";
 import Button from "../../Shared/ui/Button";
 import LoadingState from "../../Shared/ui/LoadingState";
+import Surface from "../../Shared/ui/Surface";
+import DropdownSelectSearchable from "../../Shared/ui/DropdownSelectSearchable";
+import MultiSelectDropdownSearchable from "../../Shared/ui/MultiSelectDropdownSearchable";
 import AdminSection from "../../features/admin/components/AdminSection";
+import { buildBookCoverUploadFile } from "../../domain/books/build-book-cover-upload-file";
 import AdminFormField from "../../features/admin/components/AdminFormField";
+import {
+  fetchBookAiApproval,
+  updateBookAiApproval,
+} from "../../Api/monetization.api";
 
-function CoverPreview({ src }) {
+function CoverPreview({ src, title }) {
   const [failed, setFailed] = useState(false);
   const resolved = src && !failed ? absUrl(src) : "";
+  const initial = (title || "InkVerse").trim().slice(0, 1).toUpperCase() || "I";
 
   return (
-    <div className="admin-cover-thumb--wide">
+    <div className="admin-book-editor__cover-preview">
       {resolved ? (
         <img src={resolved} alt="Book cover preview" onError={() => setFailed(true)} />
       ) : (
-        <div className="admin-cover-thumb__placeholder">No cover</div>
+        <div className="admin-book-editor__cover-placeholder">
+          <span>{initial}</span>
+          <small>No cover yet</small>
+        </div>
       )}
     </div>
   );
 }
+
+function SelectionSummary({ items, emptyText, onRemove }) {
+  if (!items.length) {
+    return <p className="admin-book-editor__selection-empty">{emptyText}</p>;
+  }
+
+  return (
+    <div className="admin-book-editor__selection-summary">
+      {items.map((item) => (
+        <button
+          key={item.value}
+          type="button"
+          className="admin-book-editor__selection-chip"
+          onClick={() => onRemove(item.value)}
+        >
+          <span>{item.label}</span>
+          <strong aria-hidden="true">×</strong>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function getEntityId(entity) {
+  return Number(entity?.id ?? entity?.Id ?? entity?.ID ?? 0) || null;
+}
+
+function getEntityName(entity, fallback = "Untitled") {
+  return entity?.name ?? entity?.Name ?? fallback;
+}
+
+function getEntitySlug(entity) {
+  return entity?.slug ?? entity?.Slug ?? "";
+}
+
+function toOption(entity) {
+  const value = getEntityId(entity);
+  if (!value) return null;
+
+  return {
+    value,
+    label: getEntityName(entity),
+    meta: getEntitySlug(entity),
+  };
+}
+
+const STATUS_OPTIONS = [
+  { value: "Ongoing", label: "Ongoing" },
+  { value: "Paused", label: "Paused" },
+  { value: "Dropped", label: "Dropped" },
+  { value: "Completed", label: "Completed" },
+];
+
+const VERSE_TYPE_OPTIONS = [
+  { value: "Original", label: "Original" },
+  { value: "Fanfic", label: "Fanfic" },
+  { value: "AU", label: "AU" },
+];
+
+const ORIGIN_TYPE_OPTIONS = [
+  { value: "PlatformOriginal", label: "Platform original" },
+  { value: "Translation", label: "Translation" },
+];
 
 export default function AdminBookEditor({ mode }) {
   const nav = useNavigate();
@@ -35,6 +110,12 @@ export default function AdminBookEditor({ mode }) {
   const [allTags, setAllTags] = useState([]);
   const [allTrends, setAllTrends] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [aiApproval, setAiApproval] = useState({
+    translationEnabled: false,
+    ttsEnabled: false,
+  });
+  const [savingAiApproval, setSavingAiApproval] = useState(false);
+  const fileInputRef = useRef(null);
 
   const [form, setForm] = useState({
     title: "",
@@ -49,11 +130,71 @@ export default function AdminBookEditor({ mode }) {
     sourceUrl: "",
   });
 
+  const genreOptions = useMemo(
+    () => allGenres.map(toOption).filter(Boolean).sort((a, b) => a.label.localeCompare(b.label)),
+    [allGenres],
+  );
+
+  const tagOptions = useMemo(
+    () => allTags.map(toOption).filter(Boolean).sort((a, b) => a.label.localeCompare(b.label)),
+    [allTags],
+  );
+
+  const trendOptions = useMemo(
+    () => allTrends.map(toOption).filter(Boolean).sort((a, b) => a.label.localeCompare(b.label)),
+    [allTrends],
+  );
+
+  const genreMap = useMemo(
+    () => new Map(genreOptions.map((option) => [option.value, option])),
+    [genreOptions],
+  );
+
+  const tagMap = useMemo(
+    () => new Map(tagOptions.map((option) => [option.value, option])),
+    [tagOptions],
+  );
+
+  const trendMap = useMemo(
+    () => new Map(trendOptions.map((option) => [option.value, option])),
+    [trendOptions],
+  );
+
+  const selectedGenres = useMemo(
+    () => form.genreIds.map((value) => genreMap.get(value)).filter(Boolean),
+    [form.genreIds, genreMap],
+  );
+
+  const selectedTags = useMemo(
+    () => form.tagIds.map((value) => tagMap.get(value)).filter(Boolean),
+    [form.tagIds, tagMap],
+  );
+
+  const selectedTrends = useMemo(
+    () => form.trendIds.map((value) => trendMap.get(value)).filter(Boolean),
+    [form.trendIds, trendMap],
+  );
+
   const toggleId = (values, idValue) => {
     const safe = Array.isArray(values) ? values : [];
     return safe.includes(idValue)
       ? safe.filter((value) => value !== idValue)
       : [...safe, idValue];
+  };
+
+  const loadTrendIdsForBook = async (targetBookId, trends) => {
+    const linkedTrendIds = await Promise.all(
+      (trends ?? []).map(async (trend) => {
+        const trendId = getEntityId(trend);
+        if (!trendId) return null;
+
+        const idsRes = await api.get(`/admin/trends/${trendId}/book-ids`);
+        const ids = Array.isArray(idsRes.data) ? idsRes.data.map(Number) : [];
+        return ids.includes(Number(targetBookId)) ? trendId : null;
+      }),
+    );
+
+    return linkedTrendIds.filter(Boolean);
   };
 
   const uploadCover = async (file) => {
@@ -63,8 +204,15 @@ export default function AdminBookEditor({ mode }) {
       setErr("");
       setUploading(true);
 
+      const optimizedFile = await buildBookCoverUploadFile(file, {
+        title: form.title || "book",
+      });
+
       const formData = new FormData();
-      formData.append("File", file);
+      formData.append("File", optimizedFile);
+      if (bookId) formData.append("EntityId", String(bookId));
+      formData.append("EntityName", form.title || "book");
+      formData.append("Purpose", "cover");
 
       const res = await api.post("/uploads/books/admin", formData, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -102,7 +250,14 @@ export default function AdminBookEditor({ mode }) {
 
       if (isEdit && bookId) {
         const bookRes = await api.get(`/books/${bookId}`);
+        const approvalRes = await fetchBookAiApproval(bookId).catch(() => null);
         const book = bookRes.data;
+        if (approvalRes) {
+          setAiApproval({
+            translationEnabled: Boolean(approvalRes.translationEnabled ?? approvalRes.TranslationEnabled),
+            ttsEnabled: Boolean(approvalRes.ttsEnabled ?? approvalRes.TtsEnabled),
+          });
+        }
 
         setForm((current) => ({
           ...current,
@@ -118,14 +273,7 @@ export default function AdminBookEditor({ mode }) {
           sourceUrl: book.sourceUrl ?? book.SourceUrl ?? "",
         }));
 
-        const trendIds = [];
-        for (const trend of trendRes.data ?? []) {
-          const idsRes = await api.get(`/admin/trends/${trend.id}/books`);
-          const ids = idsRes.data ?? [];
-          if (ids.map(String).includes(String(bookId))) {
-            trendIds.push(trend.id);
-          }
-        }
+        const trendIds = await loadTrendIdsForBook(bookId, trendRes.data ?? []);
 
         setForm((current) => ({ ...current, trendIds }));
       }
@@ -180,20 +328,14 @@ export default function AdminBookEditor({ mode }) {
           verseType: form.verseType,
           originType: form.originType,
           status: form.status,
+          sourceUrl: form.originType === "Translation" ? form.sourceUrl : null,
           genreIds: form.genreIds,
           tagIds: form.tagIds,
         };
 
         await api.put(`/books/${bookId}`, payload);
 
-        const currentTrendIds = [];
-        for (const trend of allTrends) {
-          const idsRes = await api.get(`/admin/trends/${trend.id}/books`);
-          const ids = idsRes.data ?? [];
-          if (ids.map(String).includes(String(bookId))) {
-            currentTrendIds.push(trend.id);
-          }
-        }
+        const currentTrendIds = await loadTrendIdsForBook(bookId, allTrends);
 
         const toAdd = form.trendIds.filter((value) => !currentTrendIds.includes(value));
         const toRemove = currentTrendIds.filter((value) => !form.trendIds.includes(value));
@@ -214,215 +356,317 @@ export default function AdminBookEditor({ mode }) {
     }
   };
 
+  const saveAiApproval = async () => {
+    if (!bookId) return;
+    setSavingAiApproval(true);
+    setErr("");
+    try {
+      const updated = await updateBookAiApproval(bookId, aiApproval);
+      setAiApproval({
+        translationEnabled: Boolean(updated?.translationEnabled ?? updated?.TranslationEnabled),
+        ttsEnabled: Boolean(updated?.ttsEnabled ?? updated?.TtsEnabled),
+      });
+    } catch (error) {
+      setErr(error?.response?.data?.message || "Could not save AI service approval.");
+    } finally {
+      setSavingAiApproval(false);
+    }
+  };
+
   if (loading) return <LoadingState text="Loading book editor..." />;
 
   return (
     <AdminSection
-      actions={
-        <Button variant="outline" onClick={() => nav("/admin/books")}>
-          Back
-        </Button>
-      }
+      flat
+      className="admin-book-editor-page"
+      bodyClassName="admin-book-editor-page__body"
     >
       {err ? <div className="admin-alert">{err}</div> : null}
 
-      <div className="admin-form-grid">
-        <AdminFormField label="Title" className="admin-col-12">
-          <input
-            className="admin-input"
-            value={form.title}
-            onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
-          />
-        </AdminFormField>
+      <div className="admin-book-editor-stack">
+        <Surface className="admin-book-editor-hero">
+          <div className="admin-book-editor-hero__grid">
+            <aside className="admin-book-editor-cover-card">
+              <div className="admin-book-editor-cover-card__preview">
+                <CoverPreview src={form.coverImageUrl} title={form.title} />
+              </div>
 
-        <AdminFormField label="Description" className="admin-col-12">
-          <textarea
-            className="admin-textarea"
-            rows={5}
-            value={form.description}
-            onChange={(event) =>
-              setForm((current) => ({ ...current, description: event.target.value }))
-            }
-          />
-        </AdminFormField>
+              <div className="admin-book-editor-cover-card__copy">
+                <span className="admin-book-editor__eyebrow">Cover artwork</span>
+                <h3>{form.title.trim() || "Untitled book"}</h3>
+                <p>
+                  {form.description.trim() ||
+                    "Add a short book description and cover so the shelf card feels complete."}
+                </p>
+              </div>
 
-        <AdminFormField label="Status" className="admin-col-4">
-          <select
-            className="admin-select"
-            value={form.status}
-            onChange={(event) => setForm((current) => ({ ...current, status: event.target.value }))}
-          >
-            <option value="Ongoing">Ongoing</option>
-            <option value="Paused">Paused</option>
-            <option value="Dropped">Dropped</option>
-            <option value="Completed">Completed</option>
-          </select>
-        </AdminFormField>
+              <div className="admin-book-editor-cover-card__meta">
+                <span className="admin-pill admin-pill--neutral">{form.status}</span>
+                <span className="admin-pill admin-pill--neutral">{form.verseType}</span>
+                <span className="admin-pill admin-pill--neutral">
+                  {form.originType === "PlatformOriginal"
+                    ? "Platform original"
+                    : form.originType}
+                </span>
+              </div>
 
-        <AdminFormField label="Verse type" className="admin-col-4">
-          <select
-            className="admin-select"
-            value={form.verseType}
-            onChange={(event) =>
-              setForm((current) => ({ ...current, verseType: event.target.value }))
-            }
-          >
-            <option value="Original">Original</option>
-            <option value="Fanfic">Fanfic</option>
-            <option value="AU">AU</option>
-          </select>
-        </AdminFormField>
+              <div className="admin-book-editor-cover-card__actions">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="admin-book-editor__file-input"
+                  disabled={uploading}
+                  onChange={(event) => uploadCover(event.target.files?.[0])}
+                />
 
-        <AdminFormField label="Origin type" className="admin-col-4">
-          <select
-            className="admin-select"
-            value={form.originType}
-            onChange={(event) =>
-              setForm((current) => ({ ...current, originType: event.target.value }))
-            }
-          >
-            <option value="PlatformOriginal">Platform original</option>
-            <option value="Translation">Translation</option>
-          </select>
-        </AdminFormField>
+                <Button
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                >
+                  {uploading ? "Uploading..." : "Upload cover"}
+                </Button>
 
-        {form.originType === "Translation" ? (
-          <AdminFormField
-            label="Source URL"
-            hint="Optional link to the original source."
-            className="admin-col-12"
-          >
-            <input
-              className="admin-input"
-              placeholder="https://example.com/novel/..."
-              value={form.sourceUrl}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, sourceUrl: event.target.value }))
-              }
-            />
-          </AdminFormField>
+                {form.coverImageUrl ? (
+                  <Button
+                    variant="danger"
+                    onClick={() => setForm((current) => ({ ...current, coverImageUrl: "" }))}
+                  >
+                    Remove
+                  </Button>
+                ) : null}
+              </div>
+            </aside>
+
+            <div className="admin-book-editor-hero__content">
+              <div className="admin-book-editor-hero__head">
+                <span className="admin-book-editor__eyebrow">
+                  {isEdit ? "Book settings" : "New title"}
+                </span>
+                <h2 className="admin-book-editor__title">
+                  {isEdit ? "Polish the book page" : "Build the book entry"}
+                </h2>
+                <p className="admin-book-editor__subtitle">
+                  Keep the main story details clean here, then use the pickers below for
+                  genres, tags, and trend links.
+                </p>
+              </div>
+
+              <div className="admin-form-grid">
+                <AdminFormField label="Title" className="admin-col-12">
+                  <input
+                    className="admin-input"
+                    value={form.title}
+                    onChange={(event) =>
+                      setForm((current) => ({ ...current, title: event.target.value }))
+                    }
+                    placeholder="Book title"
+                  />
+                </AdminFormField>
+
+                <AdminFormField label="Description" className="admin-col-12">
+                  <textarea
+                    className="admin-textarea"
+                    rows={6}
+                    value={form.description}
+                    onChange={(event) =>
+                      setForm((current) => ({ ...current, description: event.target.value }))
+                    }
+                    placeholder="Write the blurb readers should see."
+                  />
+                </AdminFormField>
+
+                <AdminFormField label="Status" className="admin-col-4">
+                  <DropdownSelectSearchable
+                    value={form.status}
+                    onChange={(value) =>
+                      setForm((current) => ({ ...current, status: value }))
+                    }
+                    options={STATUS_OPTIONS}
+                    placeholder="Choose status"
+                    searchPlaceholder="Search status..."
+                  />
+                </AdminFormField>
+
+                <AdminFormField label="Verse type" className="admin-col-4">
+                  <DropdownSelectSearchable
+                    value={form.verseType}
+                    onChange={(value) =>
+                      setForm((current) => ({ ...current, verseType: value }))
+                    }
+                    options={VERSE_TYPE_OPTIONS}
+                    placeholder="Choose verse type"
+                    searchPlaceholder="Search verse types..."
+                  />
+                </AdminFormField>
+
+                <AdminFormField label="Origin type" className="admin-col-4">
+                  <DropdownSelectSearchable
+                    value={form.originType}
+                    onChange={(value) =>
+                      setForm((current) => ({ ...current, originType: value }))
+                    }
+                    options={ORIGIN_TYPE_OPTIONS}
+                    placeholder="Choose origin type"
+                    searchPlaceholder="Search origin types..."
+                  />
+                </AdminFormField>
+
+                {form.originType === "Translation" ? (
+                  <AdminFormField
+                    label="Source URL"
+                    hint="Optional link to the original source."
+                    className="admin-col-12"
+                  >
+                    <input
+                      className="admin-input"
+                      placeholder="https://example.com/novel/..."
+                      value={form.sourceUrl}
+                      onChange={(event) =>
+                        setForm((current) => ({ ...current, sourceUrl: event.target.value }))
+                      }
+                    />
+                  </AdminFormField>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        </Surface>
+
+        {isEdit ? (
+          <Surface className="admin-book-editor-pickers">
+            <div className="admin-book-editor-pickers__head">
+              <span className="admin-book-editor__eyebrow">Reader AI services</span>
+              <h3>Approve translation and TTS</h3>
+              <p>
+                Reader-paid AI services only work after admin approval for this book.
+              </p>
+            </div>
+            <div className="admin-book-editor__selection-summary">
+              <label className="admin-book-editor__selection-chip">
+                <input
+                  type="checkbox"
+                  checked={aiApproval.translationEnabled}
+                  onChange={(event) =>
+                    setAiApproval((current) => ({
+                      ...current,
+                      translationEnabled: event.target.checked,
+                    }))
+                  }
+                />
+                <span>AI translation</span>
+              </label>
+              <label className="admin-book-editor__selection-chip">
+                <input
+                  type="checkbox"
+                  checked={aiApproval.ttsEnabled}
+                  onChange={(event) =>
+                    setAiApproval((current) => ({
+                      ...current,
+                      ttsEnabled: event.target.checked,
+                    }))
+                  }
+                />
+                <span>AI TTS</span>
+              </label>
+              <Button type="button" variant="outline" onClick={saveAiApproval} disabled={savingAiApproval}>
+                {savingAiApproval ? "Saving..." : "Save AI approval"}
+              </Button>
+            </div>
+          </Surface>
         ) : null}
 
-        <AdminFormField label="Cover upload" className="admin-col-6">
-          <div className="admin-simple-stack">
-            <input
-              type="file"
-              accept="image/*"
-              className="admin-input"
-              disabled={uploading}
-              onChange={(event) => uploadCover(event.target.files?.[0])}
-            />
-            <div className="admin-inline-actions">
-              {uploading ? <span className="admin-row-note">Uploading…</span> : null}
-              {form.coverImageUrl ? (
-                <Button
-                  variant="danger"
-                  size="sm"
-                  onClick={() => setForm((current) => ({ ...current, coverImageUrl: "" }))}
-                >
-                  Remove cover
-                </Button>
-              ) : null}
-            </div>
-            <input
-              className="admin-input"
-              value={form.coverImageUrl}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, coverImageUrl: event.target.value }))
-              }
-              placeholder="Manual image URL"
-            />
+        <Surface className="admin-book-editor-pickers">
+          <div className="admin-book-editor-pickers__head">
+            <span className="admin-book-editor__eyebrow">Discovery setup</span>
+            <h3>Pick the shelf signals</h3>
+            <p>
+              Use searchable pickers instead of huge checklists. You can remove any
+              selected item directly from the chips below.
+            </p>
           </div>
-        </AdminFormField>
 
-        <div className="admin-col-6 admin-preview-stack">
-          <CoverPreview src={form.coverImageUrl} />
-          <span className="admin-row-note">
-            Upload a cover or paste a fallback URL.
-          </span>
-        </div>
+          <div className="admin-book-editor-pickers__grid">
+            <AdminFormField label="Genres">
+              <MultiSelectDropdownSearchable
+                label={
+                  form.genreIds.length ? `${form.genreIds.length} genres selected` : "Choose genres"
+                }
+                values={form.genreIds}
+                onChange={(values) =>
+                  setForm((current) => ({ ...current, genreIds: values }))
+                }
+                options={genreOptions}
+                searchPlaceholder="Search genres..."
+                className="admin-book-editor__dropdown"
+              />
+              <SelectionSummary
+                items={selectedGenres}
+                emptyText="No genres selected yet."
+                onRemove={(value) =>
+                  setForm((current) => ({
+                    ...current,
+                    genreIds: toggleId(current.genreIds, value),
+                  }))
+                }
+              />
+            </AdminFormField>
 
-        <AdminFormField label="Genres" className="admin-col-4">
-          <div className="admin-choice-grid">
-            {allGenres.map((genre) => (
-              <label key={genre.id ?? genre.Id ?? genre.ID} className="admin-choice-tile">
-                <input
-                  type="checkbox"
-                  checked={form.genreIds.includes(genre.id ?? genre.Id ?? genre.ID)}
-                  onChange={() =>
-                    setForm((current) => ({
-                      ...current,
-                      genreIds: toggleId(
-                        current.genreIds,
-                        genre.id ?? genre.Id ?? genre.ID,
-                      ),
-                    }))
-                  }
-                />
-                <div>
-                  <span>{genre.name ?? genre.Name}</span>
-                  <small>{genre.slug ?? genre.Slug ?? "No slug"}</small>
-                </div>
-              </label>
-            ))}
+            <AdminFormField label="Tags">
+              <MultiSelectDropdownSearchable
+                label={form.tagIds.length ? `${form.tagIds.length} tags selected` : "Choose tags"}
+                values={form.tagIds}
+                onChange={(values) => setForm((current) => ({ ...current, tagIds: values }))}
+                options={tagOptions}
+                searchPlaceholder="Search tags..."
+                className="admin-book-editor__dropdown"
+              />
+              <SelectionSummary
+                items={selectedTags}
+                emptyText="No tags selected yet."
+                onRemove={(value) =>
+                  setForm((current) => ({
+                    ...current,
+                    tagIds: toggleId(current.tagIds, value),
+                  }))
+                }
+              />
+            </AdminFormField>
+
+            <AdminFormField label="Trends">
+              <MultiSelectDropdownSearchable
+                label={
+                  form.trendIds.length
+                    ? `${form.trendIds.length} trends linked`
+                    : "Link trends"
+                }
+                values={form.trendIds}
+                onChange={(values) => setForm((current) => ({ ...current, trendIds: values }))}
+                options={trendOptions}
+                searchPlaceholder="Search trends..."
+                className="admin-book-editor__dropdown"
+              />
+              <SelectionSummary
+                items={selectedTrends}
+                emptyText="No trends linked yet."
+                onRemove={(value) =>
+                  setForm((current) => ({
+                    ...current,
+                    trendIds: toggleId(current.trendIds, value),
+                  }))
+                }
+              />
+            </AdminFormField>
           </div>
-        </AdminFormField>
+        </Surface>
 
-        <AdminFormField label="Tags" className="admin-col-4">
-          <div className="admin-choice-grid">
-            {allTags.map((tag) => (
-              <label key={tag.id ?? tag.Id ?? tag.ID} className="admin-choice-tile">
-                <input
-                  type="checkbox"
-                  checked={form.tagIds.includes(tag.id ?? tag.Id ?? tag.ID)}
-                  onChange={() =>
-                    setForm((current) => ({
-                      ...current,
-                      tagIds: toggleId(current.tagIds, tag.id ?? tag.Id ?? tag.ID),
-                    }))
-                  }
-                />
-                <div>
-                  <span>{tag.name ?? tag.Name}</span>
-                  <small>Reader-facing tag</small>
-                </div>
-              </label>
-            ))}
-          </div>
-        </AdminFormField>
-
-        <AdminFormField label="Trends" className="admin-col-4">
-          <div className="admin-choice-grid">
-            {allTrends.map((trend) => (
-              <label key={trend.id ?? trend.Id ?? trend.ID} className="admin-choice-tile">
-                <input
-                  type="checkbox"
-                  checked={form.trendIds.includes(trend.id ?? trend.Id ?? trend.ID)}
-                  onChange={() =>
-                    setForm((current) => ({
-                      ...current,
-                      trendIds: toggleId(
-                        current.trendIds,
-                        trend.id ?? trend.Id ?? trend.ID,
-                      ),
-                    }))
-                  }
-                />
-                <div>
-                  <span>{trend.name ?? trend.Name}</span>
-                  <small>{trend.slug ?? trend.Slug ?? "No slug"}</small>
-                </div>
-              </label>
-            ))}
-          </div>
-        </AdminFormField>
-
-        <div className="admin-col-12 admin-form-actions">
+        <div className="admin-book-editor__footer admin-form-actions">
           <Button variant="outline" onClick={() => nav("/admin/books")}>
             Cancel
           </Button>
           <Button onClick={save} disabled={uploading}>
-            Save book
+            {isEdit ? "Save changes" : "Create book"}
           </Button>
         </div>
       </div>

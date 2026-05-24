@@ -34,9 +34,13 @@ export async function linkBookToTrend(trendId, bookId) {
   return res.data;
 }
 
-export async function uploadBookCover(file) {
+export async function uploadBookCover(file, { bookId, title } = {}) {
   const form = new FormData();
   form.append("file", file);
+  if (bookId) form.append("EntityId", String(bookId));
+  if (title) form.append("EntityName", title);
+  form.append("Purpose", "cover");
+
   const res = await api.post("/uploads/books/user", form, {
     timeout: 20000,
     headers: { "Content-Type": "multipart/form-data" },

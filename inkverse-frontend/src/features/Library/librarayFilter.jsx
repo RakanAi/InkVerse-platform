@@ -1,8 +1,10 @@
+import { useTranslation } from "react-i18next";
 import Segmented from "@/Shared/ui/Segmented";
-import { LIBRARY_FILTERS } from "@/features/Library/library.presets";
+import { getLibraryFilters } from "@/features/Library/library.presets";
 
 export default function LibraryFilter({ value, onChange, counts }) {
-  const options = LIBRARY_FILTERS.map((filter) => ({
+  const { t } = useTranslation();
+  const options = getLibraryFilters(t).map((filter) => ({
     value: filter.value,
     label: (
       <span className="iv-libraryFilter__item">

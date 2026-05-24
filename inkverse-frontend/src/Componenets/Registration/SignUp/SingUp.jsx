@@ -1,4 +1,5 @@
 import { useContext, useMemo, useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import api from "../../../Api/api";
@@ -9,7 +10,7 @@ import AuthAside from "@/features/auth/components/AuthAside";
 import AuthChecklist from "@/features/auth/components/AuthChecklist";
 import AuthField from "@/features/auth/components/AuthField";
 import AuthPanel from "@/features/auth/components/AuthPanel";
-import { REGISTER_FEATURES } from "@/features/auth/auth.copy";
+import { getRegisterFeatures } from "@/features/auth/auth.copy";
 import {
   getRegisterErrorMessage,
   getRegistrationState,
@@ -17,6 +18,7 @@ import {
 
 const SignUpForm = ({ onLogin }) => {
   const { setAuth, closeLogin } = useContext(AuthContext);
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || "/";
@@ -35,10 +37,8 @@ const SignUpForm = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const registrationState = useMemo(
-    () => getRegistrationState(formData),
-    [formData],
-  );
+  const registrationState = useMemo(() => getRegistrationState(t, formData), [formData, t]);
+  const registerFeatures = useMemo(() => getRegisterFeatures(t), [t]);
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -66,7 +66,7 @@ const SignUpForm = ({ onLogin }) => {
         setSuccess(true);
       }
     } catch (err) {
-      setError(getRegisterErrorMessage(err));
+      setError(getRegisterErrorMessage(t, err));
     } finally {
       setLoading(false);
     }
@@ -76,9 +76,9 @@ const SignUpForm = ({ onLogin }) => {
     <AuthPanel
       aside={
         <AuthAside
-          eyebrow={REGISTER_FEATURES.eyebrow}
-          title={REGISTER_FEATURES.title}
-          text={REGISTER_FEATURES.text}
+          eyebrow={registerFeatures.eyebrow}
+          title={registerFeatures.title}
+          text={registerFeatures.text}
         >
           <AuthChecklist
             sections={registrationState.sections}
@@ -88,20 +88,27 @@ const SignUpForm = ({ onLogin }) => {
           />
         </AuthAside>
       }
-      formEyebrow={success ? "Account ready" : "Create your pass"}
+      formEyebrow={
+        success
+          ? t("auth.register.form.successEyebrow")
+          : t("auth.register.form.eyebrow")
+      }
       formTitle={
-        success ? "Your account is ready." : "Create your InkVerse account"
+        success
+          ? t("auth.register.form.successTitle")
+          : t("auth.register.form.title")
       }
       formText={
         success
-          ? "Sign in with your new credentials and start shaping your shelf."
-          : "Set up a reader identity for reviews, saved books, rankings, and your personal library."
+          ? t("auth.register.form.successText")
+          : t("auth.register.form.text")
       }
       footer={
         <p className="iv-auth-legal">
-          By creating an account, you agree to InkVerse&apos;s{" "}
-          <Link to="/terms">Terms of Service</Link> and{" "}
-          <Link to="/privacy">Privacy Policy</Link>.
+          <Trans
+            i18nKey="auth.legal.register"
+            components={[<Link to="/terms" />, <Link to="/privacy" />]}
+          />
         </p>
       }
     >
@@ -112,11 +119,10 @@ const SignUpForm = ({ onLogin }) => {
           </span>
           <div>
             <h2 className="iv-auth-success__title">
-              Welcome to InkVerse.
+              {t("auth.register.form.successCardTitle")}
             </h2>
             <p className="iv-auth-success__text">
-              Your reader account is live. You can sign in now with your new
-              username and password, or continue with Google whenever you like.
+              {t("auth.register.form.successCardText")}
             </p>
           </div>
           <div className="iv-auth-success__actions">
@@ -125,14 +131,14 @@ const SignUpForm = ({ onLogin }) => {
               className="iv-auth-submit"
               onClick={() => onLogin?.()}
             >
-              Sign in now
+              {t("auth.register.form.signInNow")}
             </button>
             <button
               type="button"
               className="iv-auth-secondaryAction"
               onClick={closeLogin}
             >
-              Continue browsing
+              {t("auth.register.form.continueBrowsing")}
             </button>
           </div>
         </div>
@@ -148,78 +154,78 @@ const SignUpForm = ({ onLogin }) => {
             <div className="iv-auth-nameGrid">
               <AuthField
                 id="register-first-name"
-                label="First name"
+                label={t("auth.register.form.firstName")}
                 name="firstName"
                 type="text"
                 value={formData.firstName}
                 onChange={handleInputChange}
-                placeholder="Rakan"
+                placeholder={t("auth.register.form.firstNamePlaceholder")}
                 autoComplete="given-name"
               />
 
               <AuthField
                 id="register-last-name"
-                label="Last name"
+                label={t("auth.register.form.lastName")}
                 name="lastName"
                 type="text"
                 value={formData.lastName}
                 onChange={handleInputChange}
-                placeholder="Odeh"
+                placeholder={t("auth.register.form.lastNamePlaceholder")}
                 autoComplete="family-name"
               />
             </div>
 
             <AuthField
               id="register-username"
-              label="Username"
+              label={t("auth.register.form.username")}
               name="username"
               type="text"
               value={formData.username}
               onChange={handleInputChange}
-              placeholder="inkverse_reader"
+              placeholder={t("auth.register.form.usernamePlaceholder")}
               autoComplete="username"
-              helper="3 to 20 characters, starting with a letter. Letters, numbers, and underscores only."
+              helper={t("auth.register.form.usernameHelper")}
             />
 
             <AuthField
               id="register-email"
-              label="Email"
+              label={t("auth.register.form.email")}
               name="email"
               type="email"
               value={formData.email}
               onChange={handleInputChange}
-              placeholder="name@example.com"
+              placeholder={t("auth.register.form.emailPlaceholder")}
               autoComplete="email"
             />
 
             <AuthField
               id="register-password"
-              label="Password"
+              label={t("auth.register.form.password")}
               name="password"
               type={showPassword ? "text" : "password"}
               value={formData.password}
               onChange={handleInputChange}
-              placeholder="Create a secure password"
+              placeholder={t("auth.register.form.passwordPlaceholder")}
               autoComplete="new-password"
-              helper="Use 8+ characters with upper, lower, number, and symbol."
+              helper={t("auth.register.form.passwordHelper")}
               action={
                 <button
                   type="button"
                   onClick={() => setShowPassword((current) => !current)}
                 >
-                  {showPassword ? "Hide" : "Show"}
+                  {showPassword ? t("auth.register.form.hide") : t("auth.register.form.show")}
                 </button>
               }
             />
 
             <AuthField
               id="register-confirm-password"
-              label="Confirm password"
+              label={t("auth.register.form.confirmPassword")}
               name="confirmPassword"
               type={showConfirmPassword ? "text" : "password"}
               value={formData.confirmPassword}
               onChange={handleInputChange}
-              placeholder="Repeat your password"
+              placeholder={t("auth.register.form.confirmPasswordPlaceholder")}
               autoComplete="new-password"
               action={
                 <button
@@ -228,7 +234,7 @@ const SignUpForm = ({ onLogin }) => {
                     setShowConfirmPassword((current) => !current)
                   }
                 >
-                  {showConfirmPassword ? "Hide" : "Show"}
+                  {showConfirmPassword ? t("auth.register.form.hide") : t("auth.register.form.show")}
                 </button>
               }
             />
@@ -238,11 +244,11 @@ const SignUpForm = ({ onLogin }) => {
               className="iv-auth-submit"
               disabled={!registrationState.isReady || loading}
             >
-              {loading ? "Creating account..." : "Create account"}
+              {loading ? t("auth.register.form.submitting") : t("auth.register.form.submit")}
             </button>
           </form>
 
-          <div className="iv-auth-bridge">or continue with</div>
+          <div className="iv-auth-bridge">{t("auth.googleBridge")}</div>
 
           <div className="iv-auth-social iv-auth-social--standalone">
             <div className="iv-auth-googleShell">

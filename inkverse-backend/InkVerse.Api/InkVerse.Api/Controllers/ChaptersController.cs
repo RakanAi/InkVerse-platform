@@ -12,19 +12,38 @@ namespace InkVerse.Api.Controllers
     public class ChaptersController : ControllerBase
     {
         private readonly IChapterService _chapterService;
+        private readonly IMonetizationService _monetizationService;
 
-        public ChaptersController(IChapterService chapterService)
+        public ChaptersController(IChapterService chapterService, IMonetizationService monetizationService)
         {
             _chapterService = chapterService;
+            _monetizationService = monetizationService;
         }
         
         // Creates a new chapter.
         
+        [Authorize(Roles = "Admin,Author")]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] ChapterCreateDto dto)
         {
-            var chapter = await _chapterService.CreateAsync(dto);
-            return CreatedAtAction(nameof(Get), new { id = chapter.Id }, chapter);
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var chapter = await _chapterService.CreateAsync(dto, userId, User.IsInRole("Admin"));
+                return CreatedAtAction(nameof(Get), new { id = chapter.Id }, chapter);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         // Gets a chapter by its ID.
@@ -34,6 +53,8 @@ namespace InkVerse.Api.Controllers
         {
             var chapter = await _chapterService.GetByIdAsync(id);
             if (chapter == null) return NotFound();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            chapter = await _monetizationService.ApplyChapterAccessAsync(chapter, userId, User.IsInRole("Admin"));
             return Ok(chapter);
         }
         // Gets all chapters for a specific book.
@@ -47,20 +68,51 @@ namespace InkVerse.Api.Controllers
 
         // Updates an existing chapter by its ID.
 
+        [Authorize(Roles = "Admin,Author")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update([FromRoute] int id, [FromBody] ChapterUpdateDto dto)
         {
-            var updated = await _chapterService.UpdateAsync(id, dto);
-            if (updated == null) return NotFound();
-            return Ok(updated);
+            try
+            {
+                var updated = await _chapterService.UpdateAsync(
+                    id,
+                    dto,
+                    User.FindFirstValue(ClaimTypes.NameIdentifier),
+                    User.IsInRole("Admin"));
+                if (updated == null) return NotFound();
+                return Ok(updated);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
         // Deletes a chapter by its ID.
+        [Authorize(Roles = "Admin,Author")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete([FromRoute] int id)
         {
-            var success = await _chapterService.DeleteAsync(id);
-            if (!success) return NotFound();
-            return NoContent();
+            try
+            {
+                var success = await _chapterService.DeleteAsync(
+                    id,
+                    User.FindFirstValue(ClaimTypes.NameIdentifier),
+                    User.IsInRole("Admin"));
+                if (!success) return NotFound();
+                return NoContent();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
 

@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using InkVerse.Api.Entities;
 using InkVerse.Api.Entities.Base;
+using InkVerse.Api.Entities.CharacterBank;
 using InkVerse.Api.Entities.Enums;
 using InkVerse.Api.Entities.Identity;
 
@@ -33,6 +34,7 @@ public class Book : CrudBase
     public ICollection<Genre> Genres { get; set; } = new List<Genre>();
     public ICollection<Tag> Tags { get; set; } = new List<Tag>();
     public ICollection<BookTrend> BookTrends { get; set; } = new List<BookTrend>();
+    public ICollection<BookCharacter> BookCharacters { get; set; } = new List<BookCharacter>();
 
     public string? SourceUrl { get; set; }   // optional (translation source)
 

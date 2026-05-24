@@ -1,10 +1,9 @@
 import BookPage from "../Componenets/BookPage/BookPage";
 
-export default function BookDetails(){
-    return (
-      
-      <div>
-        <BookPage />
-      </div>
-    );
+export default function BookDetails() {
+  return (
+    <div>
+      <BookPage />
+    </div>
+  );
 }

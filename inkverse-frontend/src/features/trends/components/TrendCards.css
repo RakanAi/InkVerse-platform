@@ -242,6 +242,35 @@
   text-transform: uppercase;
 }
 
+html[data-theme="dark"] .iv-trend-badge--soft {
+  background: rgba(100, 116, 255, 0.16);
+  border-color: rgba(130, 144, 255, 0.2);
+  color: #c2cdff;
+}
+
+html[data-theme="dark"] .iv-trend-collectionCard__media {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(97, 104, 242, 0.24), transparent 34%),
+    linear-gradient(150deg, rgba(24, 35, 68, 0.96), rgba(18, 28, 52, 0.94));
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+}
+
+html[data-theme="dark"] .iv-trend-collectionCard__body {
+  padding: 0.15rem 0.15rem 0.25rem;
+}
+
+html[data-theme="dark"] .iv-trend-collectionCard__title {
+  color: #eef3ff;
+}
+
+html[data-theme="dark"] .iv-trend-collectionCard__text {
+  color: #a9b7de;
+}
+
+html[data-theme="dark"] .iv-trend-collectionCard__cta {
+  color: #bfcaff;
+}
+
 .iv-trend-spotlight:focus-visible,
 .iv-trend-collectionCard:focus-visible {
   outline: 3px solid rgba(86, 99, 235, 0.26);

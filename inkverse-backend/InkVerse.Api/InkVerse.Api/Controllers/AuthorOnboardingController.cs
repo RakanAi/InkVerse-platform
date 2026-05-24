@@ -68,6 +68,7 @@ public class AuthorOnboardingController : ControllerBase
         {
             UserName = user.UserName ?? string.Empty,
             Email = user.Email ?? string.Empty,
+            AvatarUrl = user.AvatarUrl,
             Token = _tokenService.CreateToken(user, roles),
             Roles = roles
         };
